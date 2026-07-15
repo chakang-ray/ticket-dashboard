@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+make_excel.py
+import_qoo10.py
+티켓_마케팅_대시보드_데이터입력.xlsx
