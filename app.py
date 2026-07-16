@@ -98,6 +98,26 @@ def first_date_str(date_str: str) -> str:
     """저장된 날짜 문자열에서 첫 번째 날짜만 추출 (D-Day 계산용)"""
     return date_str.split("~")[0].strip() if date_str else ""
 
+def parse_date_range(date_str: str):
+    """저장된 공연일 문자열 → date_input value 튜플"""
+    try:
+        if "~" in date_str:
+            parts = date_str.split("~")
+            s = pd.to_datetime(parts[0].strip()).date()
+            e = pd.to_datetime(parts[1].strip()).date()
+            return (s, e)
+        d = pd.to_datetime(date_str.strip()).date()
+        return (d, d)
+    except Exception:
+        return (date.today(), date.today())
+
+def parse_single_date(date_str: str):
+    """저장된 날짜 문자열 → date 객체"""
+    try:
+        return pd.to_datetime(date_str.strip()).date()
+    except Exception:
+        return date.today()
+
 def _render_ticket_card(ticket: dict):
     fname    = ticket.get("썸네일", "")
     b64      = img_to_b64(fname) if fname else None
@@ -107,10 +127,16 @@ def _render_ticket_card(ticket: dict):
 
     link_btn = ""
     if ticket.get("구매링크"):
-        link_btn = (
+        link_btn += (
             f'<a href="{ticket["구매링크"]}" target="_blank" '
             f'style="background:#6C63FF;color:#fff;padding:5px 14px;border-radius:8px;'
-            f'text-decoration:none;font-size:0.82em;font-weight:600">🔗 구매 링크</a>'
+            f'text-decoration:none;font-size:0.82em;font-weight:600;margin-right:6px">🔗 구매 링크</a>'
+        )
+    if ticket.get("공식사이트"):
+        link_btn += (
+            f'<a href="{ticket["공식사이트"]}" target="_blank" '
+            f'style="background:#00b894;color:#fff;padding:5px 14px;border-radius:8px;'
+            f'text-decoration:none;font-size:0.82em;font-weight:600">🌐 공식 사이트</a>'
         )
 
     if b64:
@@ -187,7 +213,7 @@ with st.sidebar:
     st.divider()
     page = st.radio(
         "페이지",
-        ["📊 대시보드 홈", "🛒 판매중 티켓", "📈 QOO10 실적", "🗓️ QOO10 K-pop 캘린더"],
+        ["📊 대시보드 홈", "🛒 판매중 티켓", "📈 QOO10 실적", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더"],
         label_visibility="collapsed",
     )
     st.divider()
@@ -270,7 +296,9 @@ elif page == "🛒 판매중 티켓":
             deadline = t1.date_input("판매 마감일 *", value=date.today())
             venue    = t2.text_input("장소", placeholder="예: 마쿠하리멧세")
 
-            ticket_link = st.text_input("티켓 구매 링크", placeholder="https://...")
+            lc, rc = st.columns(2)
+            ticket_link   = lc.text_input("티켓 구매 링크", placeholder="https://...")
+            official_link = rc.text_input("공식 사이트 링크", placeholder="https://...")
             thumb_file  = st.file_uploader(
                 "썸네일 이미지 (JPG / PNG / GIF / WEBP)",
                 type=["jpg", "jpeg", "png", "gif", "webp"],
@@ -288,7 +316,8 @@ elif page == "🛒 판매중 티켓":
                         "공연일":   store_dates(show_dates),
                         "판매마감": str(deadline),
                         "장소":     venue,
-                        "구매링크": ticket_link,
+                        "구매링크":   ticket_link,
+                        "공식사이트": official_link,
                         "썸네일":   fname,
                         "메모":     note,
                         "등록일":   str(date.today()),
@@ -296,6 +325,97 @@ elif page == "🛒 판매중 티켓":
                     save("on_sale", on_sale)
                     st.success("✅ 티켓이 추가되었습니다!")
                     st.rerun()
+
+    # ── 티켓 수정 ─────────────────────────────────────────────────────────
+    if on_sale:
+        with st.expander("✏️ 티켓 수정", expanded=False):
+            edit_opts = [
+                f"{i}: {s.get('공연명','-')} | {s.get('아티스트','-')} | {s.get('공연일','-')}"
+                for i, s in enumerate(on_sale)
+            ]
+            # 선택한 티켓 번호를 세션에 유지
+            if "edit_sel" not in st.session_state:
+                st.session_state["edit_sel"] = edit_opts[0]
+
+            sel = st.selectbox(
+                "수정할 티켓 선택",
+                edit_opts,
+                key="edit_sel",
+            )
+            edit_idx = int(sel.split(":")[0])
+            t = on_sale[edit_idx]
+
+            # 현재 값으로 폼 pre-fill
+            cur_dates    = parse_date_range(t.get("공연일", ""))
+            cur_deadline = parse_single_date(t.get("판매마감", ""))
+
+            with st.form("edit_sale"):
+                e1, e2 = st.columns(2)
+                new_title  = e1.text_input("공연명 *",  value=t.get("공연명", ""))
+                new_artist = e2.text_input("아티스트 *", value=t.get("아티스트", ""))
+
+                new_dates = st.date_input(
+                    "공연 기간 * (하루면 같은 날 두 번 / 여러 날이면 시작일~종료일)",
+                    value=cur_dates,
+                )
+
+                f1, f2 = st.columns(2)
+                new_deadline = f1.date_input("판매 마감일 *", value=cur_deadline)
+                new_venue    = f2.text_input("장소", value=t.get("장소", ""))
+
+                el, er = st.columns(2)
+                new_link     = el.text_input("티켓 구매 링크", value=t.get("구매링크", ""))
+                new_official = er.text_input("공식 사이트 링크", value=t.get("공식사이트", ""))
+
+                # 현재 썸네일 미리보기
+                cur_fname = t.get("썸네일", "")
+                if cur_fname:
+                    b64_cur = img_to_b64(cur_fname)
+                    if b64_cur:
+                        ext_cur = cur_fname.rsplit(".", 1)[-1]
+                        st.markdown(
+                            f'<img src="data:image/{ext_cur};base64,{b64_cur}" '
+                            f'style="height:80px;border-radius:8px;margin-bottom:6px">',
+                            unsafe_allow_html=True,
+                        )
+                        st.caption("현재 썸네일 — 새 이미지를 올리면 교체됩니다")
+
+                new_thumb = st.file_uploader(
+                    "썸네일 이미지 교체 (선택, JPG / PNG / GIF / WEBP)",
+                    type=["jpg", "jpeg", "png", "gif", "webp"],
+                    key="edit_thumb",
+                )
+                new_note = st.text_area("메모/특이사항", value=t.get("메모", ""), height=70)
+
+                if st.form_submit_button("저장", type="primary", use_container_width=True):
+                    if not new_title or not new_artist:
+                        st.error("공연명과 아티스트는 필수입니다.")
+                    else:
+                        # 이미지: 새로 올리면 교체, 없으면 기존 유지
+                        if new_thumb:
+                            if cur_fname:
+                                old_path = os.path.join(IMG_DIR, cur_fname)
+                                if os.path.exists(old_path):
+                                    os.remove(old_path)
+                            new_fname = save_image(new_thumb)
+                        else:
+                            new_fname = cur_fname
+
+                        on_sale[edit_idx] = {
+                            **t,  # 등록일 등 기존 메타 유지
+                            "공연명":   new_title,
+                            "아티스트": new_artist,
+                            "공연일":   store_dates(new_dates),
+                            "판매마감": str(new_deadline),
+                            "장소":     new_venue,
+                            "구매링크":   new_link,
+                            "공식사이트": new_official,
+                            "썸네일":   new_fname,
+                            "메모":     new_note,
+                        }
+                        save("on_sale", on_sale)
+                        st.success("✅ 수정이 완료되었습니다!")
+                        st.rerun()
 
     # ── 티켓 삭제 ─────────────────────────────────────────────────────────
     if on_sale:
@@ -391,7 +511,7 @@ elif page == "📈 QOO10 실적":
 
         with tab1:
             disp_cols = {
-                "연도": "연도", "공연타이틀": "공연명", "판매기간": "판매기간",
+                "연도": "연도", "공연타이틀": "공연명", "공연장": "공연장", "판매기간": "판매기간",
                 "판매건수": "판매건수", "판매매수": "판매매수",
                 "구매자유니크": "구매자(유니크)",
                 "총GMV": "총 GMV(¥)", "티켓GMV": "티켓 GMV(¥)",
@@ -443,6 +563,7 @@ elif page == "📈 QOO10 실적":
                 df_new.columns = [
                     "연도", "공연타이틀", "셀러ID", "판매기간",
                     "NB", "RB", "NB_RB", "기간중총NB",
+                    "공연장",
                     "판매건수", "판매매수", "응모자유니크", "구매자유니크",
                     "총GMV", "티켓GMV", "티켓외GMV", "스폰서십", "탈퇴수",
                 ]
@@ -462,7 +583,138 @@ elif page == "📈 QOO10 실적":
                 st.error(f"파일 처리 오류: {e}")
 
 # ════════════════════════════════════════════════════════════════════════════
-# 4. QOO10 K-pop 캘린더
+# 4. 공연장 정보
+# ════════════════════════════════════════════════════════════════════════════
+elif page == "🏟️ 공연장 정보":
+    VENUES_PATH = os.path.join(DATA_DIR, "venues.json")
+    venues_all: list[dict] = load_json(VENUES_PATH)
+
+    st.title("🏟️ 일본 주요 공연장 정보")
+    st.caption("도쿄·오사카·나고야·후쿠오카·삿포로 등 수용 인원 1,000명 이상 주요 공연장 데이터")
+
+    # ── 검색 & 필터 ────────────────────────────────────────────────────────
+    col_s, col_c, col_t, col_cap = st.columns([3, 2, 2, 2])
+
+    keyword = col_s.text_input("🔍 검색", placeholder="공연장명·주소·역명 등")
+
+    cities = sorted({v.get("도시", "") for v in venues_all})
+    city_opts = ["전체"] + cities
+    sel_city = col_c.selectbox("도시", city_opts)
+
+    types = sorted({v.get("시설구분", "") for v in venues_all})
+    type_opts = ["전체"] + types
+    sel_type = col_t.selectbox("시설 유형", type_opts)
+
+    cap_opts = {"전체": 0, "1,000+": 1000, "5,000+": 5000, "10,000+": 10000, "30,000+": 30000}
+    sel_cap_label = col_cap.selectbox("최소 수용 인원", list(cap_opts.keys()))
+    sel_cap = cap_opts[sel_cap_label]
+
+    # ── 필터 적용 ───────────────────────────────────────────────────────────
+    filtered = venues_all
+    if keyword:
+        kw = keyword.lower()
+        filtered = [
+            v for v in filtered
+            if kw in v.get("공연장명", "").lower()
+            or kw in v.get("주소", "").lower()
+            or kw in v.get("최가까운역", "").lower()
+            or kw in v.get("비고", "").lower()
+            or kw in v.get("도시", "").lower()
+        ]
+    if sel_city != "전체":
+        filtered = [v for v in filtered if v.get("도시") == sel_city]
+    if sel_type != "전체":
+        filtered = [v for v in filtered if v.get("시설구분") == sel_type]
+    if sel_cap > 0:
+        filtered = [v for v in filtered if v.get("수용인원", 0) >= sel_cap]
+
+    st.markdown(f"**{len(filtered)}개** 공연장 표시 중")
+    st.divider()
+
+    # ── 시설 유형 색상 ─────────────────────────────────────────────────────
+    TYPE_COLOR = {
+        "ドーム":    "#FF6B6B",
+        "アリーナ":  "#6C63FF",
+        "ホール":    "#00C896",
+        "野外":      "#FF9F43",
+        "ライブハウス": "#A29BFE",
+        "スタジアム": "#E17055",
+        "屋内広場":  "#74B9FF",
+    }
+
+    # ── 카드 그리드 ─────────────────────────────────────────────────────────
+    COLS = 2
+    for row_start in range(0, len(filtered), COLS):
+        row_venues = filtered[row_start: row_start + COLS]
+        cols = st.columns(COLS)
+        for col, v in zip(cols, row_venues):
+            vtype = v.get("시설구분", "")
+            tcolor = TYPE_COLOR.get(vtype, "#888")
+            cap_fmt = f"{v.get('수용인원', 0):,}"
+            site_url = v.get("공식홈페이지", "")
+            site_btn = (
+                f'<a href="{site_url}" target="_blank" '
+                f'style="background:#6C63FF;color:#fff;padding:4px 12px;border-radius:8px;'
+                f'text-decoration:none;font-size:0.8em;font-weight:600">🌐 공식 홈페이지</a>'
+            ) if site_url else ""
+
+            col.markdown(
+                f"""
+<div style="background:#1e1e2e;border:1px solid #333;border-radius:12px;padding:18px 20px;margin-bottom:12px;height:100%">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <span style="background:{tcolor};color:#fff;padding:2px 10px;border-radius:12px;font-size:0.75em;font-weight:700">{vtype}</span>
+    <span style="color:#aaa;font-size:0.8em">{v.get('도시', '')}</span>
+  </div>
+  <div style="font-size:1.1em;font-weight:700;color:#fff;margin-bottom:6px">{v.get('공연장명', '')}</div>
+  <div style="color:#6C63FF;font-size:1.4em;font-weight:800;margin-bottom:10px">👥 {cap_fmt}명</div>
+  <table style="width:100%;font-size:0.83em;color:#ccc;border-collapse:collapse">
+    <tr><td style="padding:3px 8px 3px 0;color:#888;white-space:nowrap">📮 우편번호</td><td>〒{v.get('우편번호','')}</td></tr>
+    <tr><td style="padding:3px 8px 3px 0;color:#888;white-space:nowrap">📍 주소</td><td>{v.get('주소','')}</td></tr>
+    <tr><td style="padding:3px 8px 3px 0;color:#888;white-space:nowrap">📞 전화</td><td>{v.get('전화번호','')}</td></tr>
+    <tr><td style="padding:3px 8px 3px 0;color:#888;white-space:nowrap">🚉 가까운 역</td><td>{v.get('최가까운역','')}</td></tr>
+    <tr><td style="padding:3px 8px 3px 0;color:#888;white-space:nowrap;vertical-align:top">💬 비고</td><td style="color:#aaa">{v.get('비고','')}</td></tr>
+  </table>
+  <div style="margin-top:12px">{site_btn}</div>
+</div>
+""",
+                unsafe_allow_html=True,
+            )
+
+    if not filtered:
+        st.info("검색 조건에 맞는 공연장이 없습니다.")
+
+    # ── 엑셀 다운로드 ───────────────────────────────────────────────────────
+    st.divider()
+    if filtered:
+        df_venues = pd.DataFrame(filtered).drop(columns=["id"], errors="ignore")
+        rename_map = {
+            "공연장명": "공연장명",
+            "도시": "도시",
+            "도도부현": "도도부현",
+            "시설구분": "시설구분",
+            "수용인원": "수용인원",
+            "우편번호": "우편번호",
+            "주소": "주소",
+            "전화번호": "전화번호",
+            "공식홈페이지": "공식홈페이지",
+            "최가까운역": "최가까운역",
+            "비고": "비고",
+        }
+        df_venues = df_venues.rename(columns=rename_map)
+
+        import io
+        buf = io.BytesIO()
+        with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+            df_venues.to_excel(writer, index=False, sheet_name="공연장정보")
+        buf.seek(0)
+        st.download_button(
+            "⬇️ 현재 목록 엑셀 다운로드",
+            data=buf,
+            file_name="일본_주요공연장_정보.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+# 5. QOO10 K-pop 캘린더
 # ════════════════════════════════════════════════════════════════════════════
 elif page == "🗓️ QOO10 K-pop 캘린더":
     import streamlit.components.v1 as components
