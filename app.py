@@ -21,7 +21,8 @@ os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(IMG_DIR,  exist_ok=True)
 
 FILES = {
-    "on_sale": os.path.join(DATA_DIR, "on_sale.json"),
+    "on_sale":     os.path.join(DATA_DIR, "on_sale.json"),
+    "kpop_idols":  os.path.join(DATA_DIR, "kpop_idols.json"),
 }
 
 # ── 헬퍼 ─────────────────────────────────────────────────────────────────────
@@ -213,7 +214,7 @@ with st.sidebar:
     st.divider()
     page = st.radio(
         "페이지",
-        ["📊 대시보드 홈", "🛒 판매중 티켓", "📈 QOO10 실적", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더"],
+        ["📊 대시보드 홈", "🛒 판매중 티켓", "📈 QOO10 실적", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더", "🎤 K-pop 아이돌 DB", "📅 팀 캘린더"],
         label_visibility="collapsed",
     )
     st.divider()
@@ -728,3 +729,591 @@ elif page == "🗓️ QOO10 K-pop 캘린더":
         src="https://www.qoo10.jp/gmkt.inc/Special/Special.aspx?sid=354625",
         height=900, scrolling=True,
     )
+
+# ════════════════════════════════════════════════════════════════════════════
+# 6. K-pop 아이돌 DB
+# ════════════════════════════════════════════════════════════════════════════
+elif page == "🎤 K-pop 아이돌 DB":
+    IDOL_PATH = FILES["kpop_idols"]
+
+    def load_idols() -> list[dict]:
+        if os.path.exists(IDOL_PATH):
+            with open(IDOL_PATH, encoding="utf-8") as f:
+                return json.load(f)
+        return []
+
+    def save_idols(data: list[dict]):
+        with open(IDOL_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2, default=str)
+
+    idols = load_idols()
+
+    st.title("🎤 K-pop 아이돌 DB")
+    st.caption("일본에서 활동하거나 활동한 적이 있는 K-pop 아티스트 정보 데이터베이스")
+
+    # ── 요약 지표 ─────────────────────────────────────────────────────────
+    total      = len(idols)
+    japan_act  = sum(1 for i in idols if i.get("일본활동") and i.get("활동상태") == "활동중")
+    boy_cnt    = sum(1 for i in idols if i.get("구분") == "보이그룹" and i.get("활동상태") == "활동중")
+    girl_cnt   = sum(1 for i in idols if i.get("구분") == "걸그룹" and i.get("활동상태") == "활동중")
+    solo_cnt   = sum(1 for i in idols if i.get("구분") in ("솔로남", "솔로여") and i.get("활동상태") == "활동중")
+    concert26  = sum(1 for i in idols if i.get("공연예정2026", "").strip())
+
+    mc1, mc2, mc3, mc4, mc5 = st.columns(5)
+    for col, num, lbl in [
+        (mc1, total,     "전체 등록"),
+        (mc2, japan_act, "일본 활동중"),
+        (mc3, boy_cnt,   "보이그룹"),
+        (mc4, girl_cnt,  "걸그룹"),
+        (mc5, concert26, "2026 공연 예정"),
+    ]:
+        col.markdown(
+            f'<div class="metric-box"><div class="num" style="font-size:1.8em">{num}</div>'
+            f'<div class="lbl">{lbl}</div></div>',
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("---")
+
+    # ── 검색 & 필터 ──────────────────────────────────────────────────────
+    fc1, fc2, fc3, fc4, fc5 = st.columns([3, 2, 2, 2, 2])
+    search_kw  = fc1.text_input("🔍 검색", placeholder="그룹명·멤버·소속사·대표곡")
+    구분_opts   = ["전체", "보이그룹", "걸그룹", "솔로남", "솔로여"]
+    sel_구분    = fc2.selectbox("구분", 구분_opts)
+    상태_opts   = ["전체", "활동중", "간헐적 활동", "활동 불투명", "활동종료"]
+    sel_상태    = fc3.selectbox("활동상태", 상태_opts)
+    japan_only  = fc4.checkbox("일본 활동만", value=False)
+    concert_only = fc5.checkbox("2026 공연 예정만", value=False)
+
+    # ── 필터 적용 ─────────────────────────────────────────────────────────
+    filtered_idols = idols
+    if search_kw:
+        kw = search_kw.lower()
+        filtered_idols = [
+            i for i in filtered_idols
+            if kw in i.get("그룹명", "").lower()
+            or kw in i.get("일본명", "").lower()
+            or kw in i.get("멤버", "").lower()
+            or kw in i.get("소속사", "").lower()
+            or kw in i.get("대표곡", "").lower()
+            or kw in i.get("메모", "").lower()
+        ]
+    if sel_구분 != "전체":
+        filtered_idols = [i for i in filtered_idols if i.get("구분") == sel_구분]
+    if sel_상태 != "전체":
+        filtered_idols = [i for i in filtered_idols if i.get("활동상태") == sel_상태]
+    if japan_only:
+        filtered_idols = [i for i in filtered_idols if i.get("일본활동")]
+    if concert_only:
+        filtered_idols = [i for i in filtered_idols if i.get("공연예정2026", "").strip()]
+
+    st.markdown(f"**{len(filtered_idols)}개** 표시 중")
+    st.divider()
+
+    # ── 구분별 색상·이모지 ────────────────────────────────────────────────
+    CATEGORY_STYLE = {
+        "보이그룹": ("#6C63FF", "👦"),
+        "걸그룹":   ("#FF6B9D", "👧"),
+        "솔로남":   ("#00C896", "🎤"),
+        "솔로여":   ("#FFB347", "🎤"),
+    }
+    STATUS_COLOR = {
+        "활동중":       "#00c896",
+        "간헐적 활동":  "#FFB347",
+        "활동 불투명":  "#888",
+        "활동종료":     "#FF6B6B",
+    }
+
+    # ── 카드 그리드 ──────────────────────────────────────────────────────
+    COLS = 3
+    for row_start in range(0, len(filtered_idols), COLS):
+        row_idols = filtered_idols[row_start: row_start + COLS]
+        cols = st.columns(COLS)
+        for col, idol in zip(cols, row_idols):
+            cat   = idol.get("구분", "")
+            cat_color, cat_emoji = CATEGORY_STYLE.get(cat, ("#888", "🎵"))
+            status      = idol.get("활동상태", "")
+            status_color = STATUS_COLOR.get(status, "#888")
+            japan_badge = (
+                '<span style="background:#1890ff;color:#fff;padding:2px 8px;'
+                'border-radius:10px;font-size:0.72em;font-weight:600;margin-left:4px">🇯🇵 일본</span>'
+                if idol.get("일본활동") else ""
+            )
+            concert_badge = ""
+            if idol.get("공연예정2026", "").strip():
+                concert_badge = (
+                    '<span style="background:#FF6B35;color:#fff;padding:2px 8px;'
+                    'border-radius:10px;font-size:0.72em;font-weight:600;margin-left:4px">📅 2026공연</span>'
+                )
+
+            debut_year = str(idol.get("데뷔일", ""))[:4]
+            fanclub    = idol.get("일본팬클럽", "")
+            members_preview = idol.get("멤버", "")
+            if len(members_preview) > 50:
+                members_preview = members_preview[:47] + "…"
+
+            col.markdown(
+                f"""
+<div class="ticket-card" style="border:1px solid {cat_color}33">
+  <div style="background:linear-gradient(135deg,{cat_color}22,#1a1a2e);padding:14px 16px 10px">
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+      <span style="background:{cat_color};color:#fff;padding:2px 10px;border-radius:12px;font-size:0.75em;font-weight:700">{cat_emoji} {cat}</span>
+      <span style="background:{status_color};color:#fff;padding:2px 8px;border-radius:10px;font-size:0.72em;font-weight:600">{status}</span>
+      {japan_badge}{concert_badge}
+    </div>
+    <div style="font-size:1.1em;font-weight:800;color:#fff;margin-bottom:2px">{idol.get('그룹명','-')}</div>
+    <div style="font-size:0.82em;color:#aaa">{idol.get('일본명','')}</div>
+  </div>
+  <div class="ticket-body" style="padding:10px 16px">
+    <div style="font-size:0.8em;color:#ccc;line-height:1.8">
+      🏢 {idol.get('소속사','-')}<br>
+      🗓 데뷔 {debut_year}년 · 멤버 {idol.get('멤버수','-')}인<br>
+      👥 {members_preview}<br>
+      {'🏟 팬클럽: ' + fanclub if fanclub else ''}
+    </div>
+  </div>
+</div>
+""",
+                unsafe_allow_html=True,
+            )
+
+            # 상세 정보 확장
+            with col.expander("🔍 상세 정보 보기"):
+                d = idol
+                st.markdown(f"**🎵 대표곡:** {d.get('대표곡','-')}")
+                if d.get("공연예정2026"):
+                    st.markdown(
+                        f'<div style="background:#FF6B3520;border:1px solid #FF6B35;border-radius:8px;'
+                        f'padding:8px 12px;margin:6px 0">'
+                        f'<b>📅 2026 공연 예정</b><br>{d["공연예정2026"]}</div>',
+                        unsafe_allow_html=True,
+                    )
+                if d.get("메모"):
+                    st.caption(f"📝 {d['메모']}")
+                link_html = ""
+                if d.get("공식사이트"):
+                    link_html += f'<a href="{d["공식사이트"]}" target="_blank" style="background:#6C63FF;color:#fff;padding:4px 10px;border-radius:8px;text-decoration:none;font-size:0.8em;margin-right:4px">🌐 공식</a>'
+                if d.get("유튜브"):
+                    link_html += f'<a href="{d["유튜브"]}" target="_blank" style="background:#FF0000;color:#fff;padding:4px 10px;border-radius:8px;text-decoration:none;font-size:0.8em;margin-right:4px">▶ YT</a>'
+                if d.get("인스타그램"):
+                    link_html += f'<a href="{d["인스타그램"]}" target="_blank" style="background:#E1306C;color:#fff;padding:4px 10px;border-radius:8px;text-decoration:none;font-size:0.8em">📸 IG</a>'
+                if link_html:
+                    st.markdown(link_html, unsafe_allow_html=True)
+
+    if not filtered_idols:
+        st.info("검색 조건에 맞는 아티스트가 없습니다.")
+
+    st.divider()
+
+    # ── 아이돌 추가 ──────────────────────────────────────────────────────
+    with st.expander("➕ 아티스트 추가"):
+        with st.form("add_idol", clear_on_submit=True):
+            ai1, ai2 = st.columns(2)
+            new_name    = ai1.text_input("그룹명 (한국어) *", placeholder="예: aespa")
+            new_jpname  = ai2.text_input("일본명", placeholder="예: aespa")
+            ai3, ai4 = st.columns(2)
+            new_cat     = ai3.selectbox("구분", ["보이그룹", "걸그룹", "솔로남", "솔로여"])
+            new_status  = ai4.selectbox("활동상태", ["활동중", "간헐적 활동", "활동 불투명", "활동종료"])
+            ai5, ai6 = st.columns(2)
+            new_agency  = ai5.text_input("소속사")
+            new_debut   = ai6.text_input("데뷔일", placeholder="예: 2020-11-17")
+            new_members = st.text_input("멤버 (쉼표 구분)", placeholder="예: 카리나, 지젤, 윈터, 닝닝")
+            ai7, ai8 = st.columns(2)
+            new_mcount  = ai7.number_input("멤버수", min_value=1, max_value=30, value=4)
+            new_japan   = ai8.checkbox("일본 활동 있음", value=True)
+            new_fanclub = st.text_input("일본 팬클럽명")
+            ai9, ai10, ai11 = st.columns(3)
+            new_site    = ai9.text_input("공식사이트", placeholder="https://")
+            new_yt      = ai10.text_input("유튜브", placeholder="https://")
+            new_ig      = ai11.text_input("인스타그램", placeholder="https://")
+            new_songs   = st.text_input("대표곡 (쉼표 구분)", placeholder="예: Black Mamba, Next Level")
+            new_concert = st.text_area("2026 공연 예정", height=60, placeholder="예: 2026.03 도쿄돔 공연 예정")
+            new_memo    = st.text_area("메모", height=60)
+            if st.form_submit_button("추가", type="primary", use_container_width=True):
+                if not new_name:
+                    st.error("그룹명은 필수입니다.")
+                else:
+                    idols.append({
+                        "id":          new_name.lower().replace(" ", "_"),
+                        "그룹명":       new_name,
+                        "일본명":       new_jpname,
+                        "구분":         new_cat,
+                        "소속사":       new_agency,
+                        "데뷔일":       new_debut,
+                        "멤버":         new_members,
+                        "멤버수":       int(new_mcount),
+                        "일본활동":     new_japan,
+                        "활동상태":     new_status,
+                        "일본팬클럽":   new_fanclub,
+                        "공식사이트":   new_site,
+                        "유튜브":       new_yt,
+                        "인스타그램":   new_ig,
+                        "대표곡":       new_songs,
+                        "공연예정2026": new_concert,
+                        "메모":         new_memo,
+                    })
+                    save_idols(idols)
+                    st.success(f"✅ '{new_name}' 추가 완료!")
+                    st.rerun()
+
+    # ── 아이돌 수정 ──────────────────────────────────────────────────────
+    if idols:
+        with st.expander("✏️ 아티스트 수정"):
+            edit_opts = [f"{i}: {s.get('그룹명','-')} ({s.get('구분','-')})" for i, s in enumerate(idols)]
+            sel_e = st.selectbox("수정할 아티스트 선택", edit_opts, key="idol_edit_sel")
+            ei = int(sel_e.split(":")[0])
+            t = idols[ei]
+            with st.form("edit_idol"):
+                ei1, ei2 = st.columns(2)
+                en      = ei1.text_input("그룹명 *",  value=t.get("그룹명",""))
+                ejn     = ei2.text_input("일본명",    value=t.get("일본명",""))
+                ei3, ei4 = st.columns(2)
+                ecat    = ei3.selectbox("구분", ["보이그룹","걸그룹","솔로남","솔로여"],
+                                        index=["보이그룹","걸그룹","솔로남","솔로여"].index(t.get("구분","보이그룹")) if t.get("구분") in ["보이그룹","걸그룹","솔로남","솔로여"] else 0)
+                estat   = ei4.selectbox("활동상태", ["활동중","간헐적 활동","활동 불투명","활동종료"],
+                                        index=["활동중","간헐적 활동","활동 불투명","활동종료"].index(t.get("활동상태","활동중")) if t.get("활동상태") in ["활동중","간헐적 활동","활동 불투명","활동종료"] else 0)
+                ei5, ei6 = st.columns(2)
+                eagency = ei5.text_input("소속사",  value=t.get("소속사",""))
+                edebut  = ei6.text_input("데뷔일",  value=t.get("데뷔일",""))
+                emembers = st.text_input("멤버",     value=t.get("멤버",""))
+                ei7, ei8 = st.columns(2)
+                emcnt   = ei7.number_input("멤버수", min_value=1, max_value=30, value=int(t.get("멤버수",1)))
+                ejapan  = ei8.checkbox("일본 활동",  value=bool(t.get("일본활동")))
+                efanclub = st.text_input("일본 팬클럽명", value=t.get("일본팬클럽",""))
+                ei9, ei10, ei11 = st.columns(3)
+                esite   = ei9.text_input("공식사이트",  value=t.get("공식사이트",""))
+                eyt     = ei10.text_input("유튜브",     value=t.get("유튜브",""))
+                eig     = ei11.text_input("인스타그램", value=t.get("인스타그램",""))
+                esongs  = st.text_input("대표곡",   value=t.get("대표곡",""))
+                econcert = st.text_area("2026 공연 예정", value=t.get("공연예정2026",""), height=60)
+                ememo   = st.text_area("메모",      value=t.get("메모",""), height=60)
+                if st.form_submit_button("저장", type="primary", use_container_width=True):
+                    idols[ei] = {
+                        **t,
+                        "그룹명":       en,
+                        "일본명":       ejn,
+                        "구분":         ecat,
+                        "활동상태":     estat,
+                        "소속사":       eagency,
+                        "데뷔일":       edebut,
+                        "멤버":         emembers,
+                        "멤버수":       int(emcnt),
+                        "일본활동":     ejapan,
+                        "일본팬클럽":   efanclub,
+                        "공식사이트":   esite,
+                        "유튜브":       eyt,
+                        "인스타그램":   eig,
+                        "대표곡":       esongs,
+                        "공연예정2026": econcert,
+                        "메모":         ememo,
+                    }
+                    save_idols(idols)
+                    st.success("✅ 수정 완료!")
+                    st.rerun()
+
+    # ── 아이돌 삭제 ──────────────────────────────────────────────────────
+    if idols:
+        with st.expander("🗑️ 아티스트 삭제"):
+            del_opts = [f"{i}: {s.get('그룹명','-')} ({s.get('구분','-')})" for i, s in enumerate(idols)]
+            to_del   = st.multiselect("삭제할 아티스트 선택", del_opts)
+            if st.button("선택 삭제", type="secondary", key="del_idol"):
+                indices = {int(o.split(":")[0]) for o in to_del}
+                idols   = [s for i, s in enumerate(idols) if i not in indices]
+                save_idols(idols)
+                st.success("삭제 완료!")
+                st.rerun()
+
+    # ── CSV/Excel 다운로드 ───────────────────────────────────────────────
+    if idols:
+        st.divider()
+        df_idol = pd.DataFrame(idols)
+        csv_idol = df_idol.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+        st.download_button("📥 전체 목록 CSV 다운로드", csv_idol, "kpop_아이돌DB.csv", "text/csv")
+
+# ════════════════════════════════════════════════════════════════════════════
+# 7. 팀 캘린더
+# ════════════════════════════════════════════════════════════════════════════
+elif page == "📅 팀 캘린더":
+    from streamlit_calendar import calendar as st_calendar
+
+    # ── Supabase vs 로컬 JSON 자동 선택 ─────────────────────────────────
+    def _use_supabase() -> bool:
+        try:
+            return bool(st.secrets.get("SUPABASE_URL") and st.secrets.get("SUPABASE_KEY"))
+        except Exception:
+            return False
+
+    @st.cache_resource
+    def _get_sb():
+        from supabase import create_client
+        return create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
+
+    CAL_PATH = os.path.join(DATA_DIR, "team_calendar.json")
+
+    def load_cal() -> dict:
+        if _use_supabase():
+            sb = _get_sb()
+            members = [r["name"] for r in sb.table("team_members").select("name").order("id").execute().data]
+            events  = []
+            for r in sb.table("team_events").select("*").order("start_date").execute().data:
+                events.append({
+                    "id":   r["id"],
+                    "이름": r["name"],
+                    "제목": r["title"],
+                    "시작": r["start_date"],
+                    "종료": r["end_date"],
+                    "종류": r["kind"],
+                    "메모": r.get("memo", ""),
+                })
+            return {"members": members, "events": events}
+        if os.path.exists(CAL_PATH):
+            with open(CAL_PATH, encoding="utf-8") as f:
+                return json.load(f)
+        return {"members": [], "events": []}
+
+    def save_cal(data: dict):
+        if not _use_supabase():
+            with open(CAL_PATH, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2, default=str)
+
+    def add_member_db(name: str):
+        if _use_supabase():
+            _get_sb().table("team_members").insert({"name": name}).execute()
+        else:
+            data = load_cal()
+            if name not in data["members"]:
+                data["members"].append(name)
+                save_cal(data)
+
+    def remove_member_db(name: str):
+        if _use_supabase():
+            _get_sb().table("team_members").delete().eq("name", name).execute()
+        else:
+            data = load_cal()
+            data["members"] = [m for m in data["members"] if m != name]
+            save_cal(data)
+
+    def add_event_db(ev: dict):
+        if _use_supabase():
+            _get_sb().table("team_events").insert({
+                "id":         ev["id"],
+                "name":       ev["이름"],
+                "title":      ev["제목"],
+                "start_date": ev["시작"],
+                "end_date":   ev["종료"],
+                "kind":       ev["종류"],
+                "memo":       ev.get("메모", ""),
+            }).execute()
+        else:
+            data = load_cal()
+            data["events"].append(ev)
+            save_cal(data)
+
+    def delete_event_db(ev_id: str):
+        if _use_supabase():
+            _get_sb().table("team_events").delete().eq("id", ev_id).execute()
+        else:
+            data = load_cal()
+            data["events"] = [e for e in data["events"] if e.get("id") != ev_id]
+            save_cal(data)
+
+    cal_data = load_cal()
+    members  = cal_data.get("members", [])
+    events   = cal_data.get("events", [])
+
+    # ── 종류별 색상 ──────────────────────────────────────────────────────
+    KIND_COLOR = {
+        "공연·이벤트 참석": "#6C63FF",
+        "업무 미팅·회의":   "#00C896",
+        "휴가·반차":        "#FF9F43",
+        "출장":             "#1890FF",
+    }
+    MEMBER_COLORS = [
+        "#E74C3C", "#3498DB", "#2ECC71", "#F39C12",
+        "#9B59B6", "#1ABC9C", "#E67E22", "#34495E",
+    ]
+
+    def member_color(name: str) -> str:
+        if not members:
+            return "#888"
+        idx = members.index(name) if name in members else 0
+        return MEMBER_COLORS[idx % len(MEMBER_COLORS)]
+
+    st.title("📅 팀 캘린더")
+    st.caption("팀원 모두가 자유롭게 일정을 등록·삭제할 수 있는 공유 캘린더")
+
+    # ── 팀원 필터 ─────────────────────────────────────────────────────────
+    col_f1, col_f2 = st.columns([4, 1])
+    with col_f1:
+        member_filter_opts = ["전체"] + members
+        sel_member = st.radio(
+            "팀원 필터",
+            member_filter_opts,
+            horizontal=True,
+            label_visibility="collapsed",
+        )
+    with col_f2:
+        if st.button("👥 팀원 관리", use_container_width=True):
+            st.session_state["show_member_mgmt"] = not st.session_state.get("show_member_mgmt", False)
+
+    # ── 팀원 관리 패널 ────────────────────────────────────────────────────
+    if st.session_state.get("show_member_mgmt", False):
+        with st.container():
+            st.markdown(
+                '<div style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:16px;margin-bottom:12px">',
+                unsafe_allow_html=True,
+            )
+            st.markdown("**👥 팀원 목록 관리**")
+            mc1, mc2 = st.columns([3, 1])
+            new_member = mc1.text_input("새 팀원 이름", placeholder="예: 박마케팅", label_visibility="collapsed")
+            if mc2.button("추가", use_container_width=True):
+                if new_member and new_member not in members:
+                    add_member_db(new_member)
+                    st.success(f"'{new_member}' 추가 완료!")
+                    st.rerun()
+            if members:
+                del_member = st.selectbox("삭제할 팀원", ["선택…"] + members, key="del_member_sel")
+                if del_member != "선택…" and st.button("선택 팀원 삭제", type="secondary"):
+                    remove_member_db(del_member)
+                    st.warning(f"'{del_member}' 삭제 완료.")
+                    st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── 캘린더 이벤트 빌드 ────────────────────────────────────────────────
+    filtered_events = events if sel_member == "전체" else [e for e in events if e.get("이름") == sel_member]
+
+    cal_events = []
+    for ev in filtered_events:
+        kind_color   = KIND_COLOR.get(ev.get("종류", ""), "#888")
+        end_date_str = ev.get("종료", ev.get("시작", ""))
+        # FullCalendar exclusive end: 종료일 다음날
+        try:
+            end_dt = pd.to_datetime(end_date_str).date() + timedelta(days=1)
+            end_str = str(end_dt)
+        except Exception:
+            end_str = end_date_str
+
+        title_display = f"[{ev.get('이름','')}] {ev.get('제목','')}"
+        cal_events.append({
+            "id":    ev.get("id", ""),
+            "title": title_display,
+            "start": ev.get("시작", ""),
+            "end":   end_str,
+            "color": kind_color,
+            "extendedProps": {
+                "이름": ev.get("이름", ""),
+                "종류": ev.get("종류", ""),
+                "메모": ev.get("메모", ""),
+            },
+        })
+
+    # ── 캘린더 렌더링 ─────────────────────────────────────────────────────
+    cal_options = {
+        "editable":    False,
+        "selectable":  True,
+        "locale":      "ko",
+        "initialView": "dayGridMonth",
+        "headerToolbar": {
+            "left":   "today prev,next",
+            "center": "title",
+            "right":  "dayGridMonth,timeGridWeek,listMonth",
+        },
+        "height": 650,
+        "eventDisplay": "block",
+        "dayMaxEvents": 3,
+    }
+
+    cal_state = st_calendar(
+        events=cal_events,
+        options=cal_options,
+        key="team_cal",
+    )
+
+    # ── 이벤트 클릭 → 상세·삭제 ─────────────────────────────────────────
+    if cal_state.get("eventClick"):
+        clicked = cal_state["eventClick"]["event"]
+        ev_id   = clicked.get("id", "")
+        props   = clicked.get("extendedProps", {})
+        st.markdown("---")
+        st.markdown(
+            f'<div style="background:#1a1a2e;border:1px solid #6C63FF44;border-radius:10px;padding:16px">'
+            f'<b style="font-size:1.05em">{clicked.get("title","")}</b><br>'
+            f'<span style="color:#aaa;font-size:0.85em">'
+            f'👤 {props.get("이름","-")} &nbsp;|&nbsp; 🏷 {props.get("종류","-")}</span><br>'
+            f'{"📝 " + props["메모"] if props.get("메모") else ""}'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        if ev_id and st.button("🗑️ 이 일정 삭제", type="secondary"):
+            delete_event_db(ev_id)
+            st.success("삭제 완료!")
+            st.rerun()
+
+    # ── 날짜 범위 선택 → 일정 추가 ───────────────────────────────────────
+    if cal_state.get("select"):
+        sel_start = cal_state["select"].get("startStr", "")[:10]
+        sel_end_raw = cal_state["select"].get("endStr", "")[:10]
+        # FullCalendar exclusive end → 표시용 실제 종료일
+        try:
+            sel_end = str(pd.to_datetime(sel_end_raw).date() - timedelta(days=1))
+        except Exception:
+            sel_end = sel_start
+        st.session_state["cal_sel_start"] = sel_start
+        st.session_state["cal_sel_end"]   = sel_end
+
+    st.markdown("---")
+
+    # ── 일정 추가 폼 ──────────────────────────────────────────────────────
+    with st.expander("➕ 일정 추가", expanded=bool(st.session_state.get("cal_sel_start"))):
+        if not members:
+            st.warning("먼저 '👥 팀원 관리'에서 팀원을 추가해 주세요.")
+        else:
+            with st.form("add_event", clear_on_submit=True):
+                af1, af2 = st.columns(2)
+                ev_name  = af1.selectbox("내 이름 *", members)
+                ev_kind  = af2.selectbox("일정 종류 *", list(KIND_COLOR.keys()))
+                ev_title = st.text_input("제목 *", placeholder="예: IVE 도쿄돔 현장 참석")
+
+                default_start = st.session_state.get("cal_sel_start", str(date.today()))
+                default_end   = st.session_state.get("cal_sel_end",   str(date.today()))
+                try:
+                    ds = pd.to_datetime(default_start).date()
+                    de = pd.to_datetime(default_end).date()
+                except Exception:
+                    ds = de = date.today()
+
+                af3, af4 = st.columns(2)
+                ev_start = af3.date_input("시작일 *", value=ds)
+                ev_end   = af4.date_input("종료일 *", value=de)
+                ev_memo  = st.text_area("메모", height=60)
+
+                if st.form_submit_button("등록", type="primary", use_container_width=True):
+                    if not ev_title:
+                        st.error("제목은 필수입니다.")
+                    elif ev_end < ev_start:
+                        st.error("종료일이 시작일보다 빠릅니다.")
+                    else:
+                        new_ev = {
+                            "id":   uuid.uuid4().hex,
+                            "이름": ev_name,
+                            "제목": ev_title,
+                            "시작": str(ev_start),
+                            "종료": str(ev_end),
+                            "종류": ev_kind,
+                            "메모": ev_memo,
+                        }
+                        add_event_db(new_ev)
+                        st.session_state.pop("cal_sel_start", None)
+                        st.session_state.pop("cal_sel_end", None)
+                        st.success(f"✅ '{ev_title}' 등록 완료!")
+                        st.rerun()
+
+    # ── 범례 ─────────────────────────────────────────────────────────────
+    st.markdown("---")
+    legend_html = "&nbsp;&nbsp;".join(
+        f'<span style="background:{c};color:#fff;padding:3px 10px;border-radius:10px;font-size:0.8em">{k}</span>'
+        for k, c in KIND_COLOR.items()
+    )
+    st.markdown(legend_html, unsafe_allow_html=True)
