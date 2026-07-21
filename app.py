@@ -1551,6 +1551,8 @@ elif page == "🎨 티켓 페이지 생성기":
             ['チケットセクション見出し', 'チケット', 'チケットボックスのH2見出し'],
             ['販売期間', '2026年○月○日(○) ○○:00 ～ 各公演の2日前 23:59まで', ''],
             ['販売期間注記', '※予定枚数に達し次第受付終了', '赤字。なければ空白'],
+            ['当落発表日', '', '抽選の場合のみ記入。なければ空白'],
+            ['入金期限',  '', '抽選の場合のみ記入。なければ空白'],
             ['', '', ''],
         ]
         defaults = [
@@ -1632,6 +1634,8 @@ elif page == "🎨 티켓 페이지 생성기":
             'perf_datetime':    '公演日時',
             'venue':            '会場',
             'sold_out':         '受付終了',
+            'lottery_date':     '当落発表日',
+            'payment_deadline': '入金期限',
             'l_eticket':        '「電子チケットについて」',
             'l_purchase':       '「チケットのご購入に関するお問い合わせ」',
             'l_form':           'お問い合わせフォーム',
@@ -1643,6 +1647,8 @@ elif page == "🎨 티켓 페이지 생성기":
             'perf_datetime':    'Date & Time',
             'venue':            'Venue',
             'sold_out':         'Sold Out',
+            'lottery_date':     'Lottery Result Date',
+            'payment_deadline': 'Payment Deadline',
             'l_eticket':        '"Electronic Ticket Inquiries"',
             'l_purchase':       '"Ticket Purchase Inquiries"',
             'l_form':           'Contact Form',
@@ -1654,6 +1660,8 @@ elif page == "🎨 티켓 페이지 생성기":
             'perf_datetime':    '공연일시',
             'venue':            '공연장',
             'sold_out':         '판매종료',
+            'lottery_date':     '당락발표일',
+            'payment_deadline': '입금기한',
             'l_eticket':        '「전자티켓 관련 문의」',
             'l_purchase':       '「티켓 구매 관련 문의」',
             'l_form':           '문의 양식',
@@ -1735,9 +1743,11 @@ elif page == "🎨 티켓 페이지 생성기":
             if not d: break
             perf_days.append({'date': d, 'time': g(f'公演日{i}_時間')})
 
-        section_title = g('チケットセクション見出し') or 'チケット'
-        sale_period   = g('販売期間')
-        sale_note     = g('販売期間注記')
+        section_title    = g('チケットセクション見出し') or 'チケット'
+        sale_period      = g('販売期間')
+        sale_note        = g('販売期間注記')
+        lottery_date     = g('当落発表日')
+        payment_deadline = g('入金期限')
         tickets = []
         for i in range(1, 11):
             d  = g(f'チケット{i}_公演日付')
@@ -1860,8 +1870,12 @@ elif page == "🎨 티켓 페이지 생성기":
 
         # Optional fragments
         poster_sec = f'<div style="text-align:center;"><img src="{esc(poster)}" width="900" border="0"></div>\n\n' if poster else ''
-        sp_html    = f'      <p class="ticket-note" style="color:BLACK;">販売期間<BR>{sale_period}</p>\n' if sale_period else ''
-        spn_html   = f'      <p class="ticket-note" style="color:red;">{sale_note}</p>\n' if sale_note else ''
+        sp_html       = f'      <p class="ticket-note" style="color:BLACK;">販売期間<BR>{sale_period}</p>\n' if sale_period else ''
+        spn_html      = f'      <p class="ticket-note" style="color:red;">{sale_note}</p>\n' if sale_note else ''
+        lottery_html  = (f'      <p class="ticket-note" style="color:BLACK;">{lbl["lottery_date"]}<BR>{lottery_date}</p>\n'
+                         if lottery_date else '')
+        deadline_html = (f'      <p class="ticket-note" style="color:BLACK;">{lbl["payment_deadline"]}<BR>{payment_deadline}</p>\n'
+                         if payment_deadline else '')
 
         # CSS: swap soldout overlay text for current language
         css_for_lang = ticket_css.replace('content:"受付終了"', f'content:"{lbl["sold_out"]}"')
@@ -1897,6 +1911,8 @@ elif page == "🎨 티켓 페이지 생성기":
             '  <div class="ticket-box">\n'
             '    <div class="ticket-info">\n'
             + sp_html
+            + lottery_html
+            + deadline_html
             + f'      <h2 class="ticket-title">{section_title}</h2>\n'
             + spn_html
             + '    </div>\n'
