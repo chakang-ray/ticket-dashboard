@@ -338,25 +338,26 @@ elif page == "🛒 판매중 티켓":
                     st.error("공연명과 아티스트는 필수입니다.")
                 else:
                     fname = save_image(thumb_file) if thumb_file else ""
-                    on_sale.append({
-                        "공연명":   title,
-                        "아티스트": artist,
-                        "공연일":   store_dates(show_dates),
-                        "판매마감": str(deadline),
-                        "장소":     venue,
+                    on_sale_all.append({
+                        "공연명":    title,
+                        "아티스트":  artist,
+                        "공연일":    store_dates(show_dates),
+                        "판매마감":  str(deadline),
+                        "장소":      venue,
+                        "판매상태":  "판매중",
                         "구매링크":    ticket_link,
                         "공식사이트":  official_link,
                         "응모현황링크": response_link,
-                        "썸네일":   fname,
-                        "메모":     note,
-                        "등록일":   str(date.today()),
+                        "썸네일":    fname,
+                        "메모":      note,
+                        "등록일":    str(date.today()),
                     })
-                    save("on_sale", on_sale)
+                    save("on_sale", on_sale_all)
                     st.success("✅ 티켓이 추가되었습니다!")
                     st.rerun()
 
     # ── 티켓 수정 ─────────────────────────────────────────────────────────
-    if on_sale:
+    if on_sale_all:
         with st.expander("✏️ 티켓 수정", expanded=False):
             edit_opts = [
                 f"{i}: {s.get('공연명','-')} | {s.get('아티스트','-')} | {s.get('공연일','-')}"
