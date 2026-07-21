@@ -137,7 +137,13 @@ def _render_ticket_card(ticket: dict):
         link_btn += (
             f'<a href="{ticket["공식사이트"]}" target="_blank" '
             f'style="background:#00b894;color:#fff;padding:5px 14px;border-radius:8px;'
-            f'text-decoration:none;font-size:0.82em;font-weight:600">🌐 공식 사이트</a>'
+            f'text-decoration:none;font-size:0.82em;font-weight:600;margin-right:6px">🌐 공식 사이트</a>'
+        )
+    if ticket.get("응모현황링크"):
+        link_btn += (
+            f'<a href="{ticket["응모현황링크"]}" target="_blank" '
+            f'style="background:#FF6B35;color:#fff;padding:5px 14px;border-radius:8px;'
+            f'text-decoration:none;font-size:0.82em;font-weight:600">📊 응모/판매현황</a>'
         )
 
     if b64:
@@ -297,9 +303,10 @@ elif page == "🛒 판매중 티켓":
             deadline = t1.date_input("판매 마감일 *", value=date.today())
             venue    = t2.text_input("장소", placeholder="예: 마쿠하리멧세")
 
-            lc, rc = st.columns(2)
+            lc, mc, rc = st.columns(3)
             ticket_link   = lc.text_input("티켓 구매 링크", placeholder="https://...")
-            official_link = rc.text_input("공식 사이트 링크", placeholder="https://...")
+            official_link = mc.text_input("공식 사이트 링크", placeholder="https://...")
+            response_link = rc.text_input("응모/판매현황 링크", placeholder="https://docs.google.com/...")
             thumb_file  = st.file_uploader(
                 "썸네일 이미지 (JPG / PNG / GIF / WEBP)",
                 type=["jpg", "jpeg", "png", "gif", "webp"],
@@ -317,8 +324,9 @@ elif page == "🛒 판매중 티켓":
                         "공연일":   store_dates(show_dates),
                         "판매마감": str(deadline),
                         "장소":     venue,
-                        "구매링크":   ticket_link,
-                        "공식사이트": official_link,
+                        "구매링크":    ticket_link,
+                        "공식사이트":  official_link,
+                        "응모현황링크": response_link,
                         "썸네일":   fname,
                         "메모":     note,
                         "등록일":   str(date.today()),
@@ -364,9 +372,10 @@ elif page == "🛒 판매중 티켓":
                 new_deadline = f1.date_input("판매 마감일 *", value=cur_deadline)
                 new_venue    = f2.text_input("장소", value=t.get("장소", ""))
 
-                el, er = st.columns(2)
+                el, em, er = st.columns(3)
                 new_link     = el.text_input("티켓 구매 링크", value=t.get("구매링크", ""))
-                new_official = er.text_input("공식 사이트 링크", value=t.get("공식사이트", ""))
+                new_official = em.text_input("공식 사이트 링크", value=t.get("공식사이트", ""))
+                new_response = er.text_input("응모/판매현황 링크", value=t.get("응모현황링크", ""))
 
                 # 현재 썸네일 미리보기
                 cur_fname = t.get("썸네일", "")
@@ -409,8 +418,9 @@ elif page == "🛒 판매중 티켓":
                             "공연일":   store_dates(new_dates),
                             "판매마감": str(new_deadline),
                             "장소":     new_venue,
-                            "구매링크":   new_link,
-                            "공식사이트": new_official,
+                            "구매링크":    new_link,
+                            "공식사이트":  new_official,
+                            "응모현황링크": new_response,
                             "썸네일":   new_fname,
                             "메모":     new_note,
                         }
@@ -1209,6 +1219,35 @@ elif page == "📅 팀 캘린더":
             },
         })
 
+    # 판매중 티켓 공연일 자동 연동
+    for tk in load("on_sale"):
+        공연일 = tk.get("공연일", "")
+        if not 공연일:
+            continue
+        try:
+            공연일 = str(공연일)
+            if "~" in 공연일:
+                parts = 공연일.split("~")
+                tk_start = parts[0].strip()
+                tk_end   = str(pd.to_datetime(parts[1].strip()).date() + timedelta(days=1))
+            else:
+                tk_start = 공연일.strip()
+                tk_end   = str(pd.to_datetime(tk_start).date() + timedelta(days=1))
+            cal_events.append({
+                "id":    f"ticket__{tk.get('공연명', '')}",
+                "title": f"🎫 {tk.get('공연명', tk.get('아티스트', ''))}",
+                "start": tk_start,
+                "end":   tk_end,
+                "color": "#FF6B35",
+                "extendedProps": {
+                    "이름": "티켓",
+                    "종류": "🎫 판매중 티켓",
+                    "메모": f"{tk.get('장소', '')}  |  판매마감: {tk.get('판매마감', '')}",
+                },
+            })
+        except Exception:
+            pass
+
     # ── 캘린더 렌더링 ─────────────────────────────────────────────────────
     cal_options = {
         "editable":    False,
@@ -1246,10 +1285,11 @@ elif page == "📅 팀 캘린더":
             f'</div>',
             unsafe_allow_html=True,
         )
-        if ev_id and st.button("🗑️ 이 일정 삭제", type="secondary"):
-            delete_event_db(ev_id)
-            st.success("삭제 완료!")
-            st.rerun()
+        if ev_id and not ev_id.startswith("ticket__"):
+            if st.button("🗑️ 이 일정 삭제", type="secondary"):
+                delete_event_db(ev_id)
+                st.success("삭제 완료!")
+                st.rerun()
 
     # ── 날짜 범위 선택 → 일정 추가 ───────────────────────────────────────
     if cal_state.get("select"):
@@ -1312,8 +1352,9 @@ elif page == "📅 팀 캘린더":
 
     # ── 범례 ─────────────────────────────────────────────────────────────
     st.markdown("---")
+    legend_items = {**KIND_COLOR, "🎫 판매중 티켓": "#FF6B35"}
     legend_html = "&nbsp;&nbsp;".join(
         f'<span style="background:{c};color:#fff;padding:3px 10px;border-radius:10px;font-size:0.8em">{k}</span>'
-        for k, c in KIND_COLOR.items()
+        for k, c in legend_items.items()
     )
     st.markdown(legend_html, unsafe_allow_html=True)
