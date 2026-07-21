@@ -1826,7 +1826,7 @@ elif page == "🎨 티켓 페이지 생성기":
             lineup_sec = (
                 f'\n<!-- lineup -->\n<div class="section-wrap" style="padding-bottom:0;">\n'
                 f'{h}  <div class="lineup-section">'
-                f'<img src="{esc(lineup_url)}" width="900" border="0"></div>\n</div>\n'
+                f'<img src="{esc(lineup_url)}" style="max-width:100%;height:auto;"></div>\n</div>\n'
             )
 
         # Contact block (language-aware fixed strings)
@@ -1869,7 +1869,11 @@ elif page == "🎨 티켓 페이지 생성기":
             )
 
         # Optional fragments
-        poster_sec = f'<div style="text-align:center;"><img src="{esc(poster)}" width="900" border="0"></div>\n\n' if poster else ''
+        poster_sec = (
+            f'<div style="text-align:center;">'
+            f'<img src="{esc(poster)}" style="max-width:100%;height:auto;display:block;margin:0 auto;">'
+            f'</div>\n\n'
+        ) if poster else ''
         sp_html       = f'      <p class="ticket-note" style="color:BLACK;">販売期間<BR>{sale_period}</p>\n' if sale_period else ''
         spn_html      = f'      <p class="ticket-note" style="color:red;">{sale_note}</p>\n' if sale_note else ''
         lottery_html  = (f'      <p class="ticket-note" style="color:BLACK;">{lbl["lottery_date"]}<BR>{lottery_date}</p>\n'
@@ -1885,13 +1889,8 @@ elif page == "🎨 티켓 페이지 생성기":
             + css_for_lang + '\n</style>'
         )
 
-        html_out = (
-            '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
-            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
-            '<link href="https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap" rel="stylesheet">\n'
-            '<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">\n'
-            '<link rel="stylesheet" href="https://dp.image-qoo10.jp/dp2016/JP/design/JPPM/fullEvent.css" media="screen and (min-width: 769px)">\n'
-            + style_block + '\n\n'
+        title_plain = title.replace('<br>', ' ')
+        _body_content = (
             '<!-- title -->\n'
             f'<div class="toptitle">{title}</div>\n\n'
             + poster_sec
@@ -1936,6 +1935,24 @@ elif page == "🎨 티켓 페이지 생성기":
             '        </div>\n'
             '  </div></div></div>\n'
             '</div>\n'
+        )
+        html_out = (
+            '<!DOCTYPE html>\n'
+            '<html lang="' + lang + '">\n'
+            '<head>\n'
+            '<meta charset="UTF-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+            '<title>' + title_plain + '</title>\n'
+            '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+            '<link href="https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap" rel="stylesheet">\n'
+            '<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">\n'
+            '<link rel="stylesheet" href="https://dp.image-qoo10.jp/dp2016/JP/design/JPPM/fullEvent.css">\n'
+            + style_block + '\n'
+            '</head>\n'
+            '<body style="margin:0;padding:0;background:' + page_bg + ';">\n'
+            + _body_content
+            + '</body>\n</html>\n'
         )
         return html_out, []
 
@@ -2143,19 +2160,7 @@ elif page == "🎨 티켓 페이지 생성기":
 
         st.divider()
         st.markdown("#### 미리보기")
-        preview_doc = (
-            '<!DOCTYPE html><html lang="ja"><head>'
-            '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">'
-            '<link rel="preconnect" href="https://fonts.googleapis.com">'
-            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-            '<link href="https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap" rel="stylesheet">'
-            '<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">'
-            f'<style>body{{background:{gen_bg};margin:0;padding:0;}}</style>'
-            '</head><body>'
-            + gen_html
-            + '</body></html>'
-        )
-        components_v1.html(preview_doc, height=720, scrolling=True)
+        components_v1.html(gen_html, height=720, scrolling=True)
         st.divider()
         col_d, col_c = st.columns(2)
         with col_d:
