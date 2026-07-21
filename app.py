@@ -227,7 +227,7 @@ with st.sidebar:
     st.divider()
     page = st.radio(
         "페이지",
-        ["📊 대시보드 홈", "🛒 판매중 티켓", "📈 QOO10 실적", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더", "🎤 K-pop 아이돌 DB", "📅 팀 캘린더"],
+        ["📊 대시보드 홈", "🛒 판매중 티켓", "📈 QOO10 실적", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더", "🎤 K-pop 아이돌 DB", "📅 팀 캘린더", "🎨 티켓 페이지 생성기"],
         label_visibility="collapsed",
     )
     st.divider()
@@ -1403,3 +1403,508 @@ elif page == "📅 팀 캘린더":
         for k, c in legend_items.items()
     )
     st.markdown(legend_html, unsafe_allow_html=True)
+
+# ════════════════════════════════════════════════════════════════════════════
+# 8. 티켓 페이지 생성기
+# ════════════════════════════════════════════════════════════════════════════
+elif page == "🎨 티켓 페이지 생성기":
+    import io, re
+    import streamlit.components.v1 as components_v1
+    from openpyxl import Workbook as _Workbook
+
+    st.title("🎨 Qoo10 チケットページ ジェネレーター")
+    st.caption("엑셀 템플릿에 공연 정보를 입력하고 업로드하면 Qoo10 Japan 티켓 페이지 HTML을 자동 생성합니다.")
+    st.divider()
+
+    _TICKET_CSS = (
+        'html,body,#special{-webkit-text-size-adjust:100%;text-size-adjust:100%;}\n'
+        '*{font-family:"Murecho",sans-serif;}\n'
+        '#_special_top{font-family:"Murecho",sans-serif;font-optical-sizing:auto;font-style:normal;}\n'
+        '#special{background-color:var(--page-bg);}\n'
+        '.item_wrap{border-bottom:1px solid transparent;}\n'
+        '.bd_glr_spc:after{background:transparent;}\n'
+        '.item_wrap .prc{line-height:inherit;}\n'
+        '.item_wrap .prc strong{margin:0 5px;font-size:25px;}\n'
+        '.no-mark::before{content:none !important;}\n'
+        '@media screen and (min-width:768px){\n'
+        '  #content,#wrap{background-color:#fff;}\n'
+        '  .Pstyle{display:none;position:relative;padding:60px;}\n'
+        '  #FULLContents{width:100% !important;background-size:cover !important;text-align:center;position:relative;z-index:999;}\n'
+        '  .fixed{position:fixed;top:0;left:0;z-index:999;width:100%;opacity:0.98;}\n'
+        '}\n'
+        '@media screen and (max-width:767px){#content,#wrap{background-color:var(--page-bg);}}\n'
+        '.toptitle{color:#fff;text-align:center;font-family:"Montserrat",sans-serif;font-weight:900;font-size:42px;line-height:1.35;letter-spacing:0.02em;padding:40px 16px 30px;}\n'
+        '@media(max-width:768px){.toptitle{font-size:26px;padding:30px 16px 20px;}}\n'
+        '.title{font-family:"Montserrat",sans-serif;font-weight:900;font-style:normal;text-align:center;font-size:60px;padding-bottom:30px;}\n'
+        '.titlecolor{background:linear-gradient(90deg,var(--btn-color) 0%,#fff 100%);color:transparent;-webkit-background-clip:text;background-clip:text;}\n'
+        '.subtitle{font-weight:700;font-size:35px;line-height:1.25;margin:0;text-align:center;color:#fff;}\n'
+        '.description{font-weight:500;font-size:30px;line-height:1.4;margin:0;text-align:center;color:#fff;}\n'
+        'dl,dt,dd{margin:0;}\n'
+        '.info-block{padding:40px 16px 60px;text-align:center;}\n'
+        '.info-row{padding:18px 0;}\n'
+        '.info-row+.info-row{padding-top:26px;}\n'
+        '.info-list{margin:0;}\n'
+        '.info-label{display:block;color:var(--btn-color);}\n'
+        '.info-label--mt{padding-top:40px;}\n'
+        '.info-body{margin:0;}\n'
+        '.info-date{position:relative;display:inline-block;padding-bottom:14px;}\n'
+        '.info-date::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:#ccc;}\n'
+        '.info-time{margin-top:12px;}\n'
+        '.info-venue{margin-top:12px;font-weight:700;}\n'
+        '@media(max-width:768px){.title{font-size:45px;}.info-time,.info-location{font-size:20px;}.info-block .subtitle.label{font-size:34px;}.info-block .subtitle.date,.info-block .description.time{font-size:38px;}}\n'
+        '@media(max-width:420px){.info-block .subtitle.label{font-size:30px !important;}.info-block .subtitle{font-size:30px !important;}.info-block .description{font-size:20px !important;font-weight:500;}}\n'
+        '.section-wrap,.section-wrap *{box-sizing:border-box;}\n'
+        '.section-wrap{overflow-x:hidden;padding:48px 16px;}\n'
+        '.ticket-box,.tabwrapper{max-width:750px;width:100%;margin:0 auto;background:#fff;border-radius:28px;}\n'
+        '.ticket-box{padding:40px 30px;text-align:center;}\n'
+        '.tabwrapper{padding:40px 50px;}\n'
+        '.tabwrap-outer{padding:0;}\n'
+        '@media(max-width:768px){.ticket-box,.tabwrapper{border-radius:22px;padding:40px 20px;}}\n'
+        '@media(max-width:480px){.ticket-box,.tabwrapper{border-radius:18px;padding:40px 20px;}}\n'
+        '.ticket-info{text-align:center;margin-bottom:36px;padding-bottom:30px;font-size:15px;}\n'
+        '.ticket-title{font-size:40px;font-weight:900;margin-bottom:18px;letter-spacing:.02em;}\n'
+        '.ticket-note{font-size:14px;color:#666;margin-bottom:24px;}\n'
+        '.ticket-info p:not(.ticket-title):not(.ticket-note){font-size:18px;color:#666;line-height:1.6;font-weight:600;}\n'
+        '@media(max-width:768px){.ticket-title{font-size:30px;}.ticket-info{padding-bottom:12px;margin-bottom:20px;}}\n'
+        '.ticketList{list-style:none;margin:0 auto;padding:0;display:flex;flex-direction:column;gap:14px;max-width:540px;}\n'
+        '@media(max-width:768px){.ticketList{gap:10px;}}\n'
+        '.ticket-type-label{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 0 2px;font-size:11px;font-weight:900;color:#aaa;letter-spacing:.12em;text-transform:uppercase;}\n'
+        '.ticket-type-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#ddd 0%,transparent 100%);}\n'
+        '.ticket-type-label:first-child{padding-top:0;}\n'
+        '.ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto;column-gap:16px;row-gap:6px;align-items:center;padding:22px 42px;border-radius:999px;background:var(--btn-color);color:#fff;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;-webkit-tap-highlight-color:rgba(0,0,0,0);-webkit-appearance:none;appearance:none;outline:none !important;user-select:none;-webkit-user-select:none;}\n'
+        '.ticketDay{grid-column:1;grid-row:1;text-align:left;letter-spacing:.5px;font-size:18px;font-weight:800;}\n'
+        '.ticketDate{grid-column:1;grid-row:2;text-align:left;font-size:14px;font-weight:600;opacity:.95;}\n'
+        '.ticketPrice{grid-column:2;grid-row:1/span 2;justify-self:end;align-self:center;font-size:22px;white-space:nowrap;}\n'
+        '.ticketBtn::after{content:"";grid-column:3;grid-row:1/span 2;justify-self:end;align-self:center;width:10px;height:10px;border-top:2px solid #fff;border-right:2px solid #fff;transform:rotate(45deg);transition:transform .18s ease;z-index:1;}\n'
+        '.ticketBtn:hover::after{transform:translateX(6px) rotate(45deg);}\n'
+        '@media(max-width:768px){.ticketBtn{grid-template-columns:1fr 18px;grid-template-rows:auto auto auto;padding:16px 22px;border-radius:20px;}.ticketDay{grid-column:1;grid-row:1;font-size:16px;white-space:normal;word-break:keep-all;}.ticketDate{grid-column:1;grid-row:2;font-size:13px;white-space:normal;}.ticketPrice{grid-column:1;grid-row:3;justify-self:start;font-size:25px;margin-top:10px;}.ticketBtn::after{grid-column:2;grid-row:1/span 3;align-self:center;justify-self:end;}}\n'
+        '.ticketBtn.is-soldout{pointer-events:none;cursor:default;filter:saturate(.6) brightness(.95);}\n'
+        '.ticketBtn.is-soldout .ticketDay,.ticketBtn.is-soldout .ticketDate,.ticketBtn.is-soldout .ticketPrice{opacity:.35;}\n'
+        '.ticketBtn.is-soldout::before{content:"受付終了";position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-weight:900;letter-spacing:.14em;font-size:18px;text-shadow:0 2px 8px rgba(0,0,0,.6);}\n'
+        '.ticketBtn.is-soldout:hover::after{transform:rotate(45deg);}\n'
+        '.ticket-notice{list-style:none;padding:0;margin:24px auto;max-width:540px;font-size:14px;text-align:left;font-weight:500;}\n'
+        '.ticket-notice li{position:relative;padding-left:1.2em;line-height:1.6;margin-bottom:6px;}\n'
+        '.ticket-notice li::before{content:"※";position:absolute;left:0;top:0;}\n'
+        '@media(max-width:480px){.ticket-title{font-size:35px;}.ticket-notice{max-width:100%;}}\n'
+        '.lineup-section{text-align:center;padding:0 16px 20px;}\n'
+        '.lineup-section img{max-width:100%;height:auto;}\n'
+        '.tabwrapper,.tabwrapper *{box-sizing:border-box;}\n'
+        '.infotabs{position:relative;}\n'
+        '.infotab__input{position:absolute;opacity:0;pointer-events:none;}\n'
+        '.infotab__nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start;margin-bottom:28px;}\n'
+        '.infotab__label{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:999px;border:2px solid var(--btn-color);color:var(--btn-color);font-size:20px;font-weight:700;white-space:nowrap;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}\n'
+        '#tab1:checked ~ .infotab__nav label[for="tab1"],\n'
+        '#tab2:checked ~ .infotab__nav label[for="tab2"],\n'
+        '#tab3:checked ~ .infotab__nav label[for="tab3"],\n'
+        '#tab4:checked ~ .infotab__nav label[for="tab4"],\n'
+        '#tab5:checked ~ .infotab__nav label[for="tab5"],\n'
+        '#tab6:checked ~ .infotab__nav label[for="tab6"]{background:var(--btn-color);color:#121113;}\n'
+        '.infotab__content{display:none;font-size:15px;line-height:1.7;}\n'
+        '#tab1:checked ~ .infotab__panels .panel1{display:block;}\n'
+        '#tab2:checked ~ .infotab__panels .panel2{display:block;}\n'
+        '#tab3:checked ~ .infotab__panels .panel3{display:block;}\n'
+        '#tab4:checked ~ .infotab__panels .panel4{display:block;}\n'
+        '#tab5:checked ~ .infotab__panels .panel5{display:block;}\n'
+        '#tab6:checked ~ .infotab__panels .panel6{display:block;}\n'
+        '.oshirase{font-size:14px;text-align:left;word-break:break-word;padding-top:30px;font-weight:450;}\n'
+        '.oshirase dl{margin:0;}\n'
+        '.oshirase dd{margin:0;padding:8px 0;}\n'
+        '.oshirase dt{position:relative;padding-top:30px;padding-left:18px;font-weight:700;}\n'
+        '.oshirase dt::before{content:"■";position:absolute;left:0;top:30px;color:var(--btn-color);}\n'
+        '.oshirase .list{text-indent:-14px;padding-left:14px;}\n'
+        '.oshirase .list::before{content:"●";font-size:5px;margin-right:7px;color:var(--btn-color);vertical-align:middle;}\n'
+        '.oshirase .list_star{text-indent:-14px;padding-left:14px;}\n'
+        '.oshirase .list_star::before{content:"＊";font-size:13px;margin-right:7px;color:var(--btn-color);vertical-align:middle;}\n'
+        '.oshirase .list_important{text-indent:-14px;padding-left:14px;}\n'
+        '.oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:var(--btn-color);vertical-align:middle;}\n'
+        '@media(max-width:768px){.tabwrapper{padding:32px 18px;}.infotab__label{font-size:14px;padding:10px 16px;}.infotab__content{font-size:14px;}}\n'
+        '@media(max-width:480px){.tabwrapper{padding:40px 25px;}.infotab__nav{gap:8px;}.infotab__label{font-size:13px;padding:10px 14px;}.infotab__content{font-size:13px;line-height:1.75;}.oshirase{padding-top:10px;}.oshirase .list,.oshirase .list_star,.oshirase .list_important{text-indent:-12px;padding-left:12px;}}\n'
+    )
+
+    def _make_template():
+        wb = _Workbook()
+        ws = wb.active
+        ws.title = "入力フォーム"
+        rows = [
+            ['항목', '내용', '설명 (수정 불필요 / 참고용)'],
+            ['', '', ''],
+            ['【① 基本情報 & デザイン】', '', ''],
+            ['タイトル', '2026 ○○ WORLD TOUR [○○] IN TOKYO', '改行したい場合は \\n を入力'],
+            ['ポスターURL', '', '画像URLがあれば入力（なければ空白）'],
+            ['会場', '○○アリーナ', ''],
+            ['背景色', '#191919', '例: #191919（黒） / #0a0a1e / #1a0a00'],
+            ['チケットボタン色', '#8da0a7', '例: #8da0a7（デフォルト） / #c2185b / #2e5fa3'],
+            ['', '', ''],
+            ['【② 公演概要 — SCHEDULE セクション】', '', '最大5日'],
+            ['公演日1_日付', '2026年○月○日(○)', ''],
+            ['公演日1_時間', '○○:○○開場・○○:○○開演', ''],
+            ['公演日2_日付', '', '2日目がなければ空白'],
+            ['公演日2_時間', '', ''],
+            ['公演日3_日付', '', ''],
+            ['公演日3_時間', '', ''],
+            ['公演日4_日付', '', ''],
+            ['公演日4_時間', '', ''],
+            ['公演日5_日付', '', ''],
+            ['公演日5_時間', '', ''],
+            ['', '', ''],
+            ['【③ チケット一覧 — TICKETS セクション】', '', '最大10件'],
+            ['チケットセクション見出し', 'チケット', 'チケットボックスのH2見出し'],
+            ['販売期間', '2026年○月○日(○) ○○:00 ～ 各公演の2日前 23:59まで', ''],
+            ['販売期間注記', '※予定枚数に達し次第受付終了', '赤字。なければ空白'],
+            ['', '', ''],
+        ]
+        defaults = [
+            ('VIP席', '¥20,000', '販売中'),
+            ('S席',   '¥15,000', '販売中'),
+        ]
+        for n in range(1, 11):
+            d = defaults[n - 1] if n <= len(defaults) else ('', '', '')
+            rows += [
+                [f'── チケット{n} ──', '', ''],
+                [f'チケット{n}_公演日付', '2026年○月○日(○)' if n <= 2 else '', ''],
+                [f'チケット{n}_公演時間', '○○:○○開場・○○:○○開演' if n <= 2 else '', ''],
+                [f'チケット{n}_権種名',   d[0], '例: VIP席 / S席 / 一般指定席'],
+                [f'チケット{n}_価格',     d[1], ''],
+                [f'チケット{n}_URL',      'https://www.qoo10.jp/...' if n <= 2 else '', '購入URL'],
+                [f'チケット{n}_状態',     d[2], '「販売中」または「受付終了」'],
+                ['', '', ''],
+            ]
+        rows += [
+            ['【④ チケット注意事項】', '', '※が付く注意事項'],
+            ['チケット注意1', 'お一人様４枚まで', ''],
+            ['チケット注意2', '未就学児入場不可', ''],
+            ['チケット注意3', '録音・録画機材（携帯電話）使用禁止', ''],
+            ['チケット注意4', '', ''],
+            ['チケット注意5', '', ''],
+            ['', '', ''],
+            ['【⑤ ラインアップ（チケットとNOTICEの間）】', '', ''],
+            ['ラインアップ見出し', 'LINEUP', '空白の場合は見出しなし'],
+            ['ラインアップ画像URL', '', '画像URLがあれば入力（なければセクション非表示）'],
+            ['', '', ''],
+            ['【⑥ NOTICE タブ（最大6個）】', '', 'タブ名が空白のタブは非表示'],
+            ['', '', ''],
+        ]
+        tab_defs = [
+            ('前売りのご案内', '●', [
+                '本チケットは1名様4枚までご購入いただけます。',
+                'チケット1枚につき1名様のみご入場可能となります。',
+                'チケットは数量限定で販売され、売り切れ次第終了する場合がございます。',
+                'チケットは券面に記載の公演日・会場でのみ有効となります。',
+                'チケットの譲渡・転売が発覚した場合は、チケットの没収の上退場していただきます。',
+            ]),
+            ('チケットのお申し込みに際して', '●', [
+                'チケットのお申し込みをする前に、下記リンクより本公演に関する注意事項を必ずご確認ください。',
+            ]),
+            ('公演当日の注意事項', '＊', [
+                'スタッフの指示に従っていただきますよう、ご理解とご協力をお願いいたします。',
+            ]),
+            ('', '●', []),
+            ('', '●', []),
+            ('', '●', []),
+        ]
+        for ti, (name, style, contents) in enumerate(tab_defs, 1):
+            rows.append([f'── タブ{ti} ──', '', ''])
+            rows.append([f'タブ{ti}_名称',   name,  'タブボタンに表示される名前'])
+            rows.append([f'タブ{ti}_スタイル', style, '箇条書きの種類: ●（丸）/ ＊（星）/ ※（重要）/ なし'])
+            for ci in range(1, 16):
+                rows.append([f'タブ{ti}_内容{ci}', contents[ci - 1] if ci <= len(contents) else '', ''])
+            rows.append(['', '', ''])
+        rows += [
+            ['【⑦ お問い合わせ（タブ1末尾に自動挿入）】', '', ''],
+            ['問合せ_チケットURL',    'https://www.qoo10.jp/gmkt.inc/CS/NHelpContactUs.aspx', ''],
+            ['問合せ_電子チケットURL', 'https://www.qoo10.jp/gmkt.inc/Special/Special.aspx?sid=354258', 'なければ空白'],
+            ['問合せ_公演会社名',     '（株）○○', ''],
+            ['問合せ_公演電話',       '○○-○○○○-○○○○（平日11:00～15:00）', ''],
+            ['問合せ_公演タイトル',   '', '空白の場合はタイトル欄を使用'],
+        ]
+        for r in rows:
+            ws.append(r)
+        ws.column_dimensions['A'].width = 26
+        ws.column_dimensions['B'].width = 68
+        ws.column_dimensions['C'].width = 42
+        buf = io.BytesIO()
+        wb.save(buf)
+        return buf.getvalue()
+
+    def _generate_html(data, ticket_css):
+        def g(k): return str(data.get(k, '') or '').strip()
+        def esc(s): return str(s).replace('&', '&amp;').replace('"', '&quot;')
+        def linkify(text):
+            return re.sub(r'(https?://[^\s<>"]+)',
+                          lambda m: f'<a href="{esc(m.group(1))}" target="_blank">{m.group(1)}</a>',
+                          str(text))
+        def bullet_cls(style):
+            s = str(style or '').strip()
+            if s in ('＊', '*'): return 'list_star'
+            if s == '※':         return 'list_important'
+            if s == 'なし':       return 'list_none'
+            return 'list'
+        def collect(prefix, max_n):
+            return [g(f'{prefix}{i}') for i in range(1, max_n + 1) if g(f'{prefix}{i}')]
+
+        title     = g('タイトル').replace('\\n', '<br>')
+        poster    = g('ポスターURL')
+        venue     = g('会場')
+        page_bg   = g('背景色') or '#191919'
+        btn_color = g('チケットボタン色') or '#8da0a7'
+
+        perf_days = []
+        for i in range(1, 6):
+            d = g(f'公演日{i}_日付')
+            if not d: break
+            perf_days.append({'date': d, 'time': g(f'公演日{i}_時間')})
+
+        section_title = g('チケットセクション見出し') or 'チケット'
+        sale_period   = g('販売期間')
+        sale_note     = g('販売期間注記')
+        tickets = []
+        for i in range(1, 11):
+            d  = g(f'チケット{i}_公演日付')
+            tp = g(f'チケット{i}_権種名')
+            pr = g(f'チケット{i}_価格')
+            if not d and not tp and not pr: break
+            if not d and not tp: continue
+            tickets.append({
+                'date': d, 'time': g(f'チケット{i}_公演時間'),
+                'type': tp, 'price': pr,
+                'url': g(f'チケット{i}_URL') or '#',
+                'status': g(f'チケット{i}_状態'),
+            })
+
+        ticket_notices = collect('チケット注意', 5)
+        lineup_heading = g('ラインアップ見出し')
+        lineup_url     = g('ラインアップ画像URL')
+
+        tabs = []
+        for t in range(1, 7):
+            name = g(f'タブ{t}_名称')
+            if not name: break
+            tabs.append({'name': name, 'cls': bullet_cls(g(f'タブ{t}_スタイル')), 'items': collect(f'タブ{t}_内容', 15)})
+
+        c_ticket  = g('問合せ_チケットURL')
+        c_eticket = g('問合せ_電子チケットURL')
+        c_name    = g('問合せ_公演会社名')
+        c_phone   = g('問合せ_公演電話')
+        c_title   = g('問合せ_公演タイトル') or g('タイトル').replace('\\n', ' ')
+
+        errors = []
+        if not title:   errors.append('タイトルが入力されていません。')
+        if not tickets: errors.append('チケット情報が入力されていません。')
+        if not tabs:    errors.append('タブ1_名称 が入力されていません。')
+        if errors:      return None, errors
+
+        # SCHEDULE
+        if perf_days:
+            sched_html = ''.join(
+                f'\n      <div class="info-row">'
+                f'<div class="subtitle info-date">{d["date"]}</div>'
+                f'<div class="description info-time">{d["time"]}</div>'
+                f'</div>'
+                for d in perf_days)
+        else:
+            sched_html = '<div class="info-row"><div class="description">—</div></div>'
+
+        # Ticket buttons
+        types_distinct = list(dict.fromkeys(t['type'] for t in tickets if t['type']))
+        has_multi = len(types_distinct) > 1
+        btns = ''
+        prev_tp = None
+        for t in tickets:
+            if has_multi and t['type'] != prev_tp:
+                btns += f'\n      <li class="ticket-type-label">{t["type"]}</li>'
+                prev_tp = t['type']
+            cls = 'is-soldout' if t['status'] == '受付終了' else ''
+            btns += (
+                f'\n      <li class="ticketItem">'
+                f'<a class="ticketBtn {cls}" href="{esc(t["url"])}">'
+                f'<span class="ticketDay">{t["date"]}</span>'
+                f'<span class="ticketDate">{t["time"]}</span>'
+                f'<span class="ticketPrice">{t["price"]}</span>'
+                f'</a></li>'
+            )
+
+        notice_html = ''
+        if ticket_notices:
+            items = '\n'.join(f'      <li>{n}</li>' for n in ticket_notices)
+            notice_html = f'    <ul class="ticket-notice">\n{items}\n    </ul>'
+
+        # Lineup section
+        lineup_sec = ''
+        if lineup_url:
+            h = f'  <div class="title"><span class="titlecolor">{lineup_heading}</span></div>\n' if lineup_heading else ''
+            lineup_sec = (
+                f'\n<!-- lineup -->\n<div class="section-wrap" style="padding-bottom:0;">\n'
+                f'{h}  <div class="lineup-section">'
+                f'<img src="{esc(lineup_url)}" width="900" border="0"></div>\n</div>\n'
+            )
+
+        # Contact block (appended to tab1)
+        contact = ''
+        if c_eticket:
+            contact += (
+                f'\n                <dd class="list_none"><span style="background-color:#fff59d;">「電子チケットについて」</span></dd>'
+                f'\n                <dd class="list_none">▶<a href="{esc(c_eticket)}" target="_blank">{c_eticket}</a></dd>'
+            )
+        if c_ticket:
+            contact += (
+                f'\n                <dd class="list_none"><span style="background-color:#fff59d;">「チケットのご購入に関するお問い合わせ」</span></dd>'
+                f'\n                <dd class="list_none">お問い合わせフォーム<br><a href="{esc(c_ticket)}" target="_blank">▶{c_ticket}</a></dd>'
+                f'\n                <dd class="list_none">カテゴリは「イベント／クーポン ＞ 公演・チケット」をご選択ください。</dd>'
+                f'\n                <dd class="list_none">お問い合わせの際にはタイトルに【{c_title}】、本文にお客様のID/注文番号（チケット購入済みの場合のみ）をご記載ください。</dd>'
+            )
+        if c_name or c_phone:
+            ph = f'<br>▶{c_phone}' if c_phone else ''
+            contact += (
+                f'\n                <dd class="list_none"><span style="background-color:#fff59d;">「公演に関するお問い合わせ」</span></dd>'
+                f'\n                <dd class="list_none">▶{c_name}{ph}</dd>'
+            )
+
+        # Tab HTML
+        tab_inputs = '\n        '.join(
+            f'<input type="radio" id="tab{i+1}" name="tab" class="infotab__input"{" checked" if i == 0 else ""}>'
+            for i in range(len(tabs)))
+        tab_nav = '\n          '.join(
+            f'<label for="tab{i+1}" class="infotab__label">{tab["name"]}</label>'
+            for i, tab in enumerate(tabs))
+        tab_panels = ''
+        for i, tab in enumerate(tabs):
+            body = '\n'.join(f'                <dd class="{tab["cls"]}">{linkify(item)}</dd>' for item in tab['items'])
+            extra = contact if i == 0 else ''
+            tab_panels += (
+                f'\n          <div class="infotab__content panel{i+1}">'
+                f'\n            <div class="oshirase"><dl>\n{body}{extra}\n              </dl></div>'
+                f'\n          </div>'
+            )
+
+        # Optional fragments
+        poster_sec = f'<div style="text-align:center;"><img src="{esc(poster)}" width="900" border="0"></div>\n\n' if poster else ''
+        sp_html    = f'      <p class="ticket-note" style="color:BLACK;">販売期間<BR>{sale_period}</p>\n' if sale_period else ''
+        spn_html   = f'      <p class="ticket-note" style="color:red;">{sale_note}</p>\n' if sale_note else ''
+
+        # Style block (concat to avoid f-string brace issues with CSS)
+        style_block = (
+            '<style>\n:root {\n  --btn-color: ' + btn_color + ';\n  --page-bg:   ' + page_bg + ';\n}\n'
+            + ticket_css + '\n</style>'
+        )
+
+        html_out = (
+            '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+            '<link href="https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap" rel="stylesheet">\n'
+            '<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">\n'
+            '<link rel="stylesheet" href="https://dp.image-qoo10.jp/dp2016/JP/design/JPPM/fullEvent.css" media="screen and (min-width: 769px)">\n'
+            + style_block + '\n\n'
+            '<!-- title -->\n'
+            f'<div class="toptitle">{title}</div>\n\n'
+            + poster_sec
+            + '<!-- schedule -->\n'
+            '<section class="info-block">\n'
+            '  <div class="title"><span class="titlecolor">SCHEDULE</span></div>\n'
+            '  <dl class="info-list">\n'
+            '    <dt class="subtitle info-label">公演日時</dt>\n'
+            f'    <dd class="info-body">{sched_html}\n    </dd>\n'
+            '    <dt class="subtitle info-label info-label--mt">会場</dt>\n'
+            f'    <dd class="description info-venue">{venue}</dd>\n'
+            '  </dl>\n'
+            '</section>\n\n'
+            '<!-- ticket -->\n'
+            '<div class="section-wrap">\n'
+            '  <div class="title"><span class="titlecolor">TICKETS</span></div>\n'
+            '  <div class="ticket-box">\n'
+            '    <div class="ticket-info">\n'
+            + sp_html
+            + f'      <h2 class="ticket-title">{section_title}</h2>\n'
+            + spn_html
+            + '    </div>\n'
+            '    <ul class="ticketList" aria-label="Ticket options">\n'
+            + btns + '\n'
+            '    </ul>\n'
+            + notice_html + '\n'
+            '  </div>\n'
+            '</div>\n'
+            + lineup_sec
+            + '<!-- notice -->\n'
+            '<div class="section-wrap">\n'
+            '  <div class="title"><span class="titlecolor">NOTICE</span></div>\n'
+            '  <div class="tabwrap-outer"><div class="tabwrapper"><div class="infotabs">\n'
+            '        ' + tab_inputs + '\n'
+            '        <div class="infotab__nav">\n'
+            '          ' + tab_nav + '\n'
+            '        </div>\n'
+            '        <div class="infotab__panels">\n'
+            + tab_panels + '\n'
+            '        </div>\n'
+            '  </div></div></div>\n'
+            '</div>\n'
+        )
+        return html_out, []
+
+    # ── UI ────────────────────────────────────────────────────────────
+    col_l, col_r = st.columns(2)
+    with col_l:
+        st.markdown("#### Step 1 · 엑셀 템플릿 다운로드")
+        st.caption("B열(내용)에만 입력하시면 됩니다. ① 기본정보·디자인 ② 공연개요 ③ 티켓목록 ④ 라인업 ⑤ NOTICE 탭 ⑥ 문의처")
+        st.download_button(
+            "↓ 템플릿 다운로드 (.xlsx)",
+            _make_template(),
+            "ticket_template.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+    with col_r:
+        st.markdown("#### Step 2 · 작성한 엑셀 업로드")
+        uploaded_tpl = st.file_uploader("", type=["xlsx", "xls"], label_visibility="collapsed", key="tpl_upload")
+
+    tpl_data = {}
+    if uploaded_tpl:
+        try:
+            df_raw = pd.read_excel(uploaded_tpl, header=None, sheet_name=0, dtype=str)
+            for _, row in df_raw.iterrows():
+                key = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) and str(row.iloc[0]) != 'nan' else ''
+                val = str(row.iloc[1]).strip() if len(row) > 1 and pd.notna(row.iloc[1]) and str(row.iloc[1]) != 'nan' else ''
+                if key and key != '항목' and not key.startswith('【') and not key.startswith('──'):
+                    tpl_data[key] = val
+            st.success(f"✅ {uploaded_tpl.name} 로드 완료 ({len(tpl_data)}개 항목)")
+        except Exception as e:
+            st.error(f"파일 읽기 오류: {e}")
+
+    if tpl_data:
+        st.markdown("#### Step 3 · HTML 생성")
+        if st.button("✦ HTML 생성하기", type="primary", use_container_width=True):
+            result_html, errs = _generate_html(tpl_data, _TICKET_CSS)
+            if errs:
+                for err in errs:
+                    st.error(f"⚠ {err}")
+            else:
+                st.session_state['ticket_gen_html'] = result_html
+                st.session_state['ticket_gen_bg']   = tpl_data.get('背景色', '') or '#191919'
+
+    if st.session_state.get('ticket_gen_html'):
+        gen_html = st.session_state['ticket_gen_html']
+        gen_bg   = st.session_state.get('ticket_gen_bg', '#191919')
+        st.divider()
+        st.markdown("#### 미리보기")
+        preview_doc = (
+            '<!DOCTYPE html><html lang="ja"><head>'
+            '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">'
+            '<link rel="preconnect" href="https://fonts.googleapis.com">'
+            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+            '<link href="https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap" rel="stylesheet">'
+            '<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">'
+            f'<style>body{{background:{gen_bg};margin:0;padding:0;}}</style>'
+            '</head><body>'
+            + gen_html
+            + '</body></html>'
+        )
+        components_v1.html(preview_doc, height=720, scrolling=True)
+        st.divider()
+        col_d, col_c = st.columns(2)
+        with col_d:
+            st.download_button(
+                "↓ HTML 다운로드",
+                gen_html.encode('utf-8'),
+                "ticket_page.html",
+                "text/html;charset=utf-8",
+                use_container_width=True,
+            )
+        with col_c:
+            st.text_area("HTML 소스 (복사용)", gen_html, height=200, key="gen_src")
