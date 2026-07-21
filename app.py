@@ -1923,6 +1923,107 @@ elif page == "🎨 티켓 페이지 생성기":
         )
         return html_out, []
 
+    # ── 검증 헬퍼 ─────────────────────────────────────────────────────
+    def _collect_notices(data):
+        items = []
+        for i in range(1, 6):
+            v = str(data.get(f'チケット注意{i}', '') or '').strip()
+            if v:
+                items.append(('チケット注意事項', v))
+        for t in range(1, 7):
+            tab_name = str(data.get(f'タブ{t}_名称', '') or '').strip()
+            if not tab_name: break
+            for c in range(1, 16):
+                v = str(data.get(f'タブ{t}_内容{c}', '') or '').strip()
+                if v:
+                    items.append((f'タブ{t}「{tab_name}」', v))
+        return items
+
+    def _validate_ai(items, api_key):
+        import anthropic as _ant
+        client = _ant.Anthropic(api_key=api_key)
+        lines = '\n'.join(f'[{src}] {txt}' for src, txt in items)
+        prompt = (
+            "당신은 이벤트 티켓 규약 전문 심사원입니다.\n"
+            "아래의 티켓 주의사항 및 NOTICE 문구들을 분석하여 문제를 한국어로 보고해주세요.\n\n"
+            "【검사 항목】\n"
+            "1. 중복/유사 문구: 동일하거나 매우 유사한 내용이 반복되는 항목\n"
+            "2. 상충 문구: 논리적으로 모순되는 내용 (연령 제한 불일치, 매수 제한 불일치, 입장 조건 모순 등)\n"
+            "3. 모호한 표현: 해석에 따라 의미가 달라질 수 있어 분쟁 소지가 있는 표현\n\n"
+            "【문구 목록】\n"
+            f"{lines}\n\n"
+            "【출력 규칙】\n"
+            "- 문제가 있는 경우: 각 항목을 번호로 구분하고, 해당 문구를 직접 인용한 뒤 왜 문제인지 + 수정 제안을 작성하세요.\n"
+            "- 전혀 문제가 없는 경우: '✅ 이상 없음' 한 줄만 출력하세요.\n"
+            "- 한국어로만 출력하세요. 마크다운 볼드(**) 사용 가능."
+        )
+        msg = client.messages.create(
+            model='claude-haiku-4-5-20251001',
+            max_tokens=1800,
+            messages=[{'role': 'user', 'content': prompt}],
+        )
+        return msg.content[0].text
+
+    def _validate_local(items):
+        import difflib, re
+        results = []
+        texts   = [txt for _, txt in items]
+        sources = [src for src, _ in items]
+
+        # ① 완전 중복
+        seen = {}
+        for i, txt in enumerate(texts):
+            key = txt.strip()
+            if key in seen:
+                j = seen[key]
+                results.append(
+                    f"🔴 **중복 문구**\n"
+                    f"  · [{sources[j]}] {txt[:80]}\n"
+                    f"  · [{sources[i]}] (동일 내용)"
+                )
+            else:
+                seen[key] = i
+
+        # ② 유사 문구 (85% 이상)
+        checked = set()
+        for i in range(len(texts)):
+            for j in range(i + 1, len(texts)):
+                if (i, j) in checked: continue
+                ratio = difflib.SequenceMatcher(None, texts[i], texts[j]).ratio()
+                if 0.85 <= ratio < 1.0:
+                    checked.add((i, j))
+                    results.append(
+                        f"🟡 **유사 문구** (유사도 {ratio:.0%})\n"
+                        f"  · [{sources[i]}] {texts[i][:70]}\n"
+                        f"  · [{sources[j]}] {texts[j][:70]}"
+                    )
+
+        # ③ 연령 제한 패턴
+        age_items = [(s, t, list(map(int, re.findall(r'(\d+)\s*(?:歳|才|세|살)', t))))
+                     for s, t in items if re.search(r'\d+\s*(?:歳|才|세|살)', t)]
+        if len(age_items) >= 2:
+            all_ages = sorted({n for _, _, ns in age_items for n in ns})
+            results.append(
+                f"⚠️ **연령 관련 문구 {len(age_items)}개 감지** "
+                f"(언급된 나이: {', '.join(str(a) for a in all_ages)}세) — 기준 일치 여부를 확인하세요.\n"
+                + '\n'.join(f"  · [{s}] {t[:80]}" for s, t, _ in age_items)
+            )
+
+        # ④ 매수 제한 패턴 (서로 다른 숫자)
+        qty_items = [(s, t, list(map(int, re.findall(r'(\d+)\s*枚', t))))
+                     for s, t in items if re.search(r'\d+\s*枚', t)]
+        if len(qty_items) >= 2:
+            nums = {n for _, _, ns in qty_items for n in ns}
+            if len(nums) > 1:
+                results.append(
+                    f"⚠️ **매수 제한 숫자 불일치** ({', '.join(str(n) for n in sorted(nums))}매) — 통일 필요\n"
+                    + '\n'.join(f"  · [{s}] {t[:80]}" for s, t, _ in qty_items)
+                )
+
+        if not results:
+            return "✅ 자동 검사에서 이상 없음"
+        return '\n\n'.join(results)
+
     # ── UI ────────────────────────────────────────────────────────────
     col_l, col_r = st.columns(2)
     with col_l:
@@ -1952,6 +2053,35 @@ elif page == "🎨 티켓 페이지 생성기":
             st.error(f"파일 읽기 오류: {e}")
 
     if tpl_data:
+        # ── 주의사항 검증 ──────────────────────────────────────────────
+        notices = _collect_notices(tpl_data)
+        if notices:
+            st.markdown("#### 🔍 주의사항 자동 검증")
+            st.caption(f"티켓 주의사항 및 NOTICE 탭 내용 총 **{len(notices)}개** 항목에서 중복·상충 문구를 검출합니다.")
+            if st.button("검증하기", type="secondary", key="validate_btn"):
+                with st.spinner("검증 중..."):
+                    try:
+                        _api_key = st.secrets.get("ANTHROPIC_API_KEY", "")
+                    except Exception:
+                        _api_key = ""
+                    if _api_key:
+                        try:
+                            val_result = _validate_ai(notices, _api_key)
+                        except Exception as _ve:
+                            val_result = f"AI 검증 오류: {_ve}\n\n" + _validate_local(notices)
+                    else:
+                        val_result = _validate_local(notices)
+                    st.session_state['ticket_validation'] = val_result
+            if st.session_state.get('ticket_validation'):
+                st.markdown(st.session_state['ticket_validation'])
+                try:
+                    _has_key = bool(st.secrets.get("ANTHROPIC_API_KEY", ""))
+                except Exception:
+                    _has_key = False
+                if not _has_key:
+                    st.caption("💡 Streamlit Cloud 앱 설정에서 `ANTHROPIC_API_KEY`를 추가하면 AI 기반 정밀 검증을 사용할 수 있습니다.")
+
+        st.markdown("---")
         st.markdown("#### Step 3 · HTML 생성")
         if st.button("✦ HTML 생성하기", type="primary", use_container_width=True):
             result_html, errs = _generate_html(tpl_data, tpl_data, _TICKET_CSS, 'ja')
