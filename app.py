@@ -119,7 +119,7 @@ def parse_single_date(date_str: str):
     except Exception:
         return date.today()
 
-def _render_ticket_card(ticket: dict):
+def _render_ticket_card(ticket: dict, sold_out: bool = False):
     fname    = ticket.get("썸네일", "")
     b64      = img_to_b64(fname) if fname else None
     deadline = ticket.get("판매마감", "")
@@ -127,35 +127,42 @@ def _render_ticket_card(ticket: dict):
     dd_color = "#00c896" if not dd_str.startswith("D+") else "#888"
 
     link_btn = ""
-    if ticket.get("구매링크"):
-        link_btn += (
-            f'<a href="{ticket["구매링크"]}" target="_blank" '
-            f'style="background:#6C63FF;color:#fff;padding:5px 14px;border-radius:8px;'
-            f'text-decoration:none;font-size:0.82em;font-weight:600;margin-right:6px">🔗 구매 링크</a>'
-        )
-    if ticket.get("공식사이트"):
-        link_btn += (
-            f'<a href="{ticket["공식사이트"]}" target="_blank" '
-            f'style="background:#00b894;color:#fff;padding:5px 14px;border-radius:8px;'
-            f'text-decoration:none;font-size:0.82em;font-weight:600;margin-right:6px">🌐 공식 사이트</a>'
-        )
-    if ticket.get("응모현황링크"):
-        link_btn += (
-            f'<a href="{ticket["응모현황링크"]}" target="_blank" '
-            f'style="background:#FF6B35;color:#fff;padding:5px 14px;border-radius:8px;'
-            f'text-decoration:none;font-size:0.82em;font-weight:600">📊 응모/판매현황</a>'
-        )
+    if not sold_out:
+        if ticket.get("구매링크"):
+            link_btn += (
+                f'<a href="{ticket["구매링크"]}" target="_blank" '
+                f'style="background:#6C63FF;color:#fff;padding:5px 14px;border-radius:8px;'
+                f'text-decoration:none;font-size:0.82em;font-weight:600;margin-right:6px">🔗 구매 링크</a>'
+            )
+        if ticket.get("공식사이트"):
+            link_btn += (
+                f'<a href="{ticket["공식사이트"]}" target="_blank" '
+                f'style="background:#00b894;color:#fff;padding:5px 14px;border-radius:8px;'
+                f'text-decoration:none;font-size:0.82em;font-weight:600;margin-right:6px">🌐 공식 사이트</a>'
+            )
+        if ticket.get("응모현황링크"):
+            link_btn += (
+                f'<a href="{ticket["응모현황링크"]}" target="_blank" '
+                f'style="background:#FF6B35;color:#fff;padding:5px 14px;border-radius:8px;'
+                f'text-decoration:none;font-size:0.82em;font-weight:600">📊 응모/판매현황</a>'
+            )
 
     if b64:
         ext        = fname.rsplit(".", 1)[-1]
-        thumb_html = f'<img class="ticket-thumb" src="data:image/{ext};base64,{b64}">'
+        thumb_html = f'<img class="ticket-thumb" src="data:image/{ext};base64,{b64}" style="{"filter:grayscale(70%);opacity:0.6" if sold_out else ""}">'
     else:
         thumb_html = '<div class="ticket-thumb-placeholder">🎫</div>'
 
     공연일_표시 = ticket.get("공연일", "-")
+    sold_banner = (
+        '<div style="background:#555;color:#fff;text-align:center;padding:5px;'
+        'font-size:0.82em;font-weight:700;letter-spacing:2px">🔒 판매 종료</div>'
+    ) if sold_out else ""
+    card_style = "opacity:0.7;" if sold_out else ""
 
     st.markdown(
-        f'<div class="ticket-card">'
+        f'<div class="ticket-card" style="{card_style}">'
+        f'{sold_banner}'
         f'{thumb_html}'
         f'<div class="ticket-body">'
         f'<div class="ticket-title">{ticket.get("공연명", "-")}</div>'
@@ -165,7 +172,7 @@ def _render_ticket_card(ticket: dict):
         f'📍 {ticket.get("장소", "-")}'
         f'</div></div>'
         f'<div class="ticket-footer">'
-        f'{badge(dd_str, dd_color)}'
+        f'{badge("판매종료", "#666") if sold_out else badge(dd_str, dd_color)}'
         f'<span style="color:#aaa;font-size:0.8em">마감 {deadline or "-"}</span>'
         f'&nbsp;{link_btn}'
         f'</div>'
@@ -232,7 +239,7 @@ with st.sidebar:
 if page == "📊 대시보드 홈":
     st.title("📊 티켓 마케팅 대시보드")
 
-    on_sale = load("on_sale")
+    on_sale = [t for t in load("on_sale") if t.get("판매상태", "판매중") == "판매중"]
 
     # ── 요약 지표 ─────────────────────────────────────────────────────────
     col_m, col_s = st.columns([1, 4])
@@ -271,18 +278,31 @@ elif page == "🛒 판매중 티켓":
     st.title("🛒 현재 판매중 티켓")
     st.caption("우리 사이트에서 현재 판매 중인 티켓을 카드 형태로 관리합니다.")
 
-    on_sale = load("on_sale")
+    on_sale_all = load("on_sale")
+    active_tickets = [t for t in on_sale_all if t.get("판매상태", "판매중") == "판매중"]
+    sold_tickets   = [t for t in on_sale_all if t.get("판매상태", "판매중") == "판매종료"]
 
-    # ── 카드 그리드 ───────────────────────────────────────────────────────
-    if not on_sale:
+    # ── 판매중 카드 그리드 ────────────────────────────────────────────────
+    if not active_tickets:
         st.info("판매중인 티켓이 없습니다. 아래 폼에서 추가해 주세요.")
     else:
         cols_per_row = 3
-        for row_start in range(0, len(on_sale), cols_per_row):
+        for row_start in range(0, len(active_tickets), cols_per_row):
             cols = st.columns(cols_per_row)
-            for ci, ti in enumerate(range(row_start, min(row_start + cols_per_row, len(on_sale)))):
+            for ci, ti in enumerate(range(row_start, min(row_start + cols_per_row, len(active_tickets)))):
                 with cols[ci]:
-                    _render_ticket_card(on_sale[ti])
+                    _render_ticket_card(active_tickets[ti])
+
+    # ── 판매완료 티켓 섹션 ────────────────────────────────────────────────
+    if sold_tickets:
+        st.divider()
+        st.subheader(f"📦 판매완료 티켓 ({len(sold_tickets)}건)")
+        cols_per_row = 3
+        for row_start in range(0, len(sold_tickets), cols_per_row):
+            cols = st.columns(cols_per_row)
+            for ci, ti in enumerate(range(row_start, min(row_start + cols_per_row, len(sold_tickets)))):
+                with cols[ci]:
+                    _render_ticket_card(sold_tickets[ti], sold_out=True)
 
     st.divider()
 
@@ -340,7 +360,7 @@ elif page == "🛒 판매중 티켓":
         with st.expander("✏️ 티켓 수정", expanded=False):
             edit_opts = [
                 f"{i}: {s.get('공연명','-')} | {s.get('아티스트','-')} | {s.get('공연일','-')}"
-                for i, s in enumerate(on_sale)
+                for i, s in enumerate(on_sale_all)
             ]
             # 선택한 티켓 번호를 세션에 유지
             if "edit_sel" not in st.session_state:
@@ -352,7 +372,7 @@ elif page == "🛒 판매중 티켓":
                 key="edit_sel",
             )
             edit_idx = int(sel.split(":")[0])
-            t = on_sale[edit_idx]
+            t = on_sale_all[edit_idx]
 
             # 현재 값으로 폼 pre-fill
             cur_dates    = parse_date_range(t.get("공연일", ""))
@@ -368,9 +388,15 @@ elif page == "🛒 판매중 티켓":
                     value=cur_dates,
                 )
 
-                f1, f2 = st.columns(2)
+                f1, f2, f3 = st.columns(3)
                 new_deadline = f1.date_input("판매 마감일 *", value=cur_deadline)
                 new_venue    = f2.text_input("장소", value=t.get("장소", ""))
+                cur_status   = t.get("판매상태", "판매중")
+                new_status_edit = f3.selectbox(
+                    "판매 상태",
+                    ["판매중", "판매종료"],
+                    index=0 if cur_status == "판매중" else 1,
+                )
 
                 el, em, er = st.columns(3)
                 new_link     = el.text_input("티켓 구매 링크", value=t.get("구매링크", ""))
@@ -411,41 +437,59 @@ elif page == "🛒 판매중 티켓":
                         else:
                             new_fname = cur_fname
 
-                        on_sale[edit_idx] = {
-                            **t,  # 등록일 등 기존 메타 유지
-                            "공연명":   new_title,
-                            "아티스트": new_artist,
-                            "공연일":   store_dates(new_dates),
-                            "판매마감": str(new_deadline),
-                            "장소":     new_venue,
+                        on_sale_all[edit_idx] = {
+                            **t,
+                            "공연명":    new_title,
+                            "아티스트":  new_artist,
+                            "공연일":    store_dates(new_dates),
+                            "판매마감":  str(new_deadline),
+                            "장소":      new_venue,
+                            "판매상태":  new_status_edit,
                             "구매링크":    new_link,
                             "공식사이트":  new_official,
                             "응모현황링크": new_response,
-                            "썸네일":   new_fname,
-                            "메모":     new_note,
+                            "썸네일":    new_fname,
+                            "메모":      new_note,
                         }
-                        save("on_sale", on_sale)
+                        save("on_sale", on_sale_all)
                         st.success("✅ 수정이 완료되었습니다!")
                         st.rerun()
 
+    # ── 판매 상태 변경 ────────────────────────────────────────────────────
+    if on_sale_all:
+        with st.expander("🔄 판매 상태 변경"):
+            status_opts = [
+                f"{i}: {s.get('공연명','-')} | {s.get('아티스트','-')} [{s.get('판매상태','판매중')}]"
+                for i, s in enumerate(on_sale_all)
+            ]
+            to_change = st.multiselect("상태 변경할 티켓 선택", status_opts, key="status_change")
+            new_status = st.radio("변경할 상태", ["판매종료", "판매중"], horizontal=True, key="new_status_radio")
+            if st.button("상태 변경 적용", type="primary"):
+                indices = {int(o.split(":")[0]) for o in to_change}
+                for i in indices:
+                    on_sale_all[i]["판매상태"] = new_status
+                save("on_sale", on_sale_all)
+                st.success(f"✅ {len(indices)}건 → [{new_status}] 처리 완료!")
+                st.rerun()
+
     # ── 티켓 삭제 ─────────────────────────────────────────────────────────
-    if on_sale:
+    if on_sale_all:
         with st.expander("🗑️ 티켓 삭제"):
             opts = [
                 f"{i}: {s.get('공연명','-')} | {s.get('아티스트','-')} | {s.get('공연일','-')}"
-                for i, s in enumerate(on_sale)
+                for i, s in enumerate(on_sale_all)
             ]
             to_del = st.multiselect("삭제할 티켓 선택", opts)
             if st.button("선택 삭제", type="secondary"):
                 indices = {int(o.split(":")[0]) for o in to_del}
                 for i in indices:
-                    fname = on_sale[i].get("썸네일", "")
+                    fname = on_sale_all[i].get("썸네일", "")
                     if fname:
                         img_path = os.path.join(IMG_DIR, fname)
                         if os.path.exists(img_path):
                             os.remove(img_path)
-                on_sale = [s for i, s in enumerate(on_sale) if i not in indices]
-                save("on_sale", on_sale)
+                on_sale_all = [s for i, s in enumerate(on_sale_all) if i not in indices]
+                save("on_sale", on_sale_all)
                 st.success("삭제되었습니다.")
                 st.rerun()
 
