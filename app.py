@@ -1626,8 +1626,89 @@ elif page == "🎨 티켓 페이지 생성기":
         wb.save(buf)
         return buf.getvalue()
 
-    def _generate_html(data, ticket_css):
+    # ── 언어별 고정 라벨 ──────────────────────────────────────────────
+    _LANG_LABELS = {
+        'ja': {
+            'perf_datetime':    '公演日時',
+            'venue':            '会場',
+            'sold_out':         '受付終了',
+            'l_eticket':        '「電子チケットについて」',
+            'l_purchase':       '「チケットのご購入に関するお問い合わせ」',
+            'l_form':           'お問い合わせフォーム',
+            'l_category':       'カテゴリは「イベント／クーポン ＞ 公演・チケット」をご選択ください。',
+            'l_id_note':        'お問い合わせの際にはタイトルに【{title}】、本文にお客様のID/注文番号（チケット購入済みの場合のみ）をご記載ください。',
+            'l_event':          '「公演に関するお問い合わせ」',
+        },
+        'en': {
+            'perf_datetime':    'Date & Time',
+            'venue':            'Venue',
+            'sold_out':         'Sold Out',
+            'l_eticket':        '"Electronic Ticket Inquiries"',
+            'l_purchase':       '"Ticket Purchase Inquiries"',
+            'l_form':           'Contact Form',
+            'l_category':       'Please select "Events/Coupons > Concerts & Tickets" as the category.',
+            'l_id_note':        'When contacting us, please include [{title}] in the subject and your customer ID / order number (only if already purchased) in the body.',
+            'l_event':          '"Performance Inquiries"',
+        },
+        'ko': {
+            'perf_datetime':    '공연일시',
+            'venue':            '공연장',
+            'sold_out':         '판매종료',
+            'l_eticket':        '「전자티켓 관련 문의」',
+            'l_purchase':       '「티켓 구매 관련 문의」',
+            'l_form':           '문의 양식',
+            'l_category':       '카테고리는 「이벤트/쿠폰 ＞ 공연・티켓」을 선택해 주세요.',
+            'l_id_note':        '문의 시 제목에 【{title}】, 본문에 고객 ID/주문번호（티켓 구매 완료 시에만）를 기재해 주세요.',
+            'l_event':          '「공연 관련 문의」',
+        },
+    }
+
+    # ── 번역 함수 ─────────────────────────────────────────────────────
+    def _translate_data(data, target_lang):
+        if target_lang == 'ja':
+            return dict(data)
+        try:
+            from deep_translator import GoogleTranslator
+        except ImportError:
+            st.warning("deep-translator 패키지가 없습니다. requirements.txt를 확인하세요.")
+            return dict(data)
+
+        lang_code = {'en': 'en', 'ko': 'ko'}[target_lang]
+
+        def should_skip(key, val):
+            if not val or not val.strip(): return True
+            if 'URL' in key or '色' in key: return True
+            if key.endswith('_状態'): return True
+            if val.startswith('#') or val.startswith('http'): return True
+            return False
+
+        to_translate = {k: v for k, v in data.items() if not should_skip(k, v)}
+        if not to_translate:
+            return dict(data)
+
+        result = dict(data)
+        translator = GoogleTranslator(source='auto', target=lang_code)
+        keys = list(to_translate.keys())
+        vals = list(to_translate.values())
+        try:
+            translated = translator.translate_batch(vals)
+            for k, v in zip(keys, translated):
+                if v:
+                    result[k] = v
+        except Exception:
+            for k, v in zip(keys, vals):
+                try:
+                    t = translator.translate(v)
+                    if t: result[k] = t
+                except Exception:
+                    pass
+        return result
+
+    # ── HTML 생성 함수 ────────────────────────────────────────────────
+    def _generate_html(data, orig_data, ticket_css, lang='ja'):
+        lbl = _LANG_LABELS[lang]
         def g(k): return str(data.get(k, '') or '').strip()
+        def og(k): return str(orig_data.get(k, '') or '').strip()
         def esc(s): return str(s).replace('&', '&amp;').replace('"', '&quot;')
         def linkify(text):
             return re.sub(r'(https?://[^\s<>"]+)',
@@ -1645,8 +1726,8 @@ elif page == "🎨 티켓 페이지 생성기":
         title     = g('タイトル').replace('\\n', '<br>')
         poster    = g('ポスターURL')
         venue     = g('会場')
-        page_bg   = g('背景色') or '#191919'
-        btn_color = g('チケットボタン色') or '#8da0a7'
+        page_bg   = og('背景色') or '#191919'
+        btn_color = og('チケットボタン色') or '#8da0a7'
 
         perf_days = []
         for i in range(1, 6):
@@ -1667,13 +1748,13 @@ elif page == "🎨 티켓 페이지 생성기":
             tickets.append({
                 'date': d, 'time': g(f'チケット{i}_公演時間'),
                 'type': tp, 'price': pr,
-                'url': g(f'チケット{i}_URL') or '#',
-                'status': g(f'チケット{i}_状態'),
+                'url': og(f'チケット{i}_URL') or '#',
+                'soldout': og(f'チケット{i}_状態') == '受付終了',
             })
 
         ticket_notices = collect('チケット注意', 5)
         lineup_heading = g('ラインアップ見出し')
-        lineup_url     = g('ラインアップ画像URL')
+        lineup_url     = og('ラインアップ画像URL')
 
         tabs = []
         for t in range(1, 7):
@@ -1681,8 +1762,8 @@ elif page == "🎨 티켓 페이지 생성기":
             if not name: break
             tabs.append({'name': name, 'cls': bullet_cls(g(f'タブ{t}_スタイル')), 'items': collect(f'タブ{t}_内容', 15)})
 
-        c_ticket  = g('問合せ_チケットURL')
-        c_eticket = g('問合せ_電子チケットURL')
+        c_ticket  = og('問合せ_チケットURL')
+        c_eticket = og('問合せ_電子チケットURL')
         c_name    = g('問合せ_公演会社名')
         c_phone   = g('問合せ_公演電話')
         c_title   = g('問合せ_公演タイトル') or g('タイトル').replace('\\n', ' ')
@@ -1704,7 +1785,7 @@ elif page == "🎨 티켓 페이지 생성기":
         else:
             sched_html = '<div class="info-row"><div class="description">—</div></div>'
 
-        # Ticket buttons
+        # Ticket buttons (soldout uses original status; CSS text uses lang label)
         types_distinct = list(dict.fromkeys(t['type'] for t in tickets if t['type']))
         has_multi = len(types_distinct) > 1
         btns = ''
@@ -1713,7 +1794,7 @@ elif page == "🎨 티켓 페이지 생성기":
             if has_multi and t['type'] != prev_tp:
                 btns += f'\n      <li class="ticket-type-label">{t["type"]}</li>'
                 prev_tp = t['type']
-            cls = 'is-soldout' if t['status'] == '受付終了' else ''
+            cls = 'is-soldout' if t['soldout'] else ''
             btns += (
                 f'\n      <li class="ticketItem">'
                 f'<a class="ticketBtn {cls}" href="{esc(t["url"])}">'
@@ -1725,10 +1806,10 @@ elif page == "🎨 티켓 페이지 생성기":
 
         notice_html = ''
         if ticket_notices:
-            items = '\n'.join(f'      <li>{n}</li>' for n in ticket_notices)
-            notice_html = f'    <ul class="ticket-notice">\n{items}\n    </ul>'
+            items_li = '\n'.join(f'      <li>{n}</li>' for n in ticket_notices)
+            notice_html = f'    <ul class="ticket-notice">\n{items_li}\n    </ul>'
 
-        # Lineup section
+        # Lineup
         lineup_sec = ''
         if lineup_url:
             h = f'  <div class="title"><span class="titlecolor">{lineup_heading}</span></div>\n' if lineup_heading else ''
@@ -1738,24 +1819,25 @@ elif page == "🎨 티켓 페이지 생성기":
                 f'<img src="{esc(lineup_url)}" width="900" border="0"></div>\n</div>\n'
             )
 
-        # Contact block (appended to tab1)
+        # Contact block (language-aware fixed strings)
         contact = ''
         if c_eticket:
             contact += (
-                f'\n                <dd class="list_none"><span style="background-color:#fff59d;">「電子チケットについて」</span></dd>'
+                f'\n                <dd class="list_none"><span style="background-color:#fff59d;">{lbl["l_eticket"]}</span></dd>'
                 f'\n                <dd class="list_none">▶<a href="{esc(c_eticket)}" target="_blank">{c_eticket}</a></dd>'
             )
         if c_ticket:
+            id_note = lbl['l_id_note'].replace('{title}', c_title)
             contact += (
-                f'\n                <dd class="list_none"><span style="background-color:#fff59d;">「チケットのご購入に関するお問い合わせ」</span></dd>'
-                f'\n                <dd class="list_none">お問い合わせフォーム<br><a href="{esc(c_ticket)}" target="_blank">▶{c_ticket}</a></dd>'
-                f'\n                <dd class="list_none">カテゴリは「イベント／クーポン ＞ 公演・チケット」をご選択ください。</dd>'
-                f'\n                <dd class="list_none">お問い合わせの際にはタイトルに【{c_title}】、本文にお客様のID/注文番号（チケット購入済みの場合のみ）をご記載ください。</dd>'
+                f'\n                <dd class="list_none"><span style="background-color:#fff59d;">{lbl["l_purchase"]}</span></dd>'
+                f'\n                <dd class="list_none">{lbl["l_form"]}<br><a href="{esc(c_ticket)}" target="_blank">▶{c_ticket}</a></dd>'
+                f'\n                <dd class="list_none">{lbl["l_category"]}</dd>'
+                f'\n                <dd class="list_none">{id_note}</dd>'
             )
         if c_name or c_phone:
             ph = f'<br>▶{c_phone}' if c_phone else ''
             contact += (
-                f'\n                <dd class="list_none"><span style="background-color:#fff59d;">「公演に関するお問い合わせ」</span></dd>'
+                f'\n                <dd class="list_none"><span style="background-color:#fff59d;">{lbl["l_event"]}</span></dd>'
                 f'\n                <dd class="list_none">▶{c_name}{ph}</dd>'
             )
 
@@ -1781,10 +1863,12 @@ elif page == "🎨 티켓 페이지 생성기":
         sp_html    = f'      <p class="ticket-note" style="color:BLACK;">販売期間<BR>{sale_period}</p>\n' if sale_period else ''
         spn_html   = f'      <p class="ticket-note" style="color:red;">{sale_note}</p>\n' if sale_note else ''
 
-        # Style block (concat to avoid f-string brace issues with CSS)
+        # CSS: swap soldout overlay text for current language
+        css_for_lang = ticket_css.replace('content:"受付終了"', f'content:"{lbl["sold_out"]}"')
+
         style_block = (
             '<style>\n:root {\n  --btn-color: ' + btn_color + ';\n  --page-bg:   ' + page_bg + ';\n}\n'
-            + ticket_css + '\n</style>'
+            + css_for_lang + '\n</style>'
         )
 
         html_out = (
@@ -1801,9 +1885,9 @@ elif page == "🎨 티켓 페이지 생성기":
             '<section class="info-block">\n'
             '  <div class="title"><span class="titlecolor">SCHEDULE</span></div>\n'
             '  <dl class="info-list">\n'
-            '    <dt class="subtitle info-label">公演日時</dt>\n'
+            f'    <dt class="subtitle info-label">{lbl["perf_datetime"]}</dt>\n'
             f'    <dd class="info-body">{sched_html}\n    </dd>\n'
-            '    <dt class="subtitle info-label info-label--mt">会場</dt>\n'
+            f'    <dt class="subtitle info-label info-label--mt">{lbl["venue"]}</dt>\n'
             f'    <dd class="description info-venue">{venue}</dd>\n'
             '  </dl>\n'
             '</section>\n\n'
@@ -1870,17 +1954,47 @@ elif page == "🎨 티켓 페이지 생성기":
     if tpl_data:
         st.markdown("#### Step 3 · HTML 생성")
         if st.button("✦ HTML 생성하기", type="primary", use_container_width=True):
-            result_html, errs = _generate_html(tpl_data, _TICKET_CSS)
+            result_html, errs = _generate_html(tpl_data, tpl_data, _TICKET_CSS, 'ja')
             if errs:
                 for err in errs:
                     st.error(f"⚠ {err}")
             else:
                 st.session_state['ticket_gen_html'] = result_html
                 st.session_state['ticket_gen_bg']   = tpl_data.get('背景色', '') or '#191919'
+                st.session_state['ticket_gen_data'] = tpl_data
+                st.session_state['ticket_gen_lang'] = 'ja'
 
     if st.session_state.get('ticket_gen_html'):
         gen_html = st.session_state['ticket_gen_html']
         gen_bg   = st.session_state.get('ticket_gen_bg', '#191919')
+        cur_lang = st.session_state.get('ticket_gen_lang', 'ja')
+        orig_data = st.session_state.get('ticket_gen_data', {})
+
+        st.divider()
+
+        # ── 언어 전환 버튼 ────────────────────────────────────────────
+        lang_label_map = {'ja': '🇯🇵 日本語', 'en': '🇺🇸 English', 'ko': '🇰🇷 한국어'}
+        st.markdown(
+            f"**언어 / Language** &nbsp;&nbsp;"
+            f'<span style="background:#6C63FF;color:#fff;padding:3px 12px;border-radius:12px;font-size:0.82em;font-weight:700">'
+            f'{lang_label_map[cur_lang]}</span>',
+            unsafe_allow_html=True,
+        )
+        lc1, lc2, lc3 = st.columns(3)
+        for col, code, label in [(lc1, 'ja', '🇯🇵 日本語'), (lc2, 'en', '🇺🇸 English'), (lc3, 'ko', '🇰🇷 한국어')]:
+            with col:
+                if st.button(label, disabled=(code == cur_lang), use_container_width=True, key=f'lang_{code}'):
+                    spinner_msg = {'ja': '원문 복원 중...', 'en': 'Translating to English...', 'ko': '한국어로 번역 중...'}[code]
+                    with st.spinner(spinner_msg):
+                        translated = _translate_data(orig_data, code)
+                        new_html, errs = _generate_html(translated, orig_data, _TICKET_CSS, code)
+                    if errs:
+                        for e in errs: st.error(e)
+                    else:
+                        st.session_state['ticket_gen_html'] = new_html
+                        st.session_state['ticket_gen_lang'] = code
+                        st.rerun()
+
         st.divider()
         st.markdown("#### 미리보기")
         preview_doc = (
@@ -1899,10 +2013,11 @@ elif page == "🎨 티켓 페이지 생성기":
         st.divider()
         col_d, col_c = st.columns(2)
         with col_d:
+            fname = f"ticket_page_{cur_lang}.html"
             st.download_button(
                 "↓ HTML 다운로드",
                 gen_html.encode('utf-8'),
-                "ticket_page.html",
+                fname,
                 "text/html;charset=utf-8",
                 use_container_width=True,
             )
