@@ -25,23 +25,53 @@ FILES = {
     "kpop_idols":  os.path.join(DATA_DIR, "kpop_idols.json"),
 }
 
+# ── Supabase 헬퍼 (전역) ─────────────────────────────────────────────────────
+def _use_supabase() -> bool:
+    try:
+        return bool(st.secrets.get("SUPABASE_URL") and st.secrets.get("SUPABASE_KEY"))
+    except Exception:
+        return False
+
+@st.cache_resource
+def _get_sb():
+    from supabase import create_client
+    return create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
+
 # ── 헬퍼 ─────────────────────────────────────────────────────────────────────
 def load(key: str) -> list[dict]:
-    path = FILES[key]
+    if key == "on_sale" and _use_supabase():
+        try:
+            sb   = _get_sb()
+            rows = sb.table("on_sale").select("data").order("id").execute().data
+            if rows:
+                return [r["data"] for r in rows]
+            # 테이블이 비어있으면 JSON에서 자동 시드
+            json_data = _load_json(FILES[key])
+            if json_data:
+                sb.table("on_sale").insert([{"data": t} for t in json_data]).execute()
+            return json_data
+        except Exception:
+            pass
+    return _load_json(FILES[key])
+
+def _load_json(path: str) -> list[dict]:
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
             return json.load(f)
     return []
 
 def save(key: str, data: list[dict]):
+    if key == "on_sale" and _use_supabase():
+        try:
+            sb = _get_sb()
+            sb.table("on_sale").delete().gte("id", 0).execute()
+            if data:
+                sb.table("on_sale").insert([{"data": t} for t in data]).execute()
+            return
+        except Exception:
+            pass
     with open(FILES[key], "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2, default=str)
-
-def load_json(path: str) -> list[dict]:
-    if os.path.exists(path):
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-    return []
 
 def dday(d) -> str:
     try:
@@ -227,7 +257,7 @@ with st.sidebar:
     st.divider()
     page = st.radio(
         "페이지",
-        ["📊 대시보드 홈", "🛒 판매중 티켓", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더", "🎤 K-pop 아이돌 DB", "📅 팀 캘린더", "🎨 티켓 페이지 생성기"],
+        ["📊 대시보드 홈", "🛒 판매중 티켓", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더", "🎤 K-pop 아이돌 DB", "📅 팀 캘린더", "🎨 티켓 페이지 생성기", "📋 K-POPカレンダー ソース"],
         label_visibility="collapsed",
     )
     st.divider()
@@ -519,7 +549,20 @@ elif page == "🛒 판매중 티켓":
 # ════════════════════════════════════════════════════════════════════════════
 elif page == "🏟️ 공연장 정보":
     VENUES_PATH = os.path.join(DATA_DIR, "venues.json")
-    venues_all: list[dict] = load_json(VENUES_PATH)
+    if _use_supabase():
+        try:
+            _sb = _get_sb()
+            _rows = _sb.table("venues").select("data").order("id").execute().data
+            if _rows:
+                venues_all = [r["data"] for r in _rows]
+            else:
+                venues_all = _load_json(VENUES_PATH)
+                if venues_all:
+                    _sb.table("venues").insert([{"data": v} for v in venues_all]).execute()
+        except Exception:
+            venues_all = _load_json(VENUES_PATH)
+    else:
+        venues_all = _load_json(VENUES_PATH)
 
     st.title("🏟️ 일본 주요 공연장 정보")
     st.caption("도쿄·오사카·나고야·후쿠오카·삿포로 등 수용 인원 1,000명 이상 주요 공연장 데이터")
@@ -668,12 +711,37 @@ elif page == "🎤 K-pop 아이돌 DB":
     IDOL_PATH = FILES["kpop_idols"]
 
     def load_idols() -> list[dict]:
-        if os.path.exists(IDOL_PATH):
-            with open(IDOL_PATH, encoding="utf-8") as f:
-                return json.load(f)
-        return []
+        if _use_supabase():
+            try:
+                sb   = _get_sb()
+                rows = sb.table("kpop_idols").select("data").order("kid").execute().data
+                if rows:
+                    return [r["data"] for r in rows]
+                # 테이블이 비어있으면 JSON에서 자동 시드
+                json_data = _load_json(IDOL_PATH)
+                if json_data:
+                    sb.table("kpop_idols").insert([
+                        {"kid": i.get("id", i.get("그룹명","").lower().replace(" ","_")), "data": i}
+                        for i in json_data
+                    ]).execute()
+                return json_data
+            except Exception:
+                pass
+        return _load_json(IDOL_PATH)
 
     def save_idols(data: list[dict]):
+        if _use_supabase():
+            try:
+                sb = _get_sb()
+                sb.table("kpop_idols").delete().neq("kid", "").execute()
+                if data:
+                    sb.table("kpop_idols").insert([
+                        {"kid": i.get("id", i.get("그룹명","").lower().replace(" ","_")), "data": i}
+                        for i in data
+                    ]).execute()
+                return
+            except Exception:
+                pass
         with open(IDOL_PATH, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2, default=str)
 
@@ -966,18 +1034,6 @@ elif page == "🎤 K-pop 아이돌 DB":
 # ════════════════════════════════════════════════════════════════════════════
 elif page == "📅 팀 캘린더":
     from streamlit_calendar import calendar as st_calendar
-
-    # ── Supabase vs 로컬 JSON 자동 선택 ─────────────────────────────────
-    def _use_supabase() -> bool:
-        try:
-            return bool(st.secrets.get("SUPABASE_URL") and st.secrets.get("SUPABASE_KEY"))
-        except Exception:
-            return False
-
-    @st.cache_resource
-    def _get_sb():
-        from supabase import create_client
-        return create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
 
     CAL_PATH = os.path.join(DATA_DIR, "team_calendar.json")
 
@@ -2052,3 +2108,33 @@ elif page == "🎨 티켓 페이지 생성기":
             )
         with col_c:
             st.text_area("HTML 소스 (복사용)", gen_html, height=200, key="gen_src")
+
+# ════════════════════════════════════════════════════════════════════════════
+# K-POPカレンダー ソース
+# ════════════════════════════════════════════════════════════════════════════
+elif page == "📋 K-POPカレンダー ソース":
+    st.title("📋 K-POPカレンダー — Qoo10 삽입용 소스")
+    st.caption("아래 소스를 전체 복사해서 Qoo10 Special 페이지 admin에 붙여넣으세요.")
+
+    _cal_path = os.path.join(os.path.dirname(__file__), "kpop_calendar.html")
+    if os.path.exists(_cal_path):
+        with open(_cal_path, encoding="utf-8") as _f:
+            _cal_src = _f.read()
+
+        col_dl, col_info = st.columns([1, 3])
+        with col_dl:
+            st.download_button(
+                "↓ HTML 파일 다운로드",
+                _cal_src.encode("utf-8"),
+                "kpop_calendar.html",
+                "text/html;charset=utf-8",
+                use_container_width=True,
+            )
+        with col_info:
+            st.info(f"파일 크기: {len(_cal_src):,} 문자  |  줄 수: {_cal_src.count(chr(10)):,} 줄")
+
+        st.divider()
+        st.markdown("**📌 전체 소스 (클릭 후 Ctrl+A → Ctrl+C)**")
+        st.code(_cal_src, language="html")
+    else:
+        st.error("`kpop_calendar.html` 파일을 찾을 수 없습니다. 파일이 app.py와 같은 폴더에 있는지 확인하세요.")
