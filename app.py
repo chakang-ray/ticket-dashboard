@@ -227,7 +227,7 @@ with st.sidebar:
     st.divider()
     page = st.radio(
         "페이지",
-        ["📊 대시보드 홈", "🛒 판매중 티켓", "📈 QOO10 실적", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더", "🎤 K-pop 아이돌 DB", "📅 팀 캘린더", "🎨 티켓 페이지 생성기"],
+        ["📊 대시보드 홈", "🛒 판매중 티켓", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더", "🎤 K-pop 아이돌 DB", "📅 팀 캘린더", "🎨 티켓 페이지 생성기"],
         label_visibility="collapsed",
     )
     st.divider()
@@ -515,131 +515,7 @@ elif page == "🛒 판매중 티켓":
                 st.error(f"파일 오류: {e}")
 
 # ════════════════════════════════════════════════════════════════════════════
-# 3. QOO10 실적
-# ════════════════════════════════════════════════════════════════════════════
-elif page == "📈 QOO10 실적":
-    st.title("📈 QOO10 공연별 판매 실적")
-    st.caption("Qoo10 TICKET.xlsx 데이터 기반 — 공연별 판매 건수·GMV·NB/RB 현황")
-
-    q_path  = os.path.join(DATA_DIR, "qoo10_data.json")
-    nb_path = os.path.join(DATA_DIR, "qoo10_nbrb.json")
-    qdata   = load_json(q_path)
-    nbdata  = load_json(nb_path)
-
-    if not qdata:
-        st.warning("데이터가 없습니다. 아래에서 파일을 업로드해 주세요.")
-    else:
-        df = pd.DataFrame(qdata)
-
-        with st.expander("🔍 필터", expanded=True):
-            f1, f2, f3 = st.columns(3)
-            years     = sorted(df["연도"].dropna().unique().tolist())
-            sel_years = f1.multiselect("연도", years, default=years)
-            keyword   = f2.text_input("공연명 검색", placeholder="예: MAMA, KCON...")
-            has_sales = f3.checkbox("판매 데이터 있는 것만", value=False)
-
-        df_f = df[df["연도"].isin(sel_years)].copy()
-        if keyword:
-            df_f = df_f[df_f["공연타이틀"].str.contains(keyword, case=False, na=False)]
-        if has_sales:
-            df_f = df_f[df_f["판매건수"].notna() & (df_f["판매건수"] > 0)]
-
-        def fmt_gmv(v):
-            if v >= 1_000_000_000: return f"¥{v/1_000_000_000:.1f}B"
-            elif v >= 1_000_000:   return f"¥{v/1_000_000:.0f}M"
-            return f"¥{int(v):,}"
-
-        m1, m2, m3, m4 = st.columns(4)
-        for col, num, lbl in [
-            (m1, f"{int(df_f['판매건수'].sum(skipna=True)):,}건",     "총 판매 건수"),
-            (m2, fmt_gmv(df_f['총GMV'].sum(skipna=True)),             "총 판매 GMV"),
-            (m3, f"{int(df_f['NB'].sum(skipna=True)):,}명",           "New Buyer"),
-            (m4, f"{int(df_f['구매자유니크'].sum(skipna=True)):,}명", "구매자 유니크"),
-        ]:
-            col.markdown(
-                f'<div class="metric-box"><div class="num" style="font-size:1.6em">{num}</div>'
-                f'<div class="lbl">{lbl}</div></div>',
-                unsafe_allow_html=True,
-            )
-
-        st.markdown("---")
-        tab1, tab2 = st.tabs(["📋 공연별 데이터", "👥 NB/RB 분석"])
-
-        with tab1:
-            disp_cols = {
-                "연도": "연도", "공연타이틀": "공연명", "공연장": "공연장", "판매기간": "판매기간",
-                "판매건수": "판매건수", "판매매수": "판매매수",
-                "구매자유니크": "구매자(유니크)",
-                "총GMV": "총 GMV(¥)", "티켓GMV": "티켓 GMV(¥)",
-                "NB": "NB", "RB": "RB", "NB_RB": "NB+RB", "스폰서십": "스폰서십(¥)",
-            }
-            df_show = df_f[[c for c in disp_cols if c in df_f.columns]].rename(columns=disp_cols).copy()
-            for c in ["총 GMV(¥)", "티켓 GMV(¥)", "스폰서십(¥)"]:
-                if c in df_show.columns:
-                    df_show[c] = df_show[c].apply(
-                        lambda x: f"¥{int(x):,}" if pd.notna(x) and x > 0 else ("-" if pd.isna(x) else str(int(x)))
-                    )
-            for c in ["판매건수", "판매매수", "구매자(유니크)", "NB", "RB", "NB+RB"]:
-                if c in df_show.columns:
-                    df_show[c] = df_show[c].apply(lambda x: f"{int(x):,}" if pd.notna(x) else "-")
-            st.dataframe(df_show, use_container_width=True, hide_index=True, height=420)
-            st.caption(f"총 {len(df_show)}건 표시 중")
-            csv = df_f.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
-            st.download_button("📥 CSV 다운로드", csv, "qoo10_실적.csv", "text/csv")
-
-        with tab2:
-            if not nbdata:
-                st.info("NBRB 데이터가 없습니다.")
-            else:
-                nb_df = pd.DataFrame(nbdata)
-                nb_df["NB비율%"] = (nb_df["NB비율"] * 100).round(2).apply(
-                    lambda x: f"{x:.2f}%" if pd.notna(x) else "-"
-                )
-                for c in ["NB", "RB", "NB_RB", "기간중총NB"]:
-                    nb_df[c] = nb_df[c].apply(lambda x: f"{int(x):,}" if pd.notna(x) else "-")
-                st.dataframe(
-                    nb_df.rename(columns={
-                        "이벤트기간": "이벤트 기간", "NB": "New Buyer",
-                        "RB": "Reactive Buyer", "NB_RB": "NB+RB",
-                        "기간중총NB": "기간중 총 NB", "NB비율%": "NB 비율",
-                    }),
-                    use_container_width=True, hide_index=True, height=450,
-                )
-
-    with st.expander("🔄 Qoo10 TICKET.xlsx 다시 업로드"):
-        up = st.file_uploader("새 버전 파일 선택", type=["xlsx", "xls"], key="qoo10_upload")
-        if up:
-            import tempfile
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-                tmp.write(up.read())
-                tmp_path = tmp.name
-            try:
-                xl2    = pd.ExcelFile(tmp_path)
-                df_new = xl2.parse("공연별 데이터", header=None)
-                df_new.columns = [
-                    "연도", "공연타이틀", "셀러ID", "판매기간",
-                    "NB", "RB", "NB_RB", "기간중총NB",
-                    "공연장",
-                    "판매건수", "판매매수", "응모자유니크", "구매자유니크",
-                    "총GMV", "티켓GMV", "티켓외GMV", "스폰서십", "탈퇴수",
-                ]
-                df_new = df_new.iloc[3:].reset_index(drop=True)
-                df_new = df_new[df_new["공연타이틀"].notna() & (df_new["공연타이틀"].astype(str).str.strip() != "")].copy()
-                def to_year2(x):
-                    try:    return str(int(float(x)))
-                    except: return str(x) if pd.notna(x) else ""
-                df_new["연도"] = df_new["연도"].apply(to_year2)
-                for c in ["NB","RB","NB_RB","기간중총NB","판매건수","판매매수","응모자유니크","구매자유니크","총GMV","티켓GMV","티켓외GMV","스폰서십","탈퇴수"]:
-                    df_new[c] = pd.to_numeric(df_new[c].replace("-", None), errors="coerce")
-                with open(q_path, "w", encoding="utf-8") as f:
-                    json.dump(df_new.to_dict(orient="records"), f, ensure_ascii=False, indent=2, default=str)
-                st.success(f"✅ {len(df_new)}건 업데이트 완료!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"파일 처리 오류: {e}")
-
-# ════════════════════════════════════════════════════════════════════════════
-# 4. 공연장 정보
+# 3. 공연장 정보
 # ════════════════════════════════════════════════════════════════════════════
 elif page == "🏟️ 공연장 정보":
     VENUES_PATH = os.path.join(DATA_DIR, "venues.json")
