@@ -1294,7 +1294,7 @@ elif page == "🎨 티켓 페이지 생성기":
 
     _TICKET_CSS = (
         'html,body,#special{-webkit-text-size-adjust:100%;text-size-adjust:100%;}\n'
-        '*{font-family:"Murecho",sans-serif;}\n'
+        '#tc,#tc *{font-family:"Murecho",sans-serif;}\n'
         '#_special_top{font-family:"Murecho",sans-serif;font-optical-sizing:auto;font-style:normal;}\n'
         '#special{background-color:var(--page-bg);}\n'
         '.item_wrap{border-bottom:1px solid transparent;}\n'
@@ -1315,7 +1315,7 @@ elif page == "🎨 티켓 페이지 생성기":
         '.titlecolor{background:linear-gradient(90deg,var(--btn-color) 0%,#fff 100%);color:transparent;-webkit-background-clip:text;background-clip:text;}\n'
         '.subtitle{font-weight:700;font-size:35px;line-height:1.25;margin:0;text-align:center;color:#fff;}\n'
         '.description{font-weight:500;font-size:30px;line-height:1.4;margin:0;text-align:center;color:#fff;}\n'
-        'dl,dt,dd{margin:0;}\n'
+        '#tc dl,#tc dt,#tc dd{margin:0;}\n'
         '.info-block{padding:40px 16px 60px;text-align:center;}\n'
         '.info-row{padding:18px 0;}\n'
         '.info-row+.info-row{padding-top:26px;}\n'
@@ -1827,7 +1827,9 @@ elif page == "🎨 티켓 페이지 생성기":
             + style_block + '\n'
             '</head>\n'
             '<body style="margin:0;padding:0;background:' + page_bg + ';">\n'
+            '<div id="tc">\n'
             + _body_content
+            + '</div>\n'
             + '</body>\n</html>\n'
         )
         return html_out, []
