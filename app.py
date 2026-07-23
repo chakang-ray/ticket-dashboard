@@ -1434,13 +1434,14 @@ elif page == "🎨 티켓 페이지 생성기":
         '.ticket-type-label{list-style:none;display:flex;align-items:center;gap:12px;padding:18px 0 8px;font-size:12px;font-weight:800;color:var(--point-color);letter-spacing:.16em;}\n'
         '.ticket-type-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--point-color) 0%,transparent 100%);opacity:0.35;}\n'
         '.ticket-type-label:first-child{padding-top:0;}\n'
-        '.ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto;column-gap:16px;row-gap:6px;align-items:center;padding:22px 42px;border-radius:999px;background:var(--btn-color);color:#fff;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;-webkit-tap-highlight-color:rgba(0,0,0,0);-webkit-appearance:none;appearance:none;outline:none !important;user-select:none;-webkit-user-select:none;}\n'
-        '.ticketDay{grid-column:1;grid-row:1;text-align:left;letter-spacing:.5px;font-size:18px;font-weight:800;}\n'
-        '.ticketDate{grid-column:1;grid-row:2;text-align:left;font-size:14px;font-weight:600;opacity:.95;}\n'
-        '.ticketPrice{grid-column:2;grid-row:1/span 2;justify-self:end;align-self:center;font-size:22px;white-space:nowrap;}\n'
-        '.ticketBtn::after{content:"";grid-column:3;grid-row:1/span 2;justify-self:end;align-self:center;width:10px;height:10px;border-top:2px solid #fff;border-right:2px solid #fff;transform:rotate(45deg);transition:transform .18s ease;z-index:1;}\n'
+        '.ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto auto;column-gap:16px;row-gap:0;align-items:center;padding:18px 42px;border-radius:999px;background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,rgba(0,0,0,0.18) 100%) var(--btn-color);color:#fff;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;-webkit-tap-highlight-color:rgba(0,0,0,0);-webkit-appearance:none;appearance:none;outline:none !important;user-select:none;-webkit-user-select:none;}\n'
+        '.ticketType{grid-column:1/span 2;grid-row:1;text-align:left;font-size:10px;font-weight:800;letter-spacing:.18em;opacity:0.72;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,0.22);}\n'
+        '.ticketDay{grid-column:1;grid-row:2;text-align:left;letter-spacing:.5px;font-size:18px;font-weight:800;padding-top:8px;}\n'
+        '.ticketDate{grid-column:1;grid-row:3;text-align:left;font-size:14px;font-weight:600;opacity:.95;}\n'
+        '.ticketPrice{grid-column:2;grid-row:2/span 2;justify-self:end;align-self:center;font-size:22px;white-space:nowrap;}\n'
+        '.ticketBtn::after{content:"";grid-column:3;grid-row:2/span 2;justify-self:end;align-self:center;width:10px;height:10px;border-top:2px solid #fff;border-right:2px solid #fff;transform:rotate(45deg);transition:transform .18s ease;z-index:1;}\n'
         '.ticketBtn:hover::after{transform:translateX(6px) rotate(45deg);}\n'
-        '@media(max-width:768px){.ticketBtn{grid-template-columns:1fr 18px;grid-template-rows:auto auto auto;padding:16px 22px;border-radius:20px;}.ticketDay{grid-column:1;grid-row:1;font-size:16px;white-space:normal;word-break:keep-all;}.ticketDate{grid-column:1;grid-row:2;font-size:13px;white-space:normal;}.ticketPrice{grid-column:1;grid-row:3;justify-self:start;font-size:25px;margin-top:10px;}.ticketBtn::after{grid-column:2;grid-row:1/span 3;align-self:center;justify-self:end;}}\n'
+        '@media(max-width:768px){.ticketBtn{grid-template-columns:1fr 18px;grid-template-rows:auto auto auto auto;padding:16px 22px;border-radius:20px;}.ticketType{grid-column:1/span 2;grid-row:1;padding-bottom:6px;font-size:10px;}.ticketDay{grid-column:1;grid-row:2;font-size:16px;white-space:normal;word-break:keep-all;padding-top:6px;}.ticketDate{grid-column:1;grid-row:3;font-size:13px;white-space:normal;}.ticketPrice{grid-column:1;grid-row:4;justify-self:start;font-size:25px;margin-top:10px;}.ticketBtn::after{grid-column:2;grid-row:2/span 3;align-self:center;justify-self:end;}}\n'
         '.ticketBtn.is-disabled{pointer-events:none;cursor:default;filter:saturate(.6) brightness(.95);}\n'
         '.ticketBtn.is-disabled .ticketDay,.ticketBtn.is-disabled .ticketDate,.ticketBtn.is-disabled .ticketPrice{opacity:.35;}\n'
         '.ticketBtn.is-disabled::before{content:"";position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-weight:900;letter-spacing:.14em;font-size:18px;text-shadow:0 2px 8px rgba(0,0,0,.6);}\n'
@@ -1786,19 +1787,19 @@ elif page == "🎨 티켓 페이지 생성기":
             type_color_map = dict(zip(types_distinct, _make_ticket_palette(point_color, len(types_distinct))))
 
         btns = ''
-        prev_tp = None
         for t in tickets:
-            if has_multi and t['type'] != prev_tp:
-                btns += f'\n      <li class="ticket-type-label">{t["type"]}</li>'
-                prev_tp = t['type']
             _DISABLED = {'受付予定': 'st-uketsuke-yotei', '販売終了': 'st-hanbai-shuryo', 'SOLDOUT': 'st-soldout'}
             status_cls = _DISABLED.get(t['status'], '')
             cls = f'is-disabled {status_cls}'.strip() if status_cls else ''
             btn_c = t.get('color') or type_color_map.get(t['type'], '')
-            color_style = f'style="background:{esc(btn_c)}"' if btn_c else ''
+            color_style = (
+                f'style="background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,rgba(0,0,0,0.18) 100%) {esc(btn_c)}"'
+                if btn_c else ''
+            )
             btns += (
                 f'\n      <li class="ticketItem">'
                 f'<a class="ticketBtn {cls}" {color_style} href="{esc(t["url"])}">'
+                f'<span class="ticketType">{t["type"]}</span>'
                 f'<span class="ticketDay">{t["date"]}</span>'
                 f'<span class="ticketDate">{t["time"]}</span>'
                 f'<span class="ticketPrice">{t["price"]}</span>'
