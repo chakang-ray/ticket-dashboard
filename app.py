@@ -1431,8 +1431,8 @@ elif page == "🎨 티켓 페이지 생성기":
         '@media(max-width:768px){.ticket-title{font-size:30px;}.ticket-info{padding-bottom:12px;margin-bottom:20px;}}\n'
         '.ticketList{list-style:none;margin:0 auto;padding:0;display:flex;flex-direction:column;gap:14px;max-width:540px;}\n'
         '@media(max-width:768px){.ticketList{gap:10px;}}\n'
-        '.ticket-type-label{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 0 2px;font-size:11px;font-weight:900;color:#aaa;letter-spacing:.12em;text-transform:uppercase;}\n'
-        '.ticket-type-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#ddd 0%,transparent 100%);}\n'
+        '.ticket-type-label{list-style:none;display:flex;align-items:center;gap:12px;padding:18px 0 8px;font-size:12px;font-weight:800;color:var(--point-color);letter-spacing:.16em;}\n'
+        '.ticket-type-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--point-color) 0%,transparent 100%);opacity:0.35;}\n'
         '.ticket-type-label:first-child{padding-top:0;}\n'
         '.ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto;column-gap:16px;row-gap:6px;align-items:center;padding:22px 42px;border-radius:999px;background:var(--btn-color);color:#fff;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;-webkit-tap-highlight-color:rgba(0,0,0,0);-webkit-appearance:none;appearance:none;outline:none !important;user-select:none;-webkit-user-select:none;}\n'
         '.ticketDay{grid-column:1;grid-row:1;text-align:left;letter-spacing:.5px;font-size:18px;font-weight:800;}\n'
@@ -1707,6 +1707,16 @@ elif page == "🎨 티켓 페이지 생성기":
         btn_color   = og('チケットボタン色') or '#8da0a7'
         point_color = og('ポイントカラー') or btn_color
 
+        # 色未指定 + ポスターあり → 自動抽出
+        _auto_palette = []
+        if poster and (not og('チケットボタン色') or not og('ポイントカラー')):
+            _auto_palette = _extract_poster_palette(poster)
+        if _auto_palette:
+            if not og('チケットボタン色'):
+                btn_color = _auto_palette[0]
+            if not og('ポイントカラー'):
+                point_color = _auto_palette[0]
+
         perf_days = []
         for i in range(1, 6):
             d = g(f'公演日{i}_日付')
@@ -1769,6 +1779,12 @@ elif page == "🎨 티켓 페이지 생성기":
         # Ticket buttons (soldout uses original status; CSS text uses lang label)
         types_distinct = list(dict.fromkeys(t['type'] for t in tickets if t['type']))
         has_multi = len(types_distinct) > 1
+
+        # 権種名ごとに自動カラー（ボタン色未指定 + ポスター自動抽出 + 2種以上）
+        type_color_map = {}
+        if not og('チケットボタン色') and _auto_palette and len(types_distinct) > 1:
+            type_color_map = dict(zip(types_distinct, _make_ticket_palette(point_color, len(types_distinct))))
+
         btns = ''
         prev_tp = None
         for t in tickets:
@@ -1778,7 +1794,8 @@ elif page == "🎨 티켓 페이지 생성기":
             _DISABLED = {'受付予定': 'st-uketsuke-yotei', '販売終了': 'st-hanbai-shuryo', 'SOLDOUT': 'st-soldout'}
             status_cls = _DISABLED.get(t['status'], '')
             cls = f'is-disabled {status_cls}'.strip() if status_cls else ''
-            color_style = f'style="background:{esc(t["color"])}"' if t.get('color') else ''
+            btn_c = t.get('color') or type_color_map.get(t['type'], '')
+            color_style = f'style="background:{esc(btn_c)}"' if btn_c else ''
             btns += (
                 f'\n      <li class="ticketItem">'
                 f'<a class="ticketBtn {cls}" {color_style} href="{esc(t["url"])}">'
@@ -2037,6 +2054,50 @@ elif page == "🎨 티켓 페이지 생성기":
         if not results:
             return "✅ 자동 검사에서 이상 없음"
         return '\n\n'.join(results)
+
+    def _extract_poster_palette(url, n=6):
+        """포스터 URL에서 채도 높은 색상 n개 추출. 실패 시 []."""
+        if not url:
+            return []
+        try:
+            import urllib.request, colorsys
+            from io import BytesIO
+            from PIL import Image
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                img = Image.open(BytesIO(r.read())).convert('RGB')
+            img.thumbnail((150, 150))
+            raw = img.quantize(colors=16).getpalette()[:48]
+            candidates = []
+            for i in range(0, len(raw), 3):
+                rv, gv, bv = raw[i]/255, raw[i+1]/255, raw[i+2]/255
+                h, s, v = colorsys.rgb_to_hsv(rv, gv, bv)
+                if s > 0.28 and 0.22 < v < 0.92:
+                    candidates.append((s, rv, gv, bv))
+            candidates.sort(reverse=True)
+            return ['#{:02x}{:02x}{:02x}'.format(int(rv*255), int(gv*255), int(bv*255))
+                    for _, rv, gv, bv in candidates[:n]]
+        except Exception:
+            return []
+
+    def _make_ticket_palette(base_hex, n):
+        """황금각 회전으로 base_hex와 어울리는 n가지 색상 생성."""
+        import colorsys
+        try:
+            r = int(base_hex[1:3], 16) / 255
+            g = int(base_hex[3:5], 16) / 255
+            b = int(base_hex[5:7], 16) / 255
+        except Exception:
+            return [base_hex] * n
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        s, v = max(s, 0.55), min(max(v, 0.50), 0.80)
+        golden = 0.618033988749895
+        out = []
+        for i in range(n):
+            nh = (h + i * golden) % 1.0
+            nr, ng, nb = colorsys.hsv_to_rgb(nh, s, v)
+            out.append('#{:02x}{:02x}{:02x}'.format(int(nr*255), int(ng*255), int(nb*255)))
+        return out
 
     # ── UI ────────────────────────────────────────────────────────────
     col_l, col_r = st.columns(2)
