@@ -37,6 +37,31 @@ def _get_sb():
     from supabase import create_client
     return create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
 
+# ── 인증 ─────────────────────────────────────────────────────────────────────
+def _check_auth() -> bool:
+    try:
+        correct_pw = st.secrets.get("APP_PASSWORD", "")
+    except Exception:
+        correct_pw = ""
+    if not correct_pw or st.session_state.get("authenticated"):
+        return True
+    _, col, _ = st.columns([1, 1.5, 1])
+    with col:
+        st.markdown("<br><br><br>", unsafe_allow_html=True)
+        st.markdown(
+            '<div style="text-align:center;font-size:2em;font-weight:800;color:#6C63FF">🎫 티켓 마케팅 대시보드</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown("<br>", unsafe_allow_html=True)
+        pw = st.text_input("비밀번호", type="password", placeholder="비밀번호를 입력하세요")
+        if st.button("입장하기", type="primary", use_container_width=True):
+            if pw == correct_pw:
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("❌ 비밀번호가 올바르지 않습니다.")
+    return False
+
 # ── 헬퍼 ─────────────────────────────────────────────────────────────────────
 def load(key: str) -> list[dict]:
     if key == "on_sale" and _use_supabase():
@@ -250,6 +275,9 @@ h1, h2, h3 {color: #6C63FF;}
 </style>
 """, unsafe_allow_html=True)
 
+if not _check_auth():
+    st.stop()
+
 # ── 사이드바 ─────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 🎫 마케팅 대시보드")
@@ -257,11 +285,14 @@ with st.sidebar:
     st.divider()
     page = st.radio(
         "페이지",
-        ["📊 대시보드 홈", "🛒 판매중 티켓", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더", "🎤 K-pop 아이돌 DB", "📅 팀 캘린더", "🎨 티켓 페이지 생성기", "📋 K-POPカレンダー ソース"],
+        ["📊 대시보드 홈", "🛒 판매중 티켓", "🏟️ 공연장 정보", "🗓️ QOO10 K-pop 캘린더", "🎤 K-pop 아이돌 DB", "📅 팀 캘린더", "🎨 티켓 페이지 생성기"],
         label_visibility="collapsed",
     )
     st.divider()
     st.caption("데이터는 로컬에 자동 저장됩니다")
+    if st.button("🔓 로그아웃", use_container_width=True):
+        st.session_state.pop("authenticated", None)
+        st.rerun()
 
 # ════════════════════════════════════════════════════════════════════════════
 # 1. 대시보드 홈
@@ -2109,32 +2140,3 @@ elif page == "🎨 티켓 페이지 생성기":
         with col_c:
             st.text_area("HTML 소스 (복사용)", gen_html, height=200, key="gen_src")
 
-# ════════════════════════════════════════════════════════════════════════════
-# K-POPカレンダー ソース
-# ════════════════════════════════════════════════════════════════════════════
-elif page == "📋 K-POPカレンダー ソース":
-    st.title("📋 K-POPカレンダー — Qoo10 삽입용 소스")
-    st.caption("아래 소스를 전체 복사해서 Qoo10 Special 페이지 admin에 붙여넣으세요.")
-
-    _cal_path = os.path.join(os.path.dirname(__file__), "kpop_calendar.html")
-    if os.path.exists(_cal_path):
-        with open(_cal_path, encoding="utf-8") as _f:
-            _cal_src = _f.read()
-
-        col_dl, col_info = st.columns([1, 3])
-        with col_dl:
-            st.download_button(
-                "↓ HTML 파일 다운로드",
-                _cal_src.encode("utf-8"),
-                "kpop_calendar.html",
-                "text/html;charset=utf-8",
-                use_container_width=True,
-            )
-        with col_info:
-            st.info(f"파일 크기: {len(_cal_src):,} 문자  |  줄 수: {_cal_src.count(chr(10)):,} 줄")
-
-        st.divider()
-        st.markdown("**📌 전체 소스 (클릭 후 Ctrl+A → Ctrl+C)**")
-        st.code(_cal_src, language="html")
-    else:
-        st.error("`kpop_calendar.html` 파일을 찾을 수 없습니다. 파일이 app.py와 같은 폴더에 있는지 확인하세요.")
