@@ -1426,7 +1426,7 @@ elif page == "🎨 티켓 페이지 생성기":
         '@media(max-width:480px){.ticket-box,.tabwrapper{border-radius:18px;padding:40px 20px;}}\n'
         '.ticket-info{text-align:center;margin-bottom:36px;padding-bottom:30px;font-size:15px;}\n'
         '.ticket-title{font-size:40px;font-weight:900;margin-bottom:18px;letter-spacing:.02em;}\n'
-        '.ticket-note{font-size:14px;color:#666;margin-bottom:24px;}\n'
+        '.ticket-note{font-size:16px;color:#555;margin-bottom:24px;}\n'
         '.ticket-info p:not(.ticket-title):not(.ticket-note){font-size:18px;color:#666;line-height:1.6;font-weight:600;}\n'
         '@media(max-width:768px){.ticket-title{font-size:30px;}.ticket-info{padding-bottom:12px;margin-bottom:20px;}}\n'
         '.ticketList{list-style:none;margin:0 auto;padding:0;display:flex;flex-direction:column;gap:14px;max-width:540px;}\n'
@@ -2157,16 +2157,53 @@ elif page == "🎨 티켓 페이지 생성기":
                     st.caption("💡 Streamlit Cloud 앱 설정에서 `ANTHROPIC_API_KEY`를 추가하면 AI 기반 정밀 검증을 사용할 수 있습니다.")
 
         st.markdown("---")
+        st.markdown("#### 🎨 カラー設定")
+        st.caption("엑셀에서 색상을 지정했어도 여기서 덮어씌울 수 있어요.")
+
+        _excel_btn = tpl_data.get('チケットボタン色', '') or '#8da0a7'
+        _excel_pt  = tpl_data.get('ポイントカラー', '') or _excel_btn
+        _fkey_btn  = f'cp_btn_{uploaded_tpl.name}'
+        _fkey_pt   = f'cp_pt_{uploaded_tpl.name}'
+        if _fkey_btn not in st.session_state:
+            st.session_state[_fkey_btn] = _excel_btn
+        if _fkey_pt not in st.session_state:
+            st.session_state[_fkey_pt] = _excel_pt
+
+        _pc1, _pc2, _pc3 = st.columns([2, 2, 1.4])
+        with _pc1:
+            st.color_picker("🎫 チケットボタン色", key=_fkey_btn)
+        with _pc2:
+            st.color_picker("✨ ポイントカラー", key=_fkey_pt)
+        with _pc3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            _poster_for_auto = tpl_data.get('ポスターURL', '')
+            if _poster_for_auto:
+                if st.button("🖼 ポスターから\n自動抽出", use_container_width=True, key="auto_color_btn"):
+                    with st.spinner("ポスターから色を抽出中..."):
+                        _pal = _extract_poster_palette(_poster_for_auto)
+                    if _pal:
+                        st.session_state[_fkey_btn] = _pal[0]
+                        st.session_state[_fkey_pt]  = _pal[0]
+                        st.rerun()
+                    else:
+                        st.warning("色の抽出に失敗しました。URLを確認してください。")
+            else:
+                st.caption("ポスターURLを\n入力すると自動抽出\nできます")
+
+        st.markdown("---")
         st.markdown("#### Step 3 · HTML 생성")
         if st.button("✦ HTML 생성하기", type="primary", use_container_width=True):
-            result_html, errs = _generate_html(tpl_data, tpl_data, _TICKET_CSS, 'ja')
+            _merged = dict(tpl_data)
+            _merged['チケットボタン色'] = st.session_state.get(_fkey_btn, _excel_btn)
+            _merged['ポイントカラー']   = st.session_state.get(_fkey_pt, _excel_pt)
+            result_html, errs = _generate_html(_merged, _merged, _TICKET_CSS, 'ja')
             if errs:
                 for err in errs:
                     st.error(f"⚠ {err}")
             else:
                 st.session_state['ticket_gen_html'] = result_html
-                st.session_state['ticket_gen_bg']   = tpl_data.get('背景色', '') or '#191919'
-                st.session_state['ticket_gen_data'] = tpl_data
+                st.session_state['ticket_gen_bg']   = _merged.get('背景色', '') or '#191919'
+                st.session_state['ticket_gen_data'] = _merged
                 st.session_state['ticket_gen_lang'] = 'ja'
 
     if st.session_state.get('ticket_gen_html'):
