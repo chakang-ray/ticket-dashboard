@@ -1399,7 +1399,7 @@ elif page == "🎨 티켓 페이지 생성기":
         '.toptitle{color:#fff;text-align:center;font-family:"Montserrat",sans-serif;font-weight:900;font-size:42px;line-height:1.35;letter-spacing:0.02em;padding:40px 16px 30px;}\n'
         '@media(max-width:768px){.toptitle{font-size:26px;padding:30px 16px 20px;}}\n'
         '.title{font-family:"Montserrat",sans-serif;font-weight:900;font-style:normal;text-align:center;font-size:60px;padding-bottom:30px;}\n'
-        '.titlecolor{background:linear-gradient(90deg,var(--btn-color) 0%,#fff 100%);color:transparent;-webkit-background-clip:text;background-clip:text;}\n'
+        '.titlecolor{background:linear-gradient(90deg,var(--point-color) 0%,#fff 100%);color:transparent;-webkit-background-clip:text;background-clip:text;}\n'
         '.subtitle{font-weight:700;font-size:35px;line-height:1.25;margin:0;text-align:center;color:#fff;}\n'
         '.description{font-weight:500;font-size:30px;line-height:1.4;margin:0;text-align:center;color:#fff;}\n'
         '#tc dl,#tc dt,#tc dd{margin:0;}\n'
@@ -1407,7 +1407,7 @@ elif page == "🎨 티켓 페이지 생성기":
         '.info-row{padding:18px 0;}\n'
         '.info-row+.info-row{padding-top:26px;}\n'
         '.info-list{margin:0;}\n'
-        '.info-label{display:block;color:var(--btn-color);}\n'
+        '.info-label{display:block;color:var(--point-color);}\n'
         '.info-label--mt{padding-top:40px;}\n'
         '.info-body{margin:0;}\n'
         '.info-date{position:relative;display:inline-block;padding-bottom:14px;}\n'
@@ -1458,13 +1458,13 @@ elif page == "🎨 티켓 페이지 생성기":
         '.infotabs{position:relative;}\n'
         '.infotab__input{position:absolute;opacity:0;pointer-events:none;}\n'
         '.infotab__nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start;margin-bottom:28px;}\n'
-        '.infotab__label{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:999px;border:2px solid var(--btn-color);color:var(--btn-color);font-size:20px;font-weight:700;white-space:nowrap;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}\n'
+        '.infotab__label{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:999px;border:2px solid var(--point-color);color:var(--point-color);font-size:20px;font-weight:700;white-space:nowrap;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}\n'
         '#tab1:checked ~ .infotab__nav label[for="tab1"],\n'
         '#tab2:checked ~ .infotab__nav label[for="tab2"],\n'
         '#tab3:checked ~ .infotab__nav label[for="tab3"],\n'
         '#tab4:checked ~ .infotab__nav label[for="tab4"],\n'
         '#tab5:checked ~ .infotab__nav label[for="tab5"],\n'
-        '#tab6:checked ~ .infotab__nav label[for="tab6"]{background:var(--btn-color);color:#121113;}\n'
+        '#tab6:checked ~ .infotab__nav label[for="tab6"]{background:var(--point-color);color:#121113;}\n'
         '.infotab__content{display:none;font-size:15px;line-height:1.7;}\n'
         '#tab1:checked ~ .infotab__panels .panel1{display:block;}\n'
         '#tab2:checked ~ .infotab__panels .panel2{display:block;}\n'
@@ -1476,13 +1476,13 @@ elif page == "🎨 티켓 페이지 생성기":
         '.oshirase dl{margin:0;}\n'
         '.oshirase dd{margin:0;padding:8px 0;}\n'
         '.oshirase dt{position:relative;padding-top:30px;padding-left:18px;font-weight:700;}\n'
-        '.oshirase dt::before{content:"■";position:absolute;left:0;top:30px;color:var(--btn-color);}\n'
+        '.oshirase dt::before{content:"■";position:absolute;left:0;top:30px;color:var(--point-color);}\n'
         '.oshirase .list{text-indent:-14px;padding-left:14px;}\n'
-        '.oshirase .list::before{content:"●";font-size:5px;margin-right:7px;color:var(--btn-color);vertical-align:middle;}\n'
+        '.oshirase .list::before{content:"●";font-size:5px;margin-right:7px;color:var(--point-color);vertical-align:middle;}\n'
         '.oshirase .list_star{text-indent:-14px;padding-left:14px;}\n'
-        '.oshirase .list_star::before{content:"＊";font-size:13px;margin-right:7px;color:var(--btn-color);vertical-align:middle;}\n'
+        '.oshirase .list_star::before{content:"＊";font-size:13px;margin-right:7px;color:var(--point-color);vertical-align:middle;}\n'
         '.oshirase .list_important{text-indent:-14px;padding-left:14px;}\n'
-        '.oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:var(--btn-color);vertical-align:middle;}\n'
+        '.oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:var(--point-color);vertical-align:middle;}\n'
         '@media(max-width:768px){.tabwrapper{padding:32px 18px;}.infotab__label{font-size:14px;padding:10px 16px;}.infotab__content{font-size:14px;}}\n'
         '@media(max-width:480px){.tabwrapper{padding:40px 25px;}.infotab__nav{gap:8px;}.infotab__label{font-size:13px;padding:10px 14px;}.infotab__content{font-size:13px;line-height:1.75;}.oshirase{padding-top:10px;}.oshirase .list,.oshirase .list_star,.oshirase .list_important{text-indent:-12px;padding-left:12px;}}\n'
     )
@@ -1501,6 +1501,7 @@ elif page == "🎨 티켓 페이지 생성기":
             ['会場', '○○アリーナ', ''],
             ['背景色', '#191919', '例: #191919（黒） / #0a0a1e / #1a0a00'],
             ['チケットボタン色', '#8da0a7', '例: #8da0a7（デフォルト） / #c2185b / #2e5fa3'],
+            ['ポイントカラー',   '',        '例: #FF6B6B / #6C63FF　空白でチケットボタン色と同じ'],
             ['', '', ''],
             ['【② 公演概要 — SCHEDULE セクション】', '', '最大5日'],
             ['公演日1_日付', '2026年○月○日(○)', ''],
@@ -1702,8 +1703,9 @@ elif page == "🎨 티켓 페이지 생성기":
         title     = g('タイトル').replace('\\n', '<br>')
         poster    = g('ポスターURL')
         venue     = g('会場')
-        page_bg   = og('背景色') or '#191919'
-        btn_color = og('チケットボタン色') or '#8da0a7'
+        page_bg     = og('背景色') or '#191919'
+        btn_color   = og('チケットボタン色') or '#8da0a7'
+        point_color = og('ポイントカラー') or btn_color
 
         perf_days = []
         for i in range(1, 6):
@@ -1858,7 +1860,11 @@ elif page == "🎨 티켓 페이지 생성기":
         css_for_lang = ticket_css
 
         style_block = (
-            '<style>\n:root {\n  --btn-color: ' + btn_color + ';\n  --page-bg:   ' + page_bg + ';\n}\n'
+            '<style>\n:root {\n'
+            '  --btn-color:   ' + btn_color + ';\n'
+            '  --point-color: ' + point_color + ';\n'
+            '  --page-bg:     ' + page_bg + ';\n'
+            '}\n'
             + css_for_lang + '\n</style>'
         )
 
