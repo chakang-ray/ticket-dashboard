@@ -1535,6 +1535,7 @@ elif page == "🎨 티켓 페이지 생성기":
                 [f'チケット{n}_価格',     d[1], ''],
                 [f'チケット{n}_URL',      'https://www.qoo10.jp/...' if n <= 2 else '', '購入URL'],
                 [f'チケット{n}_状態',     d[2], '受付中 / 受付予定 / 販売中 / 販売終了 / SOLDOUT'],
+                [f'チケット{n}_色',       '',   '例: #FF6B6B / #6C63FF / #00C896　空白でデフォルト色'],
                 ['', '', ''],
             ]
         rows += [
@@ -1726,6 +1727,7 @@ elif page == "🎨 티켓 페이지 생성기":
                 'type': tp, 'price': pr,
                 'url': og(f'チケット{i}_URL') or '#',
                 'status': og(f'チケット{i}_状態'),
+                'color': og(f'チケット{i}_色'),
             })
 
         ticket_notices = collect('チケット注意', 5)
@@ -1773,9 +1775,10 @@ elif page == "🎨 티켓 페이지 생성기":
             _DISABLED = {'受付予定': 'st-uketsuke-yotei', '販売終了': 'st-hanbai-shuryo', 'SOLDOUT': 'st-soldout'}
             status_cls = _DISABLED.get(t['status'], '')
             cls = f'is-disabled {status_cls}'.strip() if status_cls else ''
+            color_style = f'style="background:{esc(t["color"])}"' if t.get('color') else ''
             btns += (
                 f'\n      <li class="ticketItem">'
-                f'<a class="ticketBtn {cls}" href="{esc(t["url"])}">'
+                f'<a class="ticketBtn {cls}" {color_style} href="{esc(t["url"])}">'
                 f'<span class="ticketDay">{t["date"]}</span>'
                 f'<span class="ticketDate">{t["time"]}</span>'
                 f'<span class="ticketPrice">{t["price"]}</span>'
