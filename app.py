@@ -1441,10 +1441,13 @@ elif page == "🎨 티켓 페이지 생성기":
         '.ticketBtn::after{content:"";grid-column:3;grid-row:1/span 2;justify-self:end;align-self:center;width:10px;height:10px;border-top:2px solid #fff;border-right:2px solid #fff;transform:rotate(45deg);transition:transform .18s ease;z-index:1;}\n'
         '.ticketBtn:hover::after{transform:translateX(6px) rotate(45deg);}\n'
         '@media(max-width:768px){.ticketBtn{grid-template-columns:1fr 18px;grid-template-rows:auto auto auto;padding:16px 22px;border-radius:20px;}.ticketDay{grid-column:1;grid-row:1;font-size:16px;white-space:normal;word-break:keep-all;}.ticketDate{grid-column:1;grid-row:2;font-size:13px;white-space:normal;}.ticketPrice{grid-column:1;grid-row:3;justify-self:start;font-size:25px;margin-top:10px;}.ticketBtn::after{grid-column:2;grid-row:1/span 3;align-self:center;justify-self:end;}}\n'
-        '.ticketBtn.is-soldout{pointer-events:none;cursor:default;filter:saturate(.6) brightness(.95);}\n'
-        '.ticketBtn.is-soldout .ticketDay,.ticketBtn.is-soldout .ticketDate,.ticketBtn.is-soldout .ticketPrice{opacity:.35;}\n'
-        '.ticketBtn.is-soldout::before{content:"受付終了";position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-weight:900;letter-spacing:.14em;font-size:18px;text-shadow:0 2px 8px rgba(0,0,0,.6);}\n'
-        '.ticketBtn.is-soldout:hover::after{transform:rotate(45deg);}\n'
+        '.ticketBtn.is-disabled{pointer-events:none;cursor:default;filter:saturate(.6) brightness(.95);}\n'
+        '.ticketBtn.is-disabled .ticketDay,.ticketBtn.is-disabled .ticketDate,.ticketBtn.is-disabled .ticketPrice{opacity:.35;}\n'
+        '.ticketBtn.is-disabled::before{content:"";position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-weight:900;letter-spacing:.14em;font-size:18px;text-shadow:0 2px 8px rgba(0,0,0,.6);}\n'
+        '.ticketBtn.st-uketsuke-yotei::before{content:"受付予定";}\n'
+        '.ticketBtn.st-hanbai-shuryo::before{content:"販売終了";}\n'
+        '.ticketBtn.st-soldout::before{content:"SOLD OUT";}\n'
+        '.ticketBtn.is-disabled:hover::after{transform:rotate(45deg);}\n'
         '.ticket-notice{list-style:none;padding:0;margin:24px auto;max-width:540px;font-size:14px;text-align:left;font-weight:500;}\n'
         '.ticket-notice li{position:relative;padding-left:1.2em;line-height:1.6;margin-bottom:6px;}\n'
         '.ticket-notice li::before{content:"※";position:absolute;left:0;top:0;}\n'
@@ -1531,7 +1534,7 @@ elif page == "🎨 티켓 페이지 생성기":
                 [f'チケット{n}_権種名',   d[0], '例: VIP席 / S席 / 一般指定席'],
                 [f'チケット{n}_価格',     d[1], ''],
                 [f'チケット{n}_URL',      'https://www.qoo10.jp/...' if n <= 2 else '', '購入URL'],
-                [f'チケット{n}_状態',     d[2], '「販売中」または「受付終了」'],
+                [f'チケット{n}_状態',     d[2], '受付中 / 受付予定 / 販売中 / 販売終了 / SOLDOUT'],
                 ['', '', ''],
             ]
         rows += [
@@ -1722,7 +1725,7 @@ elif page == "🎨 티켓 페이지 생성기":
                 'date': d, 'time': g(f'チケット{i}_公演時間'),
                 'type': tp, 'price': pr,
                 'url': og(f'チケット{i}_URL') or '#',
-                'soldout': og(f'チケット{i}_状態') == '受付終了',
+                'status': og(f'チケット{i}_状態'),
             })
 
         ticket_notices = collect('チケット注意', 5)
@@ -1767,7 +1770,9 @@ elif page == "🎨 티켓 페이지 생성기":
             if has_multi and t['type'] != prev_tp:
                 btns += f'\n      <li class="ticket-type-label">{t["type"]}</li>'
                 prev_tp = t['type']
-            cls = 'is-soldout' if t['soldout'] else ''
+            _DISABLED = {'受付予定': 'st-uketsuke-yotei', '販売終了': 'st-hanbai-shuryo', 'SOLDOUT': 'st-soldout'}
+            status_cls = _DISABLED.get(t['status'], '')
+            cls = f'is-disabled {status_cls}'.strip() if status_cls else ''
             btns += (
                 f'\n      <li class="ticketItem">'
                 f'<a class="ticketBtn {cls}" href="{esc(t["url"])}">'
@@ -1845,7 +1850,7 @@ elif page == "🎨 티켓 페이지 생성기":
                          if payment_deadline else '')
 
         # CSS: swap soldout overlay text for current language
-        css_for_lang = ticket_css.replace('content:"受付終了"', f'content:"{lbl["sold_out"]}"')
+        css_for_lang = ticket_css
 
         style_block = (
             '<style>\n:root {\n  --btn-color: ' + btn_color + ';\n  --page-bg:   ' + page_bg + ';\n}\n'
