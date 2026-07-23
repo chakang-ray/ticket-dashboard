@@ -1497,6 +1497,7 @@ elif page == "🎨 티켓 페이지 생성기":
             ['【① 基本情報 & デザイン】', '', ''],
             ['タイトル', '2026 ○○ WORLD TOUR [○○] IN TOKYO', '改行したい場合は \\n を入力'],
             ['ポスターURL', '', '画像URLがあれば入力（なければ空白）'],
+            ['ポスター幅',  '100%', '例: 100% / 60% / 400px　デフォルト100%'],
             ['会場', '○○アリーナ', ''],
             ['背景色', '#191919', '例: #191919（黒） / #0a0a1e / #1a0a00'],
             ['チケットボタン色', '#8da0a7', '例: #8da0a7（デフォルト） / #c2185b / #2e5fa3'],
@@ -1840,9 +1841,10 @@ elif page == "🎨 티켓 페이지 생성기":
             )
 
         # Optional fragments
+        poster_width = og('ポスター幅') or '100%'
         poster_sec = (
             f'<div style="text-align:center;">'
-            f'<img src="{esc(poster)}" style="max-width:100%;height:auto;display:block;margin:0 auto;">'
+            f'<img src="{esc(poster)}" style="width:{esc(poster_width)};max-width:100%;height:auto;display:block;margin:0 auto;">'
             f'</div>\n\n'
         ) if poster else ''
         sp_html       = f'      <p class="ticket-note" style="color:BLACK;">販売期間<BR>{sale_period}</p>\n' if sale_period else ''
