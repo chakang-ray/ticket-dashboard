@@ -40,7 +40,7 @@ if not _check_auth():
     st.stop()
 
 st.title("🎨 Qoo10 チケットページ ジェネレーター")
-st.caption("엑셀 템플릿에 공연 정보를 입력하고 업로드하면 Qoo10 Japan 티켓 페이지 HTML을 자동 생성합니다.")
+st.caption("엑셀 템플릿에 공연 정보를 입력하고 업로드하면 HTML을 자동 생성합니다. / ExcelテンプレートをアップロードするとHTMLを自動生成します。")
 st.divider()
 
 _TICKET_CSS = (
@@ -761,19 +761,167 @@ def _validate_local(items):
     return '\n\n'.join(results)
 
 
+# ── UI 텍스트 (한국어 / 日本語) ────────────────────────────────────────────────
+_UI_TEXT = {
+    'ko': {
+        's1':        'Step 1 · 엑셀 템플릿 다운로드',
+        's1_cap':    'B열(내용)에만 입력하시면 됩니다. ① 기본정보·디자인 ② 공연개요 ③ 티켓목록 ④ 라인업 ⑤ NOTICE 탭 ⑥ 문의처',
+        's2':        'Step 2 · 작성한 엑셀 업로드',
+        'dl_tpl':    '↓ 템플릿 다운로드 (.xlsx)',
+        'load_ok':   '로드 완료',
+        'load_err':  '파일 읽기 오류',
+        'v_head':    '🔍 주의사항 자동 검증',
+        'v_items':   '개',
+        'v_suffix':  '항목에서 중복·상충 문구를 검출합니다.',
+        'v_btn':     '검증하기',
+        'v_spin':    '검증 중...',
+        'v_hint':    '💡 Streamlit Cloud 앱 설정에서 `ANTHROPIC_API_KEY`를 추가하면 AI 기반 정밀 검증을 사용할 수 있습니다.',
+        'c_head':    '🎨 カラー設定',
+        'c_cap':     '엑셀에서 색상을 지정했어도 여기서 덮어씌울 수 있어요.',
+        'c_btn':     '🎫 チケットボタン色',
+        'c_pt':      '✨ ポイントカラー',
+        'c_extract': '🖼 ポスターから\n自動抽出',
+        'c_poster':  'ポスターURLを\n入力すると自動抽出\nできます',
+        'c_spin':    'ポスターから色を抽出中...',
+        'c_fail':    '색 추출 실패. 포스터 URL이 직접 접근 가능한지 확인해 주세요.',
+        's3':        'Step 3 · HTML 생성',
+        'gen_btn':   '✦ HTML 생성하기',
+        'preview':   '미리보기',
+        'dl_html':   '↓ HTML 다운로드',
+        'src':       'HTML 소스 (복사용)',
+        'send_btn':  '📨 담당자에게 전송하기',
+        'send_spin': '이메일 전송 중...',
+        'send_ok':   '✅ chakang@ebay.com 으로 전송 완료!',
+        'send_err':  '❌ 전송 실패: {}',
+        'send_none': 'HTML을 먼저 생성해 주세요.',
+        'no_smtp':   '⚠ Streamlit Cloud Secrets에 SMTP_USER / SMTP_PASS가 설정되지 않았습니다. 관리자에게 문의하세요.',
+    },
+    'ja': {
+        's1':        'Step 1 · Excelテンプレートのダウンロード',
+        's1_cap':    'B列（内容）のみ入力してください。① 基本情報・デザイン ② 公演概要 ③ チケット一覧 ④ ラインアップ ⑤ NOTICEタブ ⑥ お問い合わせ',
+        's2':        'Step 2 · 作成したExcelをアップロード',
+        'dl_tpl':    '↓ テンプレートをダウンロード (.xlsx)',
+        'load_ok':   '読み込み完了',
+        'load_err':  'ファイル読み込みエラー',
+        'v_head':    '🔍 注意事項の自動チェック',
+        'v_items':   '件',
+        'v_suffix':  'の項目から重複・矛盾する文言を検出します。',
+        'v_btn':     'チェックする',
+        'v_spin':    'チェック中...',
+        'v_hint':    '💡 Streamlit Cloud の Secrets に ANTHROPIC_API_KEY を追加するとAI精密チェックが利用できます。',
+        'c_head':    '🎨 カラー設定',
+        'c_cap':     'Excelで色を指定していてもここで上書きできます。',
+        'c_btn':     '🎫 チケットボタン色',
+        'c_pt':      '✨ ポイントカラー',
+        'c_extract': '🖼 ポスターから\n自動抽出',
+        'c_poster':  'ポスターURLを\n入力すると自動抽出\nできます',
+        'c_spin':    'ポスターから色を抽出中...',
+        'c_fail':    '色の抽出に失敗しました。ポスターURLに直接アクセスできるか確認してください。',
+        's3':        'Step 3 · HTML生成',
+        'gen_btn':   '✦ HTMLを生成する',
+        'preview':   'プレビュー',
+        'dl_html':   '↓ HTMLをダウンロード',
+        'src':       'HTMLソース（コピー用）',
+        'send_btn':  '📨 担当者に送る',
+        'send_spin': 'メールを送信中...',
+        'send_ok':   '✅ chakang@ebay.com に送信しました！',
+        'send_err':  '❌ 送信失敗: {}',
+        'send_none': 'HTMLを先に生成してください。',
+        'no_smtp':   '⚠ Streamlit Cloud の Secrets に SMTP_USER / SMTP_PASS を設定してください。',
+    },
+}
+
+
+def _send_html_by_email(html_content, title):
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.base import MIMEBase
+    from email.mime.text import MIMEText
+    from email import encoders as _enc
+
+    try:
+        smtp_host = st.secrets.get('SMTP_HOST', 'smtp.gmail.com')
+        smtp_port = int(st.secrets.get('SMTP_PORT', '587'))
+        smtp_user = st.secrets.get('SMTP_USER', '')
+        smtp_pass = st.secrets.get('SMTP_PASS', '')
+    except Exception:
+        return False, 'no_smtp'
+
+    if not smtp_user or not smtp_pass:
+        return False, 'no_smtp'
+
+    to_addr = 'chakang@ebay.com'
+    msg = MIMEMultipart()
+    msg['From']    = smtp_user
+    msg['To']      = to_addr
+    msg['Subject'] = f'[Qoo10] {title}'
+
+    body = (f'Qoo10チケットページのHTMLファイルを送付します。\n件名：{title}\n\n'
+            f'Qoo10 티켓 페이지 HTML 파일을 전송합니다.\n제목: {title}')
+    msg.attach(MIMEText(body, 'plain', 'utf-8'))
+
+    # utf-8-sig = UTF-8 BOM → Windows/Outlook에서 일본어 깨짐 방지
+    html_bytes = html_content.encode('utf-8-sig')
+    safe_title = re.sub(r'[<>:"/\\|?*\s]', '_', title)[:40]
+    fname = f'ticket_{safe_title}.html'
+
+    part = MIMEBase('application', 'octet-stream')
+    part.set_payload(html_bytes)
+    _enc.encode_base64(part)
+    part.add_header('Content-Disposition', 'attachment', filename=('utf-8', '', fname))
+    msg.attach(part)
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as srv:
+            srv.ehlo()
+            srv.starttls()
+            srv.login(smtp_user, smtp_pass)
+            srv.send_message(msg)
+        return True, ''
+    except Exception as exc:
+        return False, str(exc)
+
+
 # ── UI ────────────────────────────────────────────────────────────────────────
+# 인터페이스 언어 선택 / 言語選択
+if 'ui_lang' not in st.session_state:
+    st.session_state['ui_lang'] = 'ko'
+t = _UI_TEXT[st.session_state['ui_lang']]
+
+_ul1, _ul2, _ = st.columns([1.2, 1.2, 5])
+with _ul1:
+    if st.button(
+        '🇰🇷 한국어',
+        use_container_width=True,
+        type='primary' if st.session_state['ui_lang'] == 'ko' else 'secondary',
+        key='uilang_ko',
+    ):
+        st.session_state['ui_lang'] = 'ko'
+        st.rerun()
+with _ul2:
+    if st.button(
+        '🇯🇵 日本語',
+        use_container_width=True,
+        type='primary' if st.session_state['ui_lang'] == 'ja' else 'secondary',
+        key='uilang_ja',
+    ):
+        st.session_state['ui_lang'] = 'ja'
+        st.rerun()
+
+st.divider()
+
 col_l, col_r = st.columns(2)
 with col_l:
-    st.markdown("#### Step 1 · 엑셀 템플릿 다운로드")
-    st.caption("B열(내용)에만 입력하시면 됩니다. ① 기본정보·디자인 ② 공연개요 ③ 티켓목록 ④ 라인업 ⑤ NOTICE 탭 ⑥ 문의처")
+    st.markdown(f"#### {t['s1']}")
+    st.caption(t['s1_cap'])
     st.download_button(
-        "↓ 템플릿 다운로드 (.xlsx)",
+        t['dl_tpl'],
         _make_template(),
         "ticket_template.xlsx",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 with col_r:
-    st.markdown("#### Step 2 · 작성한 엑셀 업로드")
+    st.markdown(f"#### {t['s2']}")
     uploaded_tpl = st.file_uploader("", type=["xlsx", "xls"], label_visibility="collapsed", key="tpl_upload")
 
 tpl_data = {}
@@ -785,17 +933,17 @@ if uploaded_tpl:
             val = str(row.iloc[1]).strip() if len(row) > 1 and pd.notna(row.iloc[1]) and str(row.iloc[1]) != 'nan' else ''
             if key and key != '항목' and not key.startswith('【') and not key.startswith('──'):
                 tpl_data[key] = val
-        st.success(f"✅ {uploaded_tpl.name} 로드 완료 ({len(tpl_data)}개 항목)")
+        st.success(f"✅ {uploaded_tpl.name} {t['load_ok']} ({len(tpl_data)}{t['v_items']})")
     except Exception as e:
-        st.error(f"파일 읽기 오류: {e}")
+        st.error(f"{t['load_err']}: {e}")
 
 if tpl_data:
     notices = _collect_notices(tpl_data)
     if notices:
-        st.markdown("#### 🔍 주의사항 자동 검증")
-        st.caption(f"티켓 주의사항 및 NOTICE 탭 내용 총 **{len(notices)}개** 항목에서 중복·상충 문구를 검출합니다.")
-        if st.button("검증하기", type="secondary", key="validate_btn"):
-            with st.spinner("검증 중..."):
+        st.markdown(f"#### {t['v_head']}")
+        st.caption(f"**{len(notices)}{t['v_items']}** {t['v_suffix']}")
+        if st.button(t['v_btn'], type="secondary", key="validate_btn"):
+            with st.spinner(t['v_spin']):
                 try:
                     _api_key = st.secrets.get("ANTHROPIC_API_KEY", "")
                 except Exception:
@@ -815,11 +963,11 @@ if tpl_data:
             except Exception:
                 _has_key = False
             if not _has_key:
-                st.caption("💡 Streamlit Cloud 앱 설정에서 `ANTHROPIC_API_KEY`를 추가하면 AI 기반 정밀 검증을 사용할 수 있습니다.")
+                st.caption(t['v_hint'])
 
     st.markdown("---")
-    st.markdown("#### 🎨 カラー設定")
-    st.caption("엑셀에서 색상을 지정했어도 여기서 덮어씌울 수 있어요.")
+    st.markdown(f"#### {t['c_head']}")
+    st.caption(t['c_cap'])
 
     _excel_btn = tpl_data.get('チケットボタン色', '') or '#8da0a7'
     _excel_pt  = tpl_data.get('ポイントカラー', '') or _excel_btn
@@ -836,18 +984,17 @@ if tpl_data:
 
     _pc1, _pc2, _pc3 = st.columns([2, 2, 1.4])
     with _pc1:
-        picked_btn = st.color_picker("🎫 チケットボタン色", key=_fkey_btn)
+        picked_btn = st.color_picker(t['c_btn'], key=_fkey_btn)
     with _pc2:
-        picked_pt = st.color_picker("✨ ポイントカラー", key=_fkey_pt)
+        picked_pt = st.color_picker(t['c_pt'], key=_fkey_pt)
     with _pc3:
         st.markdown("<br>", unsafe_allow_html=True)
         _poster_for_auto = tpl_data.get('ポスターURL', '')
         if _poster_for_auto:
-            if st.button("🖼 ポスターから\n自動抽出", use_container_width=True, key=f"auto_color_btn_{st.session_state[_cnt_key]}"):
-                with st.spinner("ポスターから色を抽出中..."):
+            if st.button(t['c_extract'], use_container_width=True, key=f"auto_color_btn_{st.session_state[_cnt_key]}"):
+                with st.spinner(t['c_spin']):
                     _pal = _extract_poster_palette(_poster_for_auto)
                 if _pal:
-                    # 카운터를 올려 color_picker 위젯을 새로 만들어 강제 갱신
                     st.session_state[_cnt_key] += 1
                     _new_btn = f'cp_btn_{_fbase}_{st.session_state[_cnt_key]}'
                     _new_pt  = f'cp_pt_{_fbase}_{st.session_state[_cnt_key]}'
@@ -855,13 +1002,13 @@ if tpl_data:
                     st.session_state[_new_pt]  = _pal[0]
                     st.rerun()
                 else:
-                    st.warning("色の抽出に失敗しました。ポスターURLに直接アクセスできるか確認してください。")
+                    st.warning(t['c_fail'])
         else:
-            st.caption("ポスターURLを\n入力すると自動抽出\nできます")
+            st.caption(t['c_poster'])
 
     st.markdown("---")
-    st.markdown("#### Step 3 · HTML 생성")
-    if st.button("✦ HTML 생성하기", type="primary", use_container_width=True):
+    st.markdown(f"#### {t['s3']}")
+    if st.button(t['gen_btn'], type="primary", use_container_width=True):
         _merged = dict(tpl_data)
         _merged['チケットボタン色'] = picked_btn
         _merged['ポイントカラー']   = picked_pt
@@ -873,51 +1020,37 @@ if tpl_data:
             st.session_state['ticket_gen_html'] = result_html
             st.session_state['ticket_gen_bg']   = _merged.get('背景色', '') or '#191919'
             st.session_state['ticket_gen_data'] = _merged
-            st.session_state['ticket_gen_lang'] = 'ja'
 
 if st.session_state.get('ticket_gen_html'):
-    gen_html = st.session_state['ticket_gen_html']
-    gen_bg   = st.session_state.get('ticket_gen_bg', '#191919')
-    cur_lang = st.session_state.get('ticket_gen_lang', 'ja')
+    gen_html  = st.session_state['ticket_gen_html']
     orig_data = st.session_state.get('ticket_gen_data', {})
 
     st.divider()
-
-    lang_label_map = {'ja': '🇯🇵 日本語', 'en': '🇺🇸 English', 'ko': '🇰🇷 한국어'}
-    st.markdown(
-        f"**언어 / Language** &nbsp;&nbsp;"
-        f'<span style="background:#6C63FF;color:#fff;padding:3px 12px;border-radius:12px;font-size:0.82em;font-weight:700">'
-        f'{lang_label_map[cur_lang]}</span>',
-        unsafe_allow_html=True,
-    )
-    lc1, lc2, lc3 = st.columns(3)
-    for col, code, label in [(lc1, 'ja', '🇯🇵 日本語'), (lc2, 'en', '🇺🇸 English'), (lc3, 'ko', '🇰🇷 한국어')]:
-        with col:
-            if st.button(label, disabled=(code == cur_lang), use_container_width=True, key=f'lang_{code}'):
-                spinner_msg = {'ja': '원문 복원 중...', 'en': 'Translating to English...', 'ko': '한국어로 번역 중...'}[code]
-                with st.spinner(spinner_msg):
-                    translated = _translate_data(orig_data, code)
-                    new_html, errs = _generate_html(translated, orig_data, _TICKET_CSS, code)
-                if errs:
-                    for e in errs: st.error(e)
-                else:
-                    st.session_state['ticket_gen_html'] = new_html
-                    st.session_state['ticket_gen_lang'] = code
-                    st.rerun()
-
-    st.divider()
-    st.markdown("#### 미리보기")
+    st.markdown(f"#### {t['preview']}")
     components_v1.html(gen_html, height=720, scrolling=True)
     st.divider()
-    col_d, col_c = st.columns(2)
+
+    col_d, col_e = st.columns(2)
     with col_d:
-        fname = f"ticket_page_{cur_lang}.html"
         st.download_button(
-            "↓ HTML 다운로드",
+            t['dl_html'],
             gen_html.encode('utf-8'),
-            fname,
+            "ticket_page.html",
             "text/html;charset=utf-8",
             use_container_width=True,
         )
-    with col_c:
-        st.text_area("HTML 소스 (복사용)", gen_html, height=200, key="gen_src")
+    with col_e:
+        if st.button(t['send_btn'], type="secondary", use_container_width=True, key="send_email_btn"):
+            with st.spinner(t['send_spin']):
+                _title = (orig_data.get('公演タイトル', '')
+                          or orig_data.get('タイトル', '')
+                          or 'Ticket Page')
+                ok, err = _send_html_by_email(gen_html, _title)
+            if ok:
+                st.success(t['send_ok'])
+            elif err == 'no_smtp':
+                st.error(t['no_smtp'])
+            else:
+                st.error(t['send_err'].format(err))
+
+    st.text_area(t['src'], gen_html, height=200, key="gen_src")
