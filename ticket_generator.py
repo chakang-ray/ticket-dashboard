@@ -437,6 +437,27 @@ def _extract_poster_palette(url, n=6):
         return []
 
 
+def _extract_palette_from_bytes(img_bytes, n=6):
+    try:
+        import colorsys
+        from io import BytesIO
+        from PIL import Image
+        img = Image.open(BytesIO(img_bytes)).convert('RGB')
+        img.thumbnail((150, 150))
+        raw = img.quantize(colors=16).getpalette()[:48]
+        candidates = []
+        for i in range(0, len(raw), 3):
+            rv, gv, bv = raw[i]/255, raw[i+1]/255, raw[i+2]/255
+            h, s, v = colorsys.rgb_to_hsv(rv, gv, bv)
+            if s > 0.28 and 0.22 < v < 0.92:
+                candidates.append((s, rv, gv, bv))
+        candidates.sort(reverse=True)
+        return ['#{:02x}{:02x}{:02x}'.format(int(rv*255), int(gv*255), int(bv*255))
+                for _, rv, gv, bv in candidates[:n]]
+    except Exception:
+        return []
+
+
 def _make_ticket_palette(base_hex, n):
     import colorsys
     try:
@@ -859,6 +880,10 @@ _UI_TEXT = {
         'send_err':  '❌ 전송 실패: {}',
         'send_none': 'HTML을 먼저 생성해 주세요.',
         'no_smtp':   '⚠ Streamlit Cloud Secrets에 SMTP_USER / SMTP_PASS가 설정되지 않았습니다. 관리자에게 문의하세요.',
+        'draft_save': '💾 초안 저장 (.json)',
+        'draft_load': '📂 초안 불러오기 (.json)',
+        'draft_ok':   '✅ 초안 로드 완료! (색상 포함)',
+        'c_upload':   '🖼 이미지 파일로 자동 추출',
     },
     'ja': {
         's1':        'Step 1 · Excelテンプレートのダウンロード',
@@ -892,6 +917,10 @@ _UI_TEXT = {
         'send_err':  '❌ 送信失敗: {}',
         'send_none': 'HTMLを先に生成してください。',
         'no_smtp':   '⚠ Streamlit Cloud の Secrets に SMTP_USER / SMTP_PASS を設定してください。',
+        'draft_save': '💾 ドラフトを保存 (.json)',
+        'draft_load': '📂 ドラフトを読み込む (.json)',
+        'draft_ok':   '✅ ドラフトを読み込みました！（色設定含む）',
+        'c_upload':   '🖼 画像ファイルから自動抽出',
     },
 }
 
@@ -986,7 +1015,8 @@ with col_l:
     )
 with col_r:
     st.markdown(f"#### {t['s2']}")
-    uploaded_tpl = st.file_uploader("", type=["xlsx", "xls"], label_visibility="collapsed", key="tpl_upload")
+    uploaded_tpl   = st.file_uploader("", type=["xlsx", "xls"], label_visibility="collapsed", key="tpl_upload")
+    uploaded_draft = st.file_uploader(t['draft_load'], type=["json"], key="draft_upload")
 
 tpl_data = {}
 if uploaded_tpl:
@@ -998,8 +1028,23 @@ if uploaded_tpl:
             if key and key != '항목' and not key.startswith('【') and not key.startswith('──'):
                 tpl_data[key] = val
         st.success(f"✅ {uploaded_tpl.name} {t['load_ok']} ({len(tpl_data)}{t['v_items']})")
+        st.session_state.pop('draft_data', None)
     except Exception as e:
         st.error(f"{t['load_err']}: {e}")
+
+if not tpl_data and uploaded_draft:
+    try:
+        import json as _json
+        _draft = _json.loads(uploaded_draft.read().decode('utf-8'))
+        st.session_state['draft_data'] = _draft
+        tpl_data = _draft
+        st.info(t['draft_ok'])
+    except Exception as e:
+        st.error(f"Draft load error: {e}")
+
+if not tpl_data and st.session_state.get('draft_data'):
+    tpl_data = st.session_state['draft_data']
+    st.info(t['draft_ok'])
 
 if tpl_data:
     notices = _collect_notices(tpl_data)
@@ -1035,7 +1080,7 @@ if tpl_data:
 
     _excel_btn = tpl_data.get('チケットボタン色', '') or '#8da0a7'
     _excel_pt  = tpl_data.get('ポイントカラー', '') or _excel_btn
-    _fbase     = uploaded_tpl.name.replace('.', '_')
+    _fbase     = uploaded_tpl.name.replace('.', '_') if uploaded_tpl else 'draft'
     _cnt_key   = f'cp_cnt_{_fbase}'
     if _cnt_key not in st.session_state:
         st.session_state[_cnt_key] = 0
@@ -1046,13 +1091,14 @@ if tpl_data:
     if _fkey_pt not in st.session_state:
         st.session_state[_fkey_pt] = _excel_pt
 
-    _pc1, _pc2, _pc3 = st.columns([2, 2, 1.4])
+    _pc1, _pc2 = st.columns(2)
     with _pc1:
         picked_btn = st.color_picker(t['c_btn'], key=_fkey_btn)
     with _pc2:
         picked_pt = st.color_picker(t['c_pt'], key=_fkey_pt)
-    with _pc3:
-        st.markdown("<br>", unsafe_allow_html=True)
+
+    _ex1, _ex2 = st.columns(2)
+    with _ex1:
         _poster_for_auto = tpl_data.get('ポスターURL', '')
         if _poster_for_auto:
             if st.button(t['c_extract'], use_container_width=True, key=f"auto_color_btn_{st.session_state[_cnt_key]}"):
@@ -1069,6 +1115,24 @@ if tpl_data:
                     st.warning(t['c_fail'])
         else:
             st.caption(t['c_poster'])
+    with _ex2:
+        _img_file = st.file_uploader(
+            t['c_upload'],
+            type=['jpg', 'jpeg', 'png', 'webp'],
+            key=f"poster_img_{_fbase}_{st.session_state[_cnt_key]}",
+        )
+        if _img_file:
+            with st.spinner(t['c_spin']):
+                _pal = _extract_palette_from_bytes(_img_file.read())
+            if _pal:
+                st.session_state[_cnt_key] += 1
+                _new_btn = f'cp_btn_{_fbase}_{st.session_state[_cnt_key]}'
+                _new_pt  = f'cp_pt_{_fbase}_{st.session_state[_cnt_key]}'
+                st.session_state[_new_btn] = _pal[0]
+                st.session_state[_new_pt]  = _pal[0]
+                st.rerun()
+            else:
+                st.warning(t['c_fail'])
 
     st.markdown("---")
     st.markdown(f"#### {t['s3']}")
@@ -1094,7 +1158,7 @@ if st.session_state.get('ticket_gen_html'):
     components_v1.html(gen_html, height=720, scrolling=True)
     st.divider()
 
-    col_d, col_e = st.columns(2)
+    col_d, col_e, col_f = st.columns(3)
     with col_d:
         st.download_button(
             t['dl_html'],
@@ -1116,5 +1180,15 @@ if st.session_state.get('ticket_gen_html'):
                 st.error(t['no_smtp'])
             else:
                 st.error(t['send_err'].format(err))
+    with col_f:
+        import json as _json
+        _draft_bytes = _json.dumps(orig_data, ensure_ascii=False, indent=2).encode('utf-8')
+        st.download_button(
+            t['draft_save'],
+            _draft_bytes,
+            "ticket_draft.json",
+            "application/json",
+            use_container_width=True,
+        )
 
     st.text_area(t['src'], gen_html, height=200, key="gen_src")
