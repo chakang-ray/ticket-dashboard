@@ -678,8 +678,14 @@ def _validate_ai(items, api_key):
         "아래의 티켓 주의사항 및 NOTICE 문구들을 분석하여 문제를 한국어로 보고해주세요.\n\n"
         "【검사 항목】\n"
         "1. 중복/유사 문구: 동일하거나 매우 유사한 내용이 반복되는 항목\n"
-        "2. 상충 문구: 논리적으로 모순되는 내용 (연령 제한 불일치, 매수 제한 불일치, 입장 조건 모순 등)\n"
+        "2. 상충 문구: 논리적으로 모순되는 내용 (연령 제한 불일치 등)\n"
         "3. 모호한 표현: 해석에 따라 의미가 달라질 수 있어 분쟁 소지가 있는 표현\n\n"
+        "【판정 제외 — 이것은 문제가 아닙니다】\n"
+        "- 「お一人様○枚まで」「1名様○枚まで購入」 등 구매 매수 제한(1인이 살 수 있는 장 수)과\n"
+        "  「チケット1枚につき1名様のみ入場」 등 입장 조건(1장당 입장 가능 인원)은\n"
+        "  완전히 다른 규칙입니다. 숫자가 달라도 상충·불일치가 아니므로 절대 지적하지 마세요.\n"
+        "- 같은 내용이 チケット注意事項(짧은 요약)와 NOTICE 탭(상세 설명)에 나뉘어 기재된 경우도\n"
+        "  중복 문구로 지적하지 마세요.\n\n"
         "【문구 목록】\n"
         f"{lines}\n\n"
         "【출력 규칙】\n"
@@ -737,8 +743,11 @@ def _validate_local(items):
             + '\n'.join(f"  · [{s}] {t[:80]}" for s, t, _ in age_items)
         )
 
-    qty_items = [(s, t, list(map(int, re.findall(r'(\d+)\s*枚', t))))
-                 for s, t in items if re.search(r'\d+\s*枚', t)]
+    def _purchase_qtys(text):
+        # "X枚につき"(1장당 입장 조건) 패턴은 구매 매수 제한이 아니므로 제거
+        cleaned = re.sub(r'\d+\s*枚\s*(?:に\s*つき|ごと|当たり|あたり|複数)', '', text)
+        return list(map(int, re.findall(r'(\d+)\s*枚', cleaned)))
+    qty_items = [(s, t, _purchase_qtys(t)) for s, t in items if _purchase_qtys(t)]
     if len(qty_items) >= 2:
         nums = {n for _, _, ns in qty_items for n in ns}
         if len(nums) > 1:
@@ -814,8 +823,12 @@ if tpl_data:
 
     _excel_btn = tpl_data.get('チケットボタン色', '') or '#8da0a7'
     _excel_pt  = tpl_data.get('ポイントカラー', '') or _excel_btn
-    _fkey_btn  = f'cp_btn_{uploaded_tpl.name}'
-    _fkey_pt   = f'cp_pt_{uploaded_tpl.name}'
+    _fbase     = uploaded_tpl.name.replace('.', '_')
+    _cnt_key   = f'cp_cnt_{_fbase}'
+    if _cnt_key not in st.session_state:
+        st.session_state[_cnt_key] = 0
+    _fkey_btn  = f'cp_btn_{_fbase}_{st.session_state[_cnt_key]}'
+    _fkey_pt   = f'cp_pt_{_fbase}_{st.session_state[_cnt_key]}'
     if _fkey_btn not in st.session_state:
         st.session_state[_fkey_btn] = _excel_btn
     if _fkey_pt not in st.session_state:
@@ -823,22 +836,26 @@ if tpl_data:
 
     _pc1, _pc2, _pc3 = st.columns([2, 2, 1.4])
     with _pc1:
-        st.color_picker("🎫 チケットボタン色", key=_fkey_btn)
+        picked_btn = st.color_picker("🎫 チケットボタン色", key=_fkey_btn)
     with _pc2:
-        st.color_picker("✨ ポイントカラー", key=_fkey_pt)
+        picked_pt = st.color_picker("✨ ポイントカラー", key=_fkey_pt)
     with _pc3:
         st.markdown("<br>", unsafe_allow_html=True)
         _poster_for_auto = tpl_data.get('ポスターURL', '')
         if _poster_for_auto:
-            if st.button("🖼 ポスターから\n自動抽出", use_container_width=True, key="auto_color_btn"):
+            if st.button("🖼 ポスターから\n自動抽出", use_container_width=True, key=f"auto_color_btn_{st.session_state[_cnt_key]}"):
                 with st.spinner("ポスターから色を抽出中..."):
                     _pal = _extract_poster_palette(_poster_for_auto)
                 if _pal:
-                    st.session_state[_fkey_btn] = _pal[0]
-                    st.session_state[_fkey_pt]  = _pal[0]
+                    # 카운터를 올려 color_picker 위젯을 새로 만들어 강제 갱신
+                    st.session_state[_cnt_key] += 1
+                    _new_btn = f'cp_btn_{_fbase}_{st.session_state[_cnt_key]}'
+                    _new_pt  = f'cp_pt_{_fbase}_{st.session_state[_cnt_key]}'
+                    st.session_state[_new_btn] = _pal[0]
+                    st.session_state[_new_pt]  = _pal[0]
                     st.rerun()
                 else:
-                    st.warning("色の抽出に失敗しました。URLを確認してください。")
+                    st.warning("色の抽出に失敗しました。ポスターURLに直接アクセスできるか確認してください。")
         else:
             st.caption("ポスターURLを\n入力すると自動抽出\nできます")
 
@@ -846,8 +863,8 @@ if tpl_data:
     st.markdown("#### Step 3 · HTML 생성")
     if st.button("✦ HTML 생성하기", type="primary", use_container_width=True):
         _merged = dict(tpl_data)
-        _merged['チケットボタン色'] = st.session_state.get(_fkey_btn, _excel_btn)
-        _merged['ポイントカラー']   = st.session_state.get(_fkey_pt, _excel_pt)
+        _merged['チケットボタン色'] = picked_btn
+        _merged['ポイントカラー']   = picked_pt
         result_html, errs = _generate_html(_merged, _merged, _TICKET_CSS, 'ja')
         if errs:
             for err in errs:
