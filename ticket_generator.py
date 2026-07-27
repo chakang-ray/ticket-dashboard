@@ -308,7 +308,8 @@ def _make_template():
         rows.append([f'タブ{ti}_名称',   name,  'タブボタンに表示される名前'])
         rows.append([f'タブ{ti}_スタイル', style, '箇条書きの種類: ●（丸）/ ＊（星）/ ※（重要）/ なし'])
         for ci in range(1, 31):
-            rows.append([f'タブ{ti}_内容{ci}', contents[ci - 1] if ci <= len(contents) else '', ''])
+            note = '자유롭게 수정·삭제 가능 / 自由に編集・削除できます' if ci == 1 else ''
+            rows.append([f'タブ{ti}_内容{ci}', contents[ci - 1] if ci <= len(contents) else '', note])
         rows.append(['', '', ''])
     rows += [
         ['【⑦ お問い合わせ（タブ1末尾に自動挿入）】', '', ''],
