@@ -828,19 +828,6 @@ def _validate_local(items):
             + '\n'.join(f"  · [{s}] {t[:80]}" for s, t, _ in age_items)
         )
 
-    def _purchase_qtys(text):
-        # "X枚につき"(1장당 입장 조건) 패턴은 구매 매수 제한이 아니므로 제거
-        cleaned = re.sub(r'\d+\s*枚\s*(?:に\s*つき|ごと|当たり|あたり|複数)', '', text)
-        return list(map(int, re.findall(r'(\d+)\s*枚', cleaned)))
-    qty_items = [(s, t, _purchase_qtys(t)) for s, t in items if _purchase_qtys(t)]
-    if len(qty_items) >= 2:
-        nums = {n for _, _, ns in qty_items for n in ns}
-        if len(nums) > 1:
-            results.append(
-                f"⚠️ **매수 제한 숫자 불일치** ({', '.join(str(n) for n in sorted(nums))}매) — 통일 필요\n"
-                + '\n'.join(f"  · [{s}] {t[:80]}" for s, t, _ in qty_items)
-            )
-
     if not results:
         return "✅ 자동 검사에서 이상 없음"
     return '\n\n'.join(results)
