@@ -1143,7 +1143,40 @@ if st.session_state.get('ticket_gen_html'):
 
     st.divider()
     st.markdown(f"#### {t['preview']}")
-    components_v1.html(gen_html, height=720, scrolling=True)
+    _prev_mode = st.radio(
+        "preview_mode_label",
+        ["🖥 데스크탑", "📱 모바일"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="preview_mode",
+    )
+    if _prev_mode == "📱 모바일":
+        import html as _html
+        _esc = _html.escape(gen_html, quote=True)
+        _phone_tpl = (
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+            '* { box-sizing: border-box; margin: 0; padding: 0; }'
+            'body { background: #111; display: flex; justify-content: center; padding: 20px 0 28px; }'
+            '.phone { width: 375px; border-radius: 48px; border: 10px solid #2c2c2e;'
+            ' box-shadow: 0 0 0 1px #444, 0 24px 64px rgba(0,0,0,.7); overflow: hidden; background: #000; }'
+            '.phone-top { background: #1c1c1e; height: 40px; position: relative; }'
+            '.pill { width: 120px; height: 34px; background: #000; border-radius: 0 0 22px 22px;'
+            ' position: absolute; top: 0; left: 50%; transform: translateX(-50%); }'
+            '.cam { width: 10px; height: 10px; background: #1c2333; border-radius: 50%;'
+            ' position: absolute; top: 13px; left: calc(50% + 28px); transform: translateX(-50%);'
+            ' box-shadow: 0 0 0 2px #2a2a2e; }'
+            '.screen { width: 100%; height: 750px; border: none; display: block; }'
+            '.phone-bottom { background: #1c1c1e; height: 32px; display: flex; align-items: center; justify-content: center; }'
+            '.bar { width: 134px; height: 5px; background: #555; border-radius: 3px; }'
+            '</style></head><body><div class="phone">'
+            '<div class="phone-top"><div class="pill"></div><div class="cam"></div></div>'
+            '<iframe class="screen" srcdoc="SRCDOC_PLACEHOLDER" scrolling="yes"></iframe>'
+            '<div class="phone-bottom"><div class="bar"></div></div>'
+            '</div></body></html>'
+        )
+        components_v1.html(_phone_tpl.replace('SRCDOC_PLACEHOLDER', _esc), height=870, scrolling=False)
+    else:
+        components_v1.html(gen_html, height=720, scrolling=True)
     st.divider()
 
     col_d, col_e, col_f = st.columns(3)
