@@ -873,6 +873,8 @@ _UI_TEXT = {
         'draft_ok':   '✅ 초안 로드 완료! (색상 포함)',
         'c_upload':      '🖼 이미지 파일로 자동 추출',
         'c_upload_desc': '포스터 이미지를 업로드하시면 해당 색상에 맞추어 포인트 컬러가 자동 추출됩니다.',
+        'prev_desktop':  '🖥 데스크탑',
+        'prev_mobile':   '📱 모바일',
     },
     'ja': {
         's1':        'Step 1 · Excelテンプレートのダウンロード',
@@ -911,6 +913,8 @@ _UI_TEXT = {
         'draft_ok':   '✅ ドラフトを読み込みました！（色設定含む）',
         'c_upload':      '🖼 画像ファイルから自動抽出',
         'c_upload_desc': 'ポスター画像をアップロードすると、その色に合わせてポイントカラーが自動抽出されます。',
+        'prev_desktop':  '🖥 デスクトップ',
+        'prev_mobile':   '📱 モバイル',
     },
 }
 
@@ -1148,12 +1152,12 @@ if st.session_state.get('ticket_gen_html'):
     st.markdown(f"#### {t['preview']}")
     _prev_mode = st.radio(
         "preview_mode_label",
-        ["🖥 데스크탑", "📱 모바일"],
+        [t['prev_desktop'], t['prev_mobile']],
         horizontal=True,
         label_visibility="collapsed",
         key="preview_mode",
     )
-    if _prev_mode == "📱 모바일":
+    if _prev_mode == t['prev_mobile']:
         import html as _html
         _esc = _html.escape(gen_html, quote=True)
         _phone_tpl = (
