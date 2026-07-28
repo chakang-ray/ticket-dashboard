@@ -689,10 +689,10 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         '  <div class="title"><span class="titlecolor">TICKETS</span></div>\n'
         '  <div class="ticket-box">\n'
         '    <div class="ticket-info">\n'
+        + f'      <h2 class="ticket-title">{section_title}</h2>\n'
         + sp_html
         + lottery_html
         + deadline_html
-        + f'      <h2 class="ticket-title">{section_title}</h2>\n'
         + spn_html
         + '    </div>\n'
         '    <ul class="ticketList" aria-label="Ticket options">\n'
