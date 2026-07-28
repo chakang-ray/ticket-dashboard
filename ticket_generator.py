@@ -1189,18 +1189,15 @@ if st.session_state.get('ticket_gen_html'):
             use_container_width=True,
         )
     with col_e:
-        if st.button(t['send_btn'], type="secondary", use_container_width=True, key="send_email_btn"):
-            with st.spinner(t['send_spin']):
-                _title = (orig_data.get('公演タイトル', '')
-                          or orig_data.get('タイトル', '')
-                          or 'Ticket Page')
-                ok, err = _send_html_by_email(gen_html, _title)
-            if ok:
-                st.success(t['send_ok'])
-            elif err == 'no_smtp':
-                st.error(t['no_smtp'])
-            else:
-                st.error(t['send_err'].format(err))
+        import urllib.parse as _up
+        _title = (orig_data.get('公演タイトル', '')
+                  or orig_data.get('タイトル', '')
+                  or 'Ticket Page').replace('\\n', ' ')
+        _subject = _up.quote(f'[Qoo10] {_title}')
+        _body = _up.quote('HTMLファイルを添付の上、ご確認をお願いします。')
+        _mailto = f"mailto:chakang@ebay.com?subject={_subject}&body={_body}"
+        st.link_button(t['send_btn'], url=_mailto, use_container_width=True, type="secondary")
+        st.caption("※ HTML을 다운받아 메일에 첨부해 주세요" if st.session_state.get('ui_lang') == 'ko' else "※ HTMLをダウンロードしてメールに添付してください")
     with col_f:
         import json as _json
         _draft_bytes = _json.dumps(orig_data, ensure_ascii=False, indent=2).encode('utf-8')
