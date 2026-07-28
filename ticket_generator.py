@@ -871,7 +871,8 @@ _UI_TEXT = {
         'draft_save': '💾 초안 저장 (.json)',
         'draft_load': '📂 초안 불러오기 (.json)',
         'draft_ok':   '✅ 초안 로드 완료! (색상 포함)',
-        'c_upload':   '🖼 이미지 파일로 자동 추출',
+        'c_upload':      '🖼 이미지 파일로 자동 추출',
+        'c_upload_desc': '포스터 이미지를 업로드하시면 해당 색상에 맞추어 포인트 컬러가 자동 추출됩니다.',
     },
     'ja': {
         's1':        'Step 1 · Excelテンプレートのダウンロード',
@@ -908,7 +909,8 @@ _UI_TEXT = {
         'draft_save': '💾 ドラフトを保存 (.json)',
         'draft_load': '📂 ドラフトを読み込む (.json)',
         'draft_ok':   '✅ ドラフトを読み込みました！（色設定含む）',
-        'c_upload':   '🖼 画像ファイルから自動抽出',
+        'c_upload':      '🖼 画像ファイルから自動抽出',
+        'c_upload_desc': 'ポスター画像をアップロードすると、その色に合わせてポイントカラーが自動抽出されます。',
     },
 }
 
@@ -1104,6 +1106,7 @@ if tpl_data:
         else:
             st.caption(t['c_poster'])
     with _ex2:
+        st.caption(t['c_upload_desc'])
         _img_file = st.file_uploader(
             t['c_upload'],
             type=['jpg', 'jpeg', 'png', 'webp'],
