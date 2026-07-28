@@ -1194,7 +1194,7 @@ if st.session_state.get('ticket_gen_html'):
                   or orig_data.get('タイトル', '')
                   or 'Ticket Page').replace('\\n', ' ')
         _subject = _up.quote(f'[Qoo10] {_title}')
-        _body = _up.quote('HTMLファイルを添付の上、ご確認をお願いします。')
+        _body = _up.quote('HTML을 다운로드받으셔서 첨부 하시고 메일을 보내주세요.\nHTMLをダウンロードして添付の上、メールをお送りください。')
         _mailto = f"mailto:chakang@ebay.com?subject={_subject}&body={_body}"
         st.link_button(t['send_btn'], url=_mailto, use_container_width=True, type="secondary")
         st.caption("※ HTML을 다운받아 메일에 첨부해 주세요" if st.session_state.get('ui_lang') == 'ko' else "※ HTMLをダウンロードしてメールに添付してください")
