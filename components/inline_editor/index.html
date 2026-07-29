@@ -5,188 +5,189 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
+    html, body { margin: 0; padding: 0; font-family: sans-serif; }
 
     #toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 9999;
-      background: rgba(18, 18, 20, 0.96);
-      backdrop-filter: blur(8px);
+      position: sticky; top: 0; z-index: 9999;
+      background: rgba(18,18,20,0.97); backdrop-filter: blur(8px);
       padding: 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-    #toolbar .hint {
-      color: rgba(255,255,255,0.55);
-      font-size: 12px;
-      font-family: sans-serif;
-      flex: 1;
-      min-width: 180px;
-    }
-    .tb-btn {
-      border: none;
-      border-radius: 6px;
-      padding: 6px 14px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 12px;
-      font-family: sans-serif;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-    #apply-btn { background: #6C63FF; color: white; }
-    #apply-btn:hover { background: #5a51e8; }
-    #reset-btn {
-      background: transparent;
-      color: rgba(255,255,255,0.5);
-      border: 1px solid rgba(255,255,255,0.18);
-    }
-    #reset-btn:hover { background: rgba(255,255,255,0.08); color: white; }
+    .hint { color: rgba(255,255,255,0.45); font-size: 11px; flex: 1; min-width: 100px; }
+    .tb { border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer;
+          font-weight: 700; font-size: 11px; transition: all 0.15s; white-space: nowrap; }
+    #btn-apply  { background: #6C63FF; color: #fff; }
+    #btn-apply:hover  { background: #5a51e8; }
+    #btn-reset  { background: transparent; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.2); }
+    #btn-reset:hover  { background: rgba(255,255,255,0.08); color: #fff; }
+    #btn-mobile { background: transparent; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.2); }
+    #btn-mobile:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    #btn-mobile.on { background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.4); }
 
-    #ticket-wrapper { width: 100%; }
+    #loading { color: rgba(255,255,255,0.3); text-align: center; padding: 60px; font-size: 13px; }
 
-    [contenteditable] {
-      cursor: text;
-      border-radius: 2px;
-      transition: outline 0.12s;
-    }
-    [contenteditable]:hover {
-      outline: 1px dashed rgba(108, 99, 255, 0.6);
-      outline-offset: 3px;
-    }
-    [contenteditable]:focus {
-      outline: 2px solid #6C63FF !important;
-      outline-offset: 3px;
-    }
+    #dw { width: 100%; }
+    #mw { display: none; background: #111; padding: 20px 0 28px; text-align: center; }
+    .phone { display: inline-block; width: 375px; border-radius: 48px;
+             border: 10px solid #2c2c2e;
+             box-shadow: 0 0 0 1px #444, 0 24px 64px rgba(0,0,0,.7);
+             overflow: hidden; background: #000; }
+    .ph-top { background: #1c1c1e; height: 40px; position: relative; }
+    .pill { width: 120px; height: 34px; background: #000; border-radius: 0 0 22px 22px;
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+    .cam { width: 10px; height: 10px; background: #1c2333; border-radius: 50%;
+           position: absolute; top: 13px; left: calc(50% + 28px); transform: translateX(-50%);
+           box-shadow: 0 0 0 2px #2a2a2e; }
+    .ph-scr { width: 375px; height: 750px; border: none; display: block; }
+    .ph-bot { background: #1c1c1e; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .bar { width: 134px; height: 5px; background: #555; border-radius: 3px; }
+
+    [contenteditable] { cursor: text; border-radius: 2px; transition: outline 0.1s; }
+    [contenteditable]:hover { outline: 1px dashed rgba(108,99,255,0.65); outline-offset: 3px; }
+    [contenteditable]:focus { outline: 2px solid #6C63FF !important; outline-offset: 3px; }
   </style>
 </head>
 <body>
   <div id="toolbar">
-    <span class="hint">✏️ 텍스트 클릭해서 직접 수정 · テキストをクリックして直接編集</span>
-    <button class="tb-btn" id="apply-btn">✅ 편집 완료 / 完了</button>
-    <button class="tb-btn" id="reset-btn">↩ 되돌리기 / リセット</button>
+    <span class="hint">✏️ 텍스트 클릭 → 편집 · クリックして編集</span>
+    <button class="tb" id="btn-mobile">📱 모바일</button>
+    <button class="tb" id="btn-reset">↩ 되돌리기</button>
+    <button class="tb" id="btn-apply">✅ 편집 완료 · ダウンロード</button>
   </div>
-  <div id="ticket-wrapper"></div>
+  <div id="loading">HTML을 불러오는 중... / 読み込み中...</div>
+  <div id="dw"></div>
+  <div id="mw">
+    <div class="phone">
+      <div class="ph-top"><div class="pill"></div><div class="cam"></div></div>
+      <iframe class="ph-scr" id="ph-iframe" scrolling="yes"></iframe>
+      <div class="ph-bot"><div class="bar"></div></div>
+    </div>
+  </div>
 
   <script>
-    var _originalHtml = '';
-    var _headHtml = '';
-    var _bodyStyle = '';
+    var _origHtml = '', _headHtml = '', _bodyStyle = '', _isMobile = false;
 
-    function _post(obj) { window.parent.postMessage(obj, '*'); }
-    function _setReady() { _post({ type: 'streamlit:componentReady', apiVersion: 1 }); }
-    function _setValue(val) { _post({ type: 'streamlit:setComponentValue', value: val }); }
-    function _setHeight(h) { _post({ type: 'streamlit:setFrameHeight', height: h }); }
+    function _post(o) { window.parent.postMessage(o, '*'); }
+    function _ready()  { _post({ type: 'streamlit:componentReady', apiVersion: 1 }); }
+    function _setVal(v){ _post({ type: 'streamlit:setComponentValue', value: v }); }
+    function _setH(h)  { _post({ type: 'streamlit:setFrameHeight', height: h }); }
 
     window.addEventListener('message', function(ev) {
       if (ev.data && ev.data.type === 'streamlit:render') {
         var html = (ev.data.args || {}).html_content || '';
-        if (html && html !== _originalHtml) _renderTicket(html);
+        if (html) _render(html);
       }
     });
 
-    var SELECTORS = [
-      '.toptitle',
-      '.subtitle.info-date',
-      '.description.info-time',
-      '.description.info-venue',
-      '.ticket-title',
-      '.ticket-note',
-      '.ticketType',
-      '.ticketDay',
-      '.ticketDate',
-      '.ticketPrice',
-      '.ticket-notice li',
-      '.oshirase dd',
-      '.oshirase dt',
-      '.title .titlecolor',
+    var SELS = [
+      '.toptitle', '.subtitle.info-date', '.description.info-time',
+      '.description.info-venue', '.ticket-title', '.ticket-note',
+      '.ticketType', '.ticketDay', '.ticketDate', '.ticketPrice',
+      '.ticket-notice li', '.oshirase dd', '.oshirase dt', '.title .titlecolor'
     ];
 
-    function _renderTicket(htmlStr) {
-      _originalHtml = htmlStr;
-
-      var parser = new DOMParser();
-      var doc = parser.parseFromString(htmlStr, 'text/html');
+    function _render(htmlStr) {
+      _origHtml = htmlStr;
+      var doc = new DOMParser().parseFromString(htmlStr, 'text/html');
       _headHtml = doc.head.innerHTML;
       _bodyStyle = doc.body.getAttribute('style') || '';
 
       // Remove previously injected resources
-      document.querySelectorAll('[data-tkt]').forEach(function(el) { el.remove(); });
-
-      // Inject external links (fonts, CSS)
-      doc.querySelectorAll('link').forEach(function(lk) {
-        var clone = lk.cloneNode(true);
-        clone.setAttribute('data-tkt', '1');
-        document.head.appendChild(clone);
+      document.querySelectorAll('[data-tkt]').forEach(function(el){ el.remove(); });
+      doc.querySelectorAll('link').forEach(function(lk){
+        var c = lk.cloneNode(true); c.setAttribute('data-tkt','1');
+        document.head.appendChild(c);
+      });
+      doc.querySelectorAll('style').forEach(function(st){
+        var s = document.createElement('style'); s.setAttribute('data-tkt','1');
+        s.textContent = st.textContent; document.head.appendChild(s);
+      });
+      _bodyStyle.split(';').forEach(function(r){
+        r = r.trim(); if (!r) return;
+        var i = r.indexOf(':'); if (i < 0) return;
+        try { document.body.style[r.slice(0,i).trim()] = r.slice(i+1).trim(); } catch(e){}
       });
 
-      // Inject styles
-      doc.querySelectorAll('style').forEach(function(st) {
-        var s = document.createElement('style');
-        s.setAttribute('data-tkt', '1');
-        s.textContent = st.textContent;
-        document.head.appendChild(s);
-      });
-
-      // Apply body style
-      if (_bodyStyle) {
-        _bodyStyle.split(';').forEach(function(rule) {
-          rule = rule.trim();
-          if (!rule) return;
-          var idx = rule.indexOf(':');
-          if (idx < 0) return;
-          var prop = rule.slice(0, idx).trim();
-          var val = rule.slice(idx + 1).trim();
-          try { document.body.style[prop] = val; } catch(e) {}
-        });
-      }
-
-      document.getElementById('ticket-wrapper').innerHTML = doc.body.innerHTML;
+      document.getElementById('dw').innerHTML = doc.body.innerHTML;
+      document.getElementById('loading').style.display = 'none';
       _makeEditable();
 
-      // Update iframe height after fonts/images settle
-      setTimeout(function() { _setHeight(document.body.scrollHeight + 20); }, 900);
+      if (_isMobile) _refreshPhone();
+      setTimeout(_updateH, 900);
     }
 
     function _makeEditable() {
-      SELECTORS.forEach(function(sel) {
-        document.querySelectorAll('#ticket-wrapper ' + sel).forEach(function(el) {
-          el.setAttribute('contenteditable', 'true');
-          el.setAttribute('spellcheck', 'false');
+      SELS.forEach(function(sel){
+        document.querySelectorAll('#dw ' + sel).forEach(function(el){
+          el.setAttribute('contenteditable','true');
+          el.setAttribute('spellcheck','false');
         });
       });
     }
 
-    function _removeEditable() {
-      document.querySelectorAll('[contenteditable]').forEach(function(el) {
-        el.removeAttribute('contenteditable');
-        el.removeAttribute('spellcheck');
+    function _stripEditable() {
+      document.querySelectorAll('[contenteditable]').forEach(function(el){
+        el.removeAttribute('contenteditable'); el.removeAttribute('spellcheck');
       });
     }
 
-    document.getElementById('apply-btn').addEventListener('click', function() {
-      _removeEditable();
-      var body = document.getElementById('ticket-wrapper').innerHTML;
+    function _buildCleanHtml() {
+      _stripEditable();
+      var body = document.getElementById('dw').innerHTML;
       var out = '<!DOCTYPE html>\n<html lang="ja">\n<head>\n'
         + _headHtml + '\n</head>\n<body style="' + _bodyStyle + '">\n'
         + body + '\n</body>\n</html>';
-      _setValue(out);
       _makeEditable();
+      return out;
+    }
+
+    function _refreshPhone() {
+      document.getElementById('ph-iframe').srcdoc = _buildCleanHtml();
+    }
+
+    function _updateH() {
+      _setH(_isMobile ? 880 : (document.getElementById('dw').scrollHeight + 80));
+    }
+
+    // Mobile toggle
+    document.getElementById('btn-mobile').addEventListener('click', function(){
+      _isMobile = !_isMobile;
+      var dw = document.getElementById('dw');
+      var mw = document.getElementById('mw');
+      var btn = document.getElementById('btn-mobile');
+      if (_isMobile) {
+        dw.style.display = 'none'; mw.style.display = 'block';
+        btn.textContent = '🖥 데스크탑'; btn.classList.add('on');
+        _refreshPhone(); _setH(880);
+      } else {
+        dw.style.display = ''; mw.style.display = 'none';
+        btn.textContent = '📱 모바일'; btn.classList.remove('on');
+        setTimeout(_updateH, 100);
+      }
     });
 
-    document.getElementById('reset-btn').addEventListener('click', function() {
-      if (_originalHtml) _renderTicket(_originalHtml);
+    // Apply + download
+    document.getElementById('btn-apply').addEventListener('click', function(){
+      var out = _buildCleanHtml();
+      _setVal(out);
+      try {
+        var blob = new Blob([out], {type:'text/html;charset=utf-8'});
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'ticket_edited.html';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      } catch(e) {}
     });
 
-    new ResizeObserver(function() {
-      _setHeight(document.body.scrollHeight + 20);
-    }).observe(document.getElementById('ticket-wrapper'));
+    // Reset
+    document.getElementById('btn-reset').addEventListener('click', function(){
+      if (_origHtml) { _render(_origHtml); }
+    });
 
-    _setReady();
+    new ResizeObserver(_updateH).observe(document.getElementById('dw'));
+
+    _ready();
+    _setH(900); // Initial height so component is visible immediately
   </script>
 </body>
 </html>

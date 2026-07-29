@@ -1166,7 +1166,6 @@ if st.session_state.get('ticket_gen_html'):
     _edit_mode = st.toggle(t['edit_mode_btn'], key='inline_edit_mode', value=False)
 
     if _edit_mode:
-        st.caption(t['edit_mode_hint'])
         _edited = _inline_editor(html_content=gen_html, default=None, key="inline_editor_widget")
         if _edited:
             st.session_state['ticket_gen_html'] = _edited
