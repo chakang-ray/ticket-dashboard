@@ -750,9 +750,14 @@ var O=new Map();
 function mk(){S.forEach(function(s){document.querySelectorAll(s).forEach(function(el){
   if(!O.has(el))O.set(el,el.innerHTML);
   el.setAttribute('contenteditable','true');el.setAttribute('spellcheck','false');
+  el.addEventListener('click',function(e){e.stopPropagation();});
 });});}
 function rm(){document.querySelectorAll('[contenteditable]').forEach(function(el){
   el.removeAttribute('contenteditable');el.removeAttribute('spellcheck');});}
+// 편집 모드에서 링크 이동 차단 (ticketBtn 등 <a> 클릭 시 Qoo10 페이지로 이동 방지)
+document.querySelectorAll('a').forEach(function(a){
+  a.addEventListener('click',function(e){e.preventDefault();});
+});
 mk();
 document.getElementById('__ied_ok').addEventListener('click',function(){
   rm();
