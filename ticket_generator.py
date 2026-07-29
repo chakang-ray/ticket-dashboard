@@ -1,9 +1,15 @@
 import io
 import re
+from pathlib import Path
 import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components_v1
 from openpyxl import Workbook as _Workbook
+
+_inline_editor = components_v1.declare_component(
+    "inline_editor",
+    path=str(Path(__file__).parent / "components" / "inline_editor"),
+)
 
 st.set_page_config(
     page_title="Qoo10 チケットページ ジェネレーター",
@@ -875,6 +881,9 @@ _UI_TEXT = {
         'c_upload_desc': '포스터 이미지를 업로드하시면 해당 색상에 맞추어 포인트 컬러가 자동 추출됩니다.',
         'prev_desktop':  '🖥 데스크탑',
         'prev_mobile':   '📱 모바일',
+        'edit_mode_btn':  '✏️ 인라인 편집 모드',
+        'edit_mode_hint': '미리보기의 텍스트를 클릭하면 그 자리에서 바로 수정할 수 있어요. 수정 후 "편집 완료" 버튼을 눌러 적용하세요.',
+        'edit_applied':   '✅ 편집 내용이 적용됐어요. 아래에서 HTML을 다운로드하세요.',
     },
     'ja': {
         's1':        'Step 1 · Excelテンプレートのダウンロード',
@@ -915,6 +924,9 @@ _UI_TEXT = {
         'c_upload_desc': 'ポスター画像をアップロードすると、その色に合わせてポイントカラーが自動抽出されます。',
         'prev_desktop':  '🖥 デスクトップ',
         'prev_mobile':   '📱 モバイル',
+        'edit_mode_btn':  '✏️ インライン編集モード',
+        'edit_mode_hint': 'プレビュー内のテキストをクリックして直接編集できます。完了後「編集完了」ボタンをクリックしてください。',
+        'edit_applied':   '✅ 編集内容が反映されました。HTMLをダウンロードしてください。',
     },
 }
 
@@ -1150,40 +1162,51 @@ if st.session_state.get('ticket_gen_html'):
 
     st.divider()
     st.markdown(f"#### {t['preview']}")
-    _prev_mode = st.radio(
-        "preview_mode_label",
-        [t['prev_desktop'], t['prev_mobile']],
-        horizontal=True,
-        label_visibility="collapsed",
-        key="preview_mode",
-    )
-    if _prev_mode == t['prev_mobile']:
-        import html as _html
-        _esc = _html.escape(gen_html, quote=True)
-        _phone_tpl = (
-            '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
-            '* { box-sizing: border-box; margin: 0; padding: 0; }'
-            'body { background: #111; display: flex; justify-content: center; padding: 20px 0 28px; }'
-            '.phone { width: 375px; border-radius: 48px; border: 10px solid #2c2c2e;'
-            ' box-shadow: 0 0 0 1px #444, 0 24px 64px rgba(0,0,0,.7); overflow: hidden; background: #000; }'
-            '.phone-top { background: #1c1c1e; height: 40px; position: relative; }'
-            '.pill { width: 120px; height: 34px; background: #000; border-radius: 0 0 22px 22px;'
-            ' position: absolute; top: 0; left: 50%; transform: translateX(-50%); }'
-            '.cam { width: 10px; height: 10px; background: #1c2333; border-radius: 50%;'
-            ' position: absolute; top: 13px; left: calc(50% + 28px); transform: translateX(-50%);'
-            ' box-shadow: 0 0 0 2px #2a2a2e; }'
-            '.screen { width: 100%; height: 750px; border: none; display: block; }'
-            '.phone-bottom { background: #1c1c1e; height: 32px; display: flex; align-items: center; justify-content: center; }'
-            '.bar { width: 134px; height: 5px; background: #555; border-radius: 3px; }'
-            '</style></head><body><div class="phone">'
-            '<div class="phone-top"><div class="pill"></div><div class="cam"></div></div>'
-            '<iframe class="screen" srcdoc="SRCDOC_PLACEHOLDER" scrolling="yes"></iframe>'
-            '<div class="phone-bottom"><div class="bar"></div></div>'
-            '</div></body></html>'
-        )
-        components_v1.html(_phone_tpl.replace('SRCDOC_PLACEHOLDER', _esc), height=870, scrolling=False)
+
+    _edit_mode = st.toggle(t['edit_mode_btn'], key='inline_edit_mode', value=False)
+
+    if _edit_mode:
+        st.caption(t['edit_mode_hint'])
+        _edited = _inline_editor(html_content=gen_html, default=None, key="inline_editor_widget")
+        if _edited:
+            st.session_state['ticket_gen_html'] = _edited
+            gen_html = _edited
+            st.success(t['edit_applied'])
     else:
-        components_v1.html(gen_html, height=720, scrolling=True)
+        _prev_mode = st.radio(
+            "preview_mode_label",
+            [t['prev_desktop'], t['prev_mobile']],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="preview_mode",
+        )
+        if _prev_mode == t['prev_mobile']:
+            import html as _html
+            _esc = _html.escape(gen_html, quote=True)
+            _phone_tpl = (
+                '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+                '* { box-sizing: border-box; margin: 0; padding: 0; }'
+                'body { background: #111; display: flex; justify-content: center; padding: 20px 0 28px; }'
+                '.phone { width: 375px; border-radius: 48px; border: 10px solid #2c2c2e;'
+                ' box-shadow: 0 0 0 1px #444, 0 24px 64px rgba(0,0,0,.7); overflow: hidden; background: #000; }'
+                '.phone-top { background: #1c1c1e; height: 40px; position: relative; }'
+                '.pill { width: 120px; height: 34px; background: #000; border-radius: 0 0 22px 22px;'
+                ' position: absolute; top: 0; left: 50%; transform: translateX(-50%); }'
+                '.cam { width: 10px; height: 10px; background: #1c2333; border-radius: 50%;'
+                ' position: absolute; top: 13px; left: calc(50% + 28px); transform: translateX(-50%);'
+                ' box-shadow: 0 0 0 2px #2a2a2e; }'
+                '.screen { width: 100%; height: 750px; border: none; display: block; }'
+                '.phone-bottom { background: #1c1c1e; height: 32px; display: flex; align-items: center; justify-content: center; }'
+                '.bar { width: 134px; height: 5px; background: #555; border-radius: 3px; }'
+                '</style></head><body><div class="phone">'
+                '<div class="phone-top"><div class="pill"></div><div class="cam"></div></div>'
+                '<iframe class="screen" srcdoc="SRCDOC_PLACEHOLDER" scrolling="yes"></iframe>'
+                '<div class="phone-bottom"><div class="bar"></div></div>'
+                '</div></body></html>'
+            )
+            components_v1.html(_phone_tpl.replace('SRCDOC_PLACEHOLDER', _esc), height=870, scrolling=False)
+        else:
+            components_v1.html(gen_html, height=720, scrolling=True)
     st.divider()
 
     col_d, col_e, col_f = st.columns(3)

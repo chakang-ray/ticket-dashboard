@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+
+    #toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      background: rgba(18, 18, 20, 0.96);
+      backdrop-filter: blur(8px);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    #toolbar .hint {
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      font-family: sans-serif;
+      flex: 1;
+      min-width: 180px;
+    }
+    .tb-btn {
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+      font-family: sans-serif;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    #apply-btn { background: #6C63FF; color: white; }
+    #apply-btn:hover { background: #5a51e8; }
+    #reset-btn {
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    #reset-btn:hover { background: rgba(255,255,255,0.08); color: white; }
+
+    #ticket-wrapper { width: 100%; }
+
+    [contenteditable] {
+      cursor: text;
+      border-radius: 2px;
+      transition: outline 0.12s;
+    }
+    [contenteditable]:hover {
+      outline: 1px dashed rgba(108, 99, 255, 0.6);
+      outline-offset: 3px;
+    }
+    [contenteditable]:focus {
+      outline: 2px solid #6C63FF !important;
+      outline-offset: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <span class="hint">✏️ 텍스트 클릭해서 직접 수정 · テキストをクリックして直接編集</span>
+    <button class="tb-btn" id="apply-btn">✅ 편집 완료 / 完了</button>
+    <button class="tb-btn" id="reset-btn">↩ 되돌리기 / リセット</button>
+  </div>
+  <div id="ticket-wrapper"></div>
+
+  <script>
+    var _originalHtml = '';
+    var _headHtml = '';
+    var _bodyStyle = '';
+
+    function _post(obj) { window.parent.postMessage(obj, '*'); }
+    function _setReady() { _post({ type: 'streamlit:componentReady', apiVersion: 1 }); }
+    function _setValue(val) { _post({ type: 'streamlit:setComponentValue', value: val }); }
+    function _setHeight(h) { _post({ type: 'streamlit:setFrameHeight', height: h }); }
+
+    window.addEventListener('message', function(ev) {
+      if (ev.data && ev.data.type === 'streamlit:render') {
+        var html = (ev.data.args || {}).html_content || '';
+        if (html && html !== _originalHtml) _renderTicket(html);
+      }
+    });
+
+    var SELECTORS = [
+      '.toptitle',
+      '.subtitle.info-date',
+      '.description.info-time',
+      '.description.info-venue',
+      '.ticket-title',
+      '.ticket-note',
+      '.ticketType',
+      '.ticketDay',
+      '.ticketDate',
+      '.ticketPrice',
+      '.ticket-notice li',
+      '.oshirase dd',
+      '.oshirase dt',
+      '.title .titlecolor',
+    ];
+
+    function _renderTicket(htmlStr) {
+      _originalHtml = htmlStr;
+
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(htmlStr, 'text/html');
+      _headHtml = doc.head.innerHTML;
+      _bodyStyle = doc.body.getAttribute('style') || '';
+
+      // Remove previously injected resources
+      document.querySelectorAll('[data-tkt]').forEach(function(el) { el.remove(); });
+
+      // Inject external links (fonts, CSS)
+      doc.querySelectorAll('link').forEach(function(lk) {
+        var clone = lk.cloneNode(true);
+        clone.setAttribute('data-tkt', '1');
+        document.head.appendChild(clone);
+      });
+
+      // Inject styles
+      doc.querySelectorAll('style').forEach(function(st) {
+        var s = document.createElement('style');
+        s.setAttribute('data-tkt', '1');
+        s.textContent = st.textContent;
+        document.head.appendChild(s);
+      });
+
+      // Apply body style
+      if (_bodyStyle) {
+        _bodyStyle.split(';').forEach(function(rule) {
+          rule = rule.trim();
+          if (!rule) return;
+          var idx = rule.indexOf(':');
+          if (idx < 0) return;
+          var prop = rule.slice(0, idx).trim();
+          var val = rule.slice(idx + 1).trim();
+          try { document.body.style[prop] = val; } catch(e) {}
+        });
+      }
+
+      document.getElementById('ticket-wrapper').innerHTML = doc.body.innerHTML;
+      _makeEditable();
+
+      // Update iframe height after fonts/images settle
+      setTimeout(function() { _setHeight(document.body.scrollHeight + 20); }, 900);
+    }
+
+    function _makeEditable() {
+      SELECTORS.forEach(function(sel) {
+        document.querySelectorAll('#ticket-wrapper ' + sel).forEach(function(el) {
+          el.setAttribute('contenteditable', 'true');
+          el.setAttribute('spellcheck', 'false');
+        });
+      });
+    }
+
+    function _removeEditable() {
+      document.querySelectorAll('[contenteditable]').forEach(function(el) {
+        el.removeAttribute('contenteditable');
+        el.removeAttribute('spellcheck');
+      });
+    }
+
+    document.getElementById('apply-btn').addEventListener('click', function() {
+      _removeEditable();
+      var body = document.getElementById('ticket-wrapper').innerHTML;
+      var out = '<!DOCTYPE html>\n<html lang="ja">\n<head>\n'
+        + _headHtml + '\n</head>\n<body style="' + _bodyStyle + '">\n'
+        + body + '\n</body>\n</html>';
+      _setValue(out);
+      _makeEditable();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', function() {
+      if (_originalHtml) _renderTicket(_originalHtml);
+    });
+
+    new ResizeObserver(function() {
+      _setHeight(document.body.scrollHeight + 20);
+    }).observe(document.getElementById('ticket-wrapper'));
+
+    _setReady();
+  </script>
+</body>
+</html>
