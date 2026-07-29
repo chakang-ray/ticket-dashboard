@@ -1,15 +1,9 @@
 import io
 import re
-from pathlib import Path
 import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components_v1
 from openpyxl import Workbook as _Workbook
-
-_inline_editor = components_v1.declare_component(
-    "inline_editor",
-    path=str(Path(__file__).parent / "components" / "inline_editor"),
-)
 
 st.set_page_config(
     page_title="Qoo10 チケットページ ジェネレーター",
@@ -745,6 +739,68 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
     return html_out, []
 
 
+def _inject_editable(html: str) -> str:
+    """미리보기 HTML에 contenteditable 툴바를 주입한다."""
+    _js = r"""(function(){
+var S=['.toptitle','.subtitle.info-date','.description.info-time',
+  '.description.info-venue','.ticket-title','.ticket-note',
+  '.ticketType','.ticketDay','.ticketDate','.ticketPrice',
+  '.ticket-notice li','.oshirase dd','.oshirase dt','.title .titlecolor'];
+var O=new Map();
+function mk(){S.forEach(function(s){document.querySelectorAll(s).forEach(function(el){
+  if(!O.has(el))O.set(el,el.innerHTML);
+  el.setAttribute('contenteditable','true');el.setAttribute('spellcheck','false');
+});});}
+function rm(){document.querySelectorAll('[contenteditable]').forEach(function(el){
+  el.removeAttribute('contenteditable');el.removeAttribute('spellcheck');});}
+mk();
+document.getElementById('__ied_ok').addEventListener('click',function(){
+  rm();
+  var bar=document.getElementById('__ied_bar');
+  var sty=document.getElementById('__ied_s');
+  var scr=document.getElementById('__ied_j');
+  bar.remove();sty.remove();scr.remove();
+  var out='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  document.body.appendChild(bar);document.head.appendChild(sty);document.body.appendChild(scr);
+  var bl=new Blob([out],{type:'text/html;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(bl);a.download='ticket_edited.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  mk();
+});
+document.getElementById('__ied_rs').addEventListener('click',function(){
+  O.forEach(function(v,el){el.innerHTML=v;});
+});
+})();"""
+    _css = (
+        '#__ied_bar{position:fixed;top:10px;right:10px;z-index:99999;'
+        'background:rgba(18,18,20,.95);backdrop-filter:blur(8px);border-radius:10px;'
+        'padding:8px 14px;display:flex;align-items:center;gap:8px;font-family:sans-serif;'
+        'box-shadow:0 4px 20px rgba(0,0,0,.5);}'
+        '.ied-h{color:rgba(255,255,255,.45);font-size:11px;}'
+        '.ied-b{border:none;border-radius:6px;padding:6px 12px;cursor:pointer;'
+        'font-weight:700;font-size:11px;transition:all .15s;white-space:nowrap;}'
+        '#__ied_ok{background:#6C63FF;color:#fff;}'
+        '#__ied_ok:hover{background:#5a51e8;}'
+        '#__ied_rs{background:transparent;color:rgba(255,255,255,.5);'
+        'border:1px solid rgba(255,255,255,.2);}'
+        '#__ied_rs:hover{background:rgba(255,255,255,.08);color:#fff;}'
+        '[contenteditable]{cursor:text;border-radius:2px;}'
+        '[contenteditable]:hover{outline:1px dashed rgba(108,99,255,.65);outline-offset:3px;}'
+        '[contenteditable]:focus{outline:2px solid #6C63FF!important;outline-offset:3px;}'
+    )
+    _inject = (
+        f'<style id="__ied_s">{_css}</style>\n'
+        '<div id="__ied_bar">'
+        '<span class="ied-h">✏️ 클릭 → 편집 · クリックして編集</span>'
+        '<button class="ied-b" id="__ied_rs">↩ 되돌리기</button>'
+        '<button class="ied-b" id="__ied_ok">✅ 편집 완료 · ダウンロード</button>'
+        '</div>\n'
+        f'<script id="__ied_j">{_js}</script>'
+    )
+    return html.replace('</body>', _inject + '\n</body>', 1)
+
+
 def _collect_notices(data):
     items = []
     for i in range(1, 6):
@@ -1165,47 +1221,44 @@ if st.session_state.get('ticket_gen_html'):
 
     _edit_mode = st.toggle(t['edit_mode_btn'], key='inline_edit_mode', value=False)
 
-    if _edit_mode:
-        _edited = _inline_editor(html_content=gen_html, default=None, key="inline_editor_widget")
-        if _edited:
-            st.session_state['ticket_gen_html'] = _edited
-            gen_html = _edited
-            st.success(t['edit_applied'])
-    else:
-        _prev_mode = st.radio(
-            "preview_mode_label",
-            [t['prev_desktop'], t['prev_mobile']],
-            horizontal=True,
-            label_visibility="collapsed",
-            key="preview_mode",
+    _prev_mode = st.radio(
+        "preview_mode_label",
+        [t['prev_desktop'], t['prev_mobile']],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="preview_mode",
+    )
+
+    _render_html = _inject_editable(gen_html) if _edit_mode else gen_html
+
+    import html as _html
+    if _prev_mode == t['prev_mobile']:
+        _esc = _html.escape(_render_html, quote=True)
+        _phone_tpl = (
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+            '* { box-sizing: border-box; margin: 0; padding: 0; }'
+            'body { background: #111; display: flex; justify-content: center; padding: 20px 0 28px; }'
+            '.phone { width: 375px; border-radius: 48px; border: 10px solid #2c2c2e;'
+            ' box-shadow: 0 0 0 1px #444, 0 24px 64px rgba(0,0,0,.7); overflow: hidden; background: #000; }'
+            '.phone-top { background: #1c1c1e; height: 40px; position: relative; }'
+            '.pill { width: 120px; height: 34px; background: #000; border-radius: 0 0 22px 22px;'
+            ' position: absolute; top: 0; left: 50%; transform: translateX(-50%); }'
+            '.cam { width: 10px; height: 10px; background: #1c2333; border-radius: 50%;'
+            ' position: absolute; top: 13px; left: calc(50% + 28px); transform: translateX(-50%);'
+            ' box-shadow: 0 0 0 2px #2a2a2e; }'
+            '.screen { width: 100%; height: 750px; border: none; display: block; }'
+            '.phone-bottom { background: #1c1c1e; height: 32px; display: flex; align-items: center; justify-content: center; }'
+            '.bar { width: 134px; height: 5px; background: #555; border-radius: 3px; }'
+            '</style></head><body><div class="phone">'
+            '<div class="phone-top"><div class="pill"></div><div class="cam"></div></div>'
+            '<iframe class="screen" srcdoc="SRCDOC_PLACEHOLDER" scrolling="yes"></iframe>'
+            '<div class="phone-bottom"><div class="bar"></div></div>'
+            '</div></body></html>'
         )
-        if _prev_mode == t['prev_mobile']:
-            import html as _html
-            _esc = _html.escape(gen_html, quote=True)
-            _phone_tpl = (
-                '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
-                '* { box-sizing: border-box; margin: 0; padding: 0; }'
-                'body { background: #111; display: flex; justify-content: center; padding: 20px 0 28px; }'
-                '.phone { width: 375px; border-radius: 48px; border: 10px solid #2c2c2e;'
-                ' box-shadow: 0 0 0 1px #444, 0 24px 64px rgba(0,0,0,.7); overflow: hidden; background: #000; }'
-                '.phone-top { background: #1c1c1e; height: 40px; position: relative; }'
-                '.pill { width: 120px; height: 34px; background: #000; border-radius: 0 0 22px 22px;'
-                ' position: absolute; top: 0; left: 50%; transform: translateX(-50%); }'
-                '.cam { width: 10px; height: 10px; background: #1c2333; border-radius: 50%;'
-                ' position: absolute; top: 13px; left: calc(50% + 28px); transform: translateX(-50%);'
-                ' box-shadow: 0 0 0 2px #2a2a2e; }'
-                '.screen { width: 100%; height: 750px; border: none; display: block; }'
-                '.phone-bottom { background: #1c1c1e; height: 32px; display: flex; align-items: center; justify-content: center; }'
-                '.bar { width: 134px; height: 5px; background: #555; border-radius: 3px; }'
-                '</style></head><body><div class="phone">'
-                '<div class="phone-top"><div class="pill"></div><div class="cam"></div></div>'
-                '<iframe class="screen" srcdoc="SRCDOC_PLACEHOLDER" scrolling="yes"></iframe>'
-                '<div class="phone-bottom"><div class="bar"></div></div>'
-                '</div></body></html>'
-            )
-            components_v1.html(_phone_tpl.replace('SRCDOC_PLACEHOLDER', _esc), height=870, scrolling=False)
-        else:
-            components_v1.html(gen_html, height=720, scrolling=True)
+        components_v1.html(_phone_tpl.replace('SRCDOC_PLACEHOLDER', _esc), height=870, scrolling=False)
+    else:
+        _h = 900 if _edit_mode else 720
+        components_v1.html(_render_html, height=_h, scrolling=True)
     st.divider()
 
     col_d, col_e, col_f = st.columns(3)
