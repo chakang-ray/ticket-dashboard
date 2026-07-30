@@ -739,6 +739,18 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
     return html_out, []
 
 
+def _block_links(html: str) -> str:
+    """미리보기에서 모든 <a> 링크 이동을 차단한다."""
+    script = (
+        '<script>'
+        'document.addEventListener("click",function(e){'
+        'var a=e.target.closest("a");if(a){e.preventDefault();e.stopPropagation();}'
+        '},true);'
+        '</script>'
+    )
+    return html.replace('</body>', script + '</body>') if '</body>' in html else html + script
+
+
 def _inject_editable(html: str) -> str:
     """미리보기 HTML에 contenteditable 툴바를 주입한다."""
     _js = r"""(function(){
@@ -754,10 +766,7 @@ function mk(){S.forEach(function(s){document.querySelectorAll(s).forEach(functio
 });});}
 function rm(){document.querySelectorAll('[contenteditable]').forEach(function(el){
   el.removeAttribute('contenteditable');el.removeAttribute('spellcheck');});}
-// 편집 모드에서 링크 이동 차단 (ticketBtn 등 <a> 클릭 시 Qoo10 페이지로 이동 방지)
-document.querySelectorAll('a').forEach(function(a){
-  a.addEventListener('click',function(e){e.preventDefault();});
-});
+document.addEventListener('click',function(e){var a=e.target.closest('a');if(a){e.preventDefault();e.stopPropagation();}},true);
 mk();
 document.getElementById('__ied_ok').addEventListener('click',function(){
   rm();
@@ -1234,7 +1243,7 @@ if st.session_state.get('ticket_gen_html'):
         key="preview_mode",
     )
 
-    _render_html = _inject_editable(gen_html) if _edit_mode else gen_html
+    _render_html = _inject_editable(gen_html) if _edit_mode else _block_links(gen_html)
 
     import html as _html
     if _prev_mode == t['prev_mobile']:
