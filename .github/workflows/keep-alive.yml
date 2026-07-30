@@ -1,0 +1,12 @@
+name: Keep Alive
+
+    on:
+      schedule:
+        - cron: '*/10 * * * *'
+
+    jobs:
+      ping:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Ping Streamlit app
+            run: curl -s -o /dev/null https://qoo10-ticket-generator.streamlit.app/
