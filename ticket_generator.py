@@ -767,9 +767,88 @@ function mk(){S.forEach(function(s){document.querySelectorAll(s).forEach(functio
 function rm(){document.querySelectorAll('[contenteditable]').forEach(function(el){
   el.removeAttribute('contenteditable');el.removeAttribute('spellcheck');});}
 document.addEventListener('click',function(e){var a=e.target.closest('a');if(a){e.preventDefault();e.stopPropagation();}},true);
-mk();
+
+var _initTL='',_initNL='';
+(function(){
+  var tl=document.querySelector('.ticketList');
+  var nl=document.querySelector('.ticket-notice');
+  if(tl)_initTL=tl.outerHTML;
+  if(nl)_initNL=nl.outerHTML;
+})();
+
+function _dBtn(cls){
+  var b=document.createElement('button');
+  b.className=cls+' __ied_ctrl';b.textContent='✕';
+  return b;
+}
+function _aBtn(id,txt){
+  var b=document.createElement('button');
+  b.id=id;b.className='__ied_add __ied_ctrl';b.textContent=txt;
+  return b;
+}
+function setupTickets(){
+  var tl=document.querySelector('.ticketList');if(!tl)return;
+  tl.querySelectorAll('.__del_t').forEach(function(b){b.remove();});
+  tl.querySelectorAll('.ticketItem').forEach(function(li){
+    var b=_dBtn('__del_t');
+    b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();li.remove();});
+    li.appendChild(b);
+  });
+  var ea=document.getElementById('__add_t');if(ea)ea.remove();
+  var ab=_aBtn('__add_t','＋ チケット追加 / 티켓 추가');
+  ab.addEventListener('click',function(e){
+    e.preventDefault();e.stopPropagation();
+    var tl2=document.querySelector('.ticketList');
+    var items=tl2.querySelectorAll('.ticketItem');
+    var last=items[items.length-1];if(!last)return;
+    var clone=last.cloneNode(true);
+    clone.querySelectorAll('.__ied_ctrl').forEach(function(b){b.remove();});
+    var a=clone.querySelector('.ticketBtn');
+    if(a){a.classList.remove('is-disabled','st-uketsuke-yotei','st-hanbai-shuryo','st-soldout');a.href='#';}
+    clone.querySelectorAll('span').forEach(function(s){
+      if(s.classList.contains('ticketType'))s.textContent='チケット種別';
+      else if(s.classList.contains('ticketDay'))s.textContent='0/00(月)';
+      else if(s.classList.contains('ticketDate'))s.textContent='00:00開演';
+      else if(s.classList.contains('ticketPrice'))s.textContent='¥0,000';
+    });
+    var db=_dBtn('__del_t');
+    db.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();clone.remove();});
+    clone.appendChild(db);
+    tl2.appendChild(clone);mk();
+  });
+  tl.parentNode.insertBefore(ab,tl.nextSibling);
+}
+function setupNotices(){
+  var nl=document.querySelector('.ticket-notice');if(!nl)return;
+  nl.querySelectorAll('.__del_n').forEach(function(b){b.remove();});
+  nl.querySelectorAll('li').forEach(function(li){
+    var b=_dBtn('__del_n');
+    b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();li.remove();});
+    li.appendChild(b);
+  });
+  var ea=document.getElementById('__add_n');if(ea)ea.remove();
+  var ab=_aBtn('__add_n','＋ 注意事項追加 / 주의사항 추가');
+  ab.addEventListener('click',function(e){
+    e.preventDefault();e.stopPropagation();
+    var nl2=document.querySelector('.ticket-notice');
+    var li=document.createElement('li');
+    li.textContent='注意事項を入力してください';
+    li.setAttribute('contenteditable','true');li.setAttribute('spellcheck','false');
+    li.addEventListener('click',function(ev){ev.stopPropagation();});
+    var b=_dBtn('__del_n');
+    b.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();li.remove();});
+    li.appendChild(b);
+    nl2.appendChild(li);
+  });
+  nl.parentNode.insertBefore(ab,nl.nextSibling);
+}
+function setupCtrls(){setupTickets();setupNotices();}
+function removeCtrls(){document.querySelectorAll('.__ied_ctrl').forEach(function(b){b.remove();});}
+
+mk();setupCtrls();
+
 document.getElementById('__ied_ok').addEventListener('click',function(){
-  rm();
+  removeCtrls();rm();
   var bar=document.getElementById('__ied_bar');
   var sty=document.getElementById('__ied_s');
   var scr=document.getElementById('__ied_j');
@@ -780,10 +859,15 @@ document.getElementById('__ied_ok').addEventListener('click',function(){
   var a=document.createElement('a');
   a.href=URL.createObjectURL(bl);a.download='ticket_edited.html';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
-  mk();
+  mk();setupCtrls();
 });
 document.getElementById('__ied_rs').addEventListener('click',function(){
-  O.forEach(function(v,el){el.innerHTML=v;});
+  O.forEach(function(v,el){if(document.contains(el))el.innerHTML=v;});
+  var tl=document.querySelector('.ticketList');
+  if(tl&&_initTL){var d=document.createElement('div');d.innerHTML=_initTL;tl.parentNode.replaceChild(d.firstChild,tl);}
+  var nl=document.querySelector('.ticket-notice');
+  if(nl&&_initNL){var d2=document.createElement('div');d2.innerHTML=_initNL;nl.parentNode.replaceChild(d2.firstChild,nl);}
+  removeCtrls();mk();setupCtrls();
 });
 })();"""
     _css = (
@@ -802,6 +886,19 @@ document.getElementById('__ied_rs').addEventListener('click',function(){
         '[contenteditable]{cursor:text;border-radius:2px;}'
         '[contenteditable]:hover{outline:1px dashed rgba(108,99,255,.65);outline-offset:3px;}'
         '[contenteditable]:focus{outline:2px solid #6C63FF!important;outline-offset:3px;}'
+        '.ticketItem{position:relative!important;}'
+        '.__del_t{position:absolute;top:-8px;right:-8px;z-index:10;width:22px;height:22px;'
+        'border-radius:50%;border:none;background:#ff4444;color:#fff;font-size:11px;'
+        'cursor:pointer;font-weight:700;line-height:22px;text-align:center;'
+        'box-shadow:0 2px 6px rgba(0,0,0,.3);padding:0;}'
+        '.__del_n{display:inline-block;margin-left:6px;width:18px;height:18px;'
+        'border-radius:50%;border:none;background:#ff4444;color:#fff;font-size:10px;'
+        'cursor:pointer;font-weight:700;line-height:18px;text-align:center;'
+        'vertical-align:middle;padding:0;}'
+        '.__ied_add{display:block;margin:10px auto 0;padding:8px 0;max-width:540px;width:100%;'
+        'border:2px dashed #6C63FF;border-radius:8px;background:transparent;'
+        'color:#6C63FF;font-size:13px;font-weight:700;cursor:pointer;}'
+        '.__ied_add:hover{background:rgba(108,99,255,.08);}'
     )
     _inject = (
         f'<style id="__ied_s">{_css}</style>\n'
