@@ -751,11 +751,12 @@ def _block_links(html: str) -> str:
     return html.replace('</body>', script + '</body>') if '</body>' in html else html + script
 
 
-def _inject_editable(html: str) -> str:
+def _inject_editable(html: str, ok_label: str = '✅ 편집완료/다운로드', rs_label: str = '↩ 되돌리기', hint_label: str = '✏️ 클릭하여 편집') -> str:
     """미리보기 HTML에 contenteditable 툴바를 주입한다."""
     _js = r"""(function(){
 var S=['.toptitle','.subtitle.info-date','.description.info-time',
-  '.description.info-venue','.ticket-title','.ticket-note',
+  '.description.info-venue','.subtitle.info-label',
+  '.ticket-title','.ticket-note',
   '.ticketType','.ticketDay','.ticketDate','.ticketPrice',
   '.ticket-notice li','.oshirase dd','.oshirase dt','.title .titlecolor'];
 var O=new Map();
@@ -768,12 +769,14 @@ function rm(){document.querySelectorAll('[contenteditable]').forEach(function(el
   el.removeAttribute('contenteditable');el.removeAttribute('spellcheck');});}
 document.addEventListener('click',function(e){var a=e.target.closest('a');if(a){e.preventDefault();e.stopPropagation();}},true);
 
-var _initTL='',_initNL='';
+var _initTL='',_initNL='',_initTabs='';
 (function(){
   var tl=document.querySelector('.ticketList');
   var nl=document.querySelector('.ticket-notice');
+  var tw=document.querySelector('.infotabs');
   if(tl)_initTL=tl.outerHTML;
   if(nl)_initNL=nl.outerHTML;
+  if(tw)_initTabs=tw.outerHTML;
 })();
 
 function _dBtn(cls){
@@ -842,7 +845,66 @@ function setupNotices(){
   });
   nl.parentNode.insertBefore(ab,nl.nextSibling);
 }
-function setupCtrls(){setupTickets();setupNotices();}
+function _ensureTabCSS(n){
+  var id='__tab_ext_css';
+  var el=document.getElementById(id);
+  if(!el){el=document.createElement('style');el.id=id;document.head.appendChild(el);}
+  el.textContent+='#tab'+n+':checked ~ .infotab__nav label[for="tab'+n+'"]{background:var(--point-color);color:#121113;}'+
+    '#tab'+n+':checked ~ .infotab__panels .panel'+n+'{display:block;}';
+}
+function setupTabs(){
+  var infotabs=document.querySelector('.infotabs');if(!infotabs)return;
+  var nav=infotabs.querySelector('.infotab__nav');if(!nav)return;
+  var panels=infotabs.querySelector('.infotab__panels');if(!panels)return;
+  nav.querySelectorAll('.__tab_edit').forEach(function(b){b.remove();});
+  nav.querySelectorAll('.infotab__label').forEach(function(lbl){
+    var eb=document.createElement('button');
+    eb.textContent='✏';eb.className='__tab_edit __ied_ctrl';eb.title='탭 이름 수정';
+    eb.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      var cur='';
+      lbl.childNodes.forEach(function(n){if(n.nodeType===3)cur+=n.textContent;});
+      cur=cur.trim();
+      var newName=window.prompt('탭 이름 수정 / タブ名を編集:',cur);
+      if(newName!==null&&newName.trim()){
+        while(lbl.firstChild){lbl.removeChild(lbl.firstChild);}
+        lbl.appendChild(document.createTextNode(newName.trim()));
+        lbl.appendChild(eb);
+      }
+    });
+    lbl.appendChild(eb);
+  });
+  var ea=document.getElementById('__add_tab');if(ea)ea.remove();
+  var ab=_aBtn('__add_tab','＋ タブ追加 / 탭 추가');
+  ab.addEventListener('click',function(e){
+    e.preventDefault();e.stopPropagation();
+    var inputs=infotabs.querySelectorAll('.infotab__input');
+    var n=inputs.length+1;
+    _ensureTabCSS(n);
+    var inp=document.createElement('input');
+    inp.type='radio';inp.name='tab';inp.id='tab'+n;inp.className='infotab__input';
+    infotabs.insertBefore(inp,nav);
+    var tname=window.prompt('새 탭 이름 / 新しいタブ名:','タブ'+n);
+    if(tname===null||!tname.trim())tname='タブ'+n;
+    var lbl=document.createElement('label');
+    lbl.setAttribute('for','tab'+n);lbl.className='infotab__label';
+    lbl.textContent=tname.trim();
+    nav.appendChild(lbl);
+    var panel=document.createElement('div');
+    panel.className='infotab__content panel'+n;
+    var inner=document.createElement('div');inner.className='oshirase';
+    var dl=document.createElement('dl');
+    var dd=document.createElement('dd');dd.className='list';
+    dd.textContent='内容を入力してください / 내용을 입력하세요';
+    dd.setAttribute('contenteditable','true');dd.setAttribute('spellcheck','false');
+    dd.addEventListener('click',function(ev){ev.stopPropagation();});
+    dl.appendChild(dd);inner.appendChild(dl);panel.appendChild(inner);
+    panels.appendChild(panel);
+    setupTabs();mk();
+  });
+  nav.parentNode.insertBefore(ab,panels.nextSibling);
+}
+function setupCtrls(){setupTickets();setupNotices();setupTabs();}
 function removeCtrls(){document.querySelectorAll('.__ied_ctrl').forEach(function(b){b.remove();});}
 
 mk();setupCtrls();
@@ -854,11 +916,26 @@ document.getElementById('__ied_ok').addEventListener('click',function(){
   var scr=document.getElementById('__ied_j');
   bar.remove();sty.remove();scr.remove();
   var out='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  try{localStorage.setItem('ticket_edited_html',out);}catch(e){}
   document.body.appendChild(bar);document.head.appendChild(sty);document.body.appendChild(scr);
-  var bl=new Blob([out],{type:'text/html;charset=utf-8'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(bl);a.download='ticket_edited.html';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  (function(){
+    try{
+      var bl=new Blob([out],{type:'text/html;charset=utf-8'});
+      var dl=URL.createObjectURL(bl);
+      var a=document.createElement('a');
+      a.href=dl;a.download='ticket_edited.html';a.style.display='none';
+      document.body.appendChild(a);a.click();
+      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(dl);},300);
+    }catch(e){
+      try{
+        var a2=document.createElement('a');
+        a2.href='data:text/html;charset=utf-8,'+encodeURIComponent(out);
+        a2.download='ticket_edited.html';a2.style.display='none';
+        document.body.appendChild(a2);a2.click();
+        setTimeout(function(){document.body.removeChild(a2);},300);
+      }catch(e2){}
+    }
+  })();
   mk();setupCtrls();
 });
 document.getElementById('__ied_rs').addEventListener('click',function(){
@@ -867,6 +944,8 @@ document.getElementById('__ied_rs').addEventListener('click',function(){
   if(tl&&_initTL){var d=document.createElement('div');d.innerHTML=_initTL;tl.parentNode.replaceChild(d.firstChild,tl);}
   var nl=document.querySelector('.ticket-notice');
   if(nl&&_initNL){var d2=document.createElement('div');d2.innerHTML=_initNL;nl.parentNode.replaceChild(d2.firstChild,nl);}
+  var tw=document.querySelector('.infotabs');
+  if(tw&&_initTabs){var d3=document.createElement('div');d3.innerHTML=_initTabs;tw.parentNode.replaceChild(d3.firstChild,tw);}
   removeCtrls();mk();setupCtrls();
 });
 })();"""
@@ -899,13 +978,17 @@ document.getElementById('__ied_rs').addEventListener('click',function(){
         'border:2px dashed #6C63FF;border-radius:8px;background:transparent;'
         'color:#6C63FF;font-size:13px;font-weight:700;cursor:pointer;}'
         '.__ied_add:hover{background:rgba(108,99,255,.08);}'
+        '.__tab_edit{display:inline-block;margin-left:4px;width:16px;height:16px;'
+        'border-radius:50%;border:none;background:rgba(108,99,255,.7);color:#fff;font-size:9px;'
+        'cursor:pointer;font-weight:700;line-height:16px;text-align:center;vertical-align:middle;padding:0;}'
+        '.__tab_edit:hover{background:#6C63FF;}'
     )
     _inject = (
         f'<style id="__ied_s">{_css}</style>\n'
         '<div id="__ied_bar">'
-        '<span class="ied-h">✏️ 클릭 → 편집 · クリックして編集</span>'
-        '<button class="ied-b" id="__ied_rs">↩ 되돌리기</button>'
-        '<button class="ied-b" id="__ied_ok">✅ 편집 완료 · ダウンロード</button>'
+        f'<span class="ied-h">{hint_label}</span>'
+        f'<button class="ied-b" id="__ied_rs">{rs_label}</button>'
+        f'<button class="ied-b" id="__ied_ok">{ok_label}</button>'
         '</div>\n'
         f'<script id="__ied_j">{_js}</script>'
     )
@@ -1051,6 +1134,11 @@ _UI_TEXT = {
         'edit_mode_btn':  '✏️ 인라인 편집 모드',
         'edit_mode_hint': '미리보기의 텍스트를 클릭하면 그 자리에서 바로 수정할 수 있어요. 수정 후 "편집 완료" 버튼을 눌러 적용하세요.',
         'edit_applied':   '✅ 편집 내용이 적용됐어요. 아래에서 HTML을 다운로드하세요.',
+        'edit_ok_btn':    '✅ 편집완료/다운로드',
+        'edit_rs_btn':    '↩ 되돌리기',
+        'edit_hint':      '✏️ 클릭하여 편집',
+        'edit_dl_btn':    '📥 편집본 다운로드',
+        'edit_dl_hint':   '위 툴바의 "편집완료/다운로드" 버튼을 먼저 눌러 저장하세요.',
     },
     'ja': {
         's1':        'Step 1 · Excelテンプレートのダウンロード',
@@ -1094,6 +1182,11 @@ _UI_TEXT = {
         'edit_mode_btn':  '✏️ インライン編集モード',
         'edit_mode_hint': 'プレビュー内のテキストをクリックして直接編集できます。完了後「編集完了」ボタンをクリックしてください。',
         'edit_applied':   '✅ 編集内容が反映されました。HTMLをダウンロードしてください。',
+        'edit_ok_btn':    '✅ 修正完了・ダウンロード',
+        'edit_rs_btn':    '↩ 元に戻す',
+        'edit_hint':      '✏️ クリックして編集',
+        'edit_dl_btn':    '📥 編集版をダウンロード',
+        'edit_dl_hint':   'ツールバーの「修正完了・ダウンロード」を先にクリックして保存してください。',
     },
 }
 
@@ -1340,7 +1433,7 @@ if st.session_state.get('ticket_gen_html'):
         key="preview_mode",
     )
 
-    _render_html = _inject_editable(gen_html) if _edit_mode else _block_links(gen_html)
+    _render_html = _inject_editable(gen_html, t['edit_ok_btn'], t['edit_rs_btn'], t['edit_hint']) if _edit_mode else _block_links(gen_html)
 
     import html as _html
     if _prev_mode == t['prev_mobile']:
@@ -1401,5 +1494,39 @@ if st.session_state.get('ticket_gen_html'):
             "application/json",
             use_container_width=True,
         )
+
+    if _edit_mode:
+        st.divider()
+        _ec1, _ec2 = st.columns([3, 1])
+        with _ec1:
+            st.caption(t['edit_dl_hint'])
+        with _ec2:
+            if st.button(t['edit_dl_btn'], use_container_width=True, type='primary', key='btn_dl_edited'):
+                st.session_state['trigger_edited_dl'] = True
+
+    if st.session_state.get('trigger_edited_dl'):
+        components_v1.html("""
+<script>
+(function(){
+  var h=localStorage.getItem('ticket_edited_html');
+  if(!h){
+    document.body.innerHTML='<p style="color:#c00;font-family:sans-serif;font-size:12px;padding:4px">⚠️ 편집완료 버튼을 먼저 눌러주세요</p>';
+    return;
+  }
+  try{
+    var bl=new Blob([h],{type:'text/html;charset=utf-8'});
+    var url=URL.createObjectURL(bl);
+    var a=document.createElement('a');
+    a.href=url;a.download='ticket_edited.html';a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},300);
+    document.body.innerHTML='<p style="color:green;font-family:sans-serif;font-size:12px;padding:4px">✅ 다운로드 완료!</p>';
+  }catch(e){
+    document.body.innerHTML='<p style="color:#c00;font-family:sans-serif;font-size:12px;padding:4px">⚠️ 다운로드 실패. 편집완료 버튼을 다시 눌러보세요.</p>';
+  }
+})();
+</script>
+""", height=32)
+        st.session_state['trigger_edited_dl'] = False
 
     st.text_area(t['src'], gen_html, height=200, key="gen_src")
