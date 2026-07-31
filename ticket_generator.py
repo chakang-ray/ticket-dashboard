@@ -11,33 +11,6 @@ st.set_page_config(
     layout="wide",
 )
 
-# ── 인증 ──────────────────────────────────────────────────────────────────────
-def _check_auth() -> bool:
-    try:
-        correct_pw = st.secrets.get("APP_PASSWORD", "")
-    except Exception:
-        correct_pw = ""
-    if not correct_pw or st.session_state.get("authenticated"):
-        return True
-    _, col, _ = st.columns([1, 1.5, 1])
-    with col:
-        st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown(
-            '<div style="text-align:center;font-size:2em;font-weight:800;color:#6C63FF">🎨 チケットページ<br>ジェネレーター</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
-        pw = st.text_input("비밀번호", type="password", placeholder="비밀번호를 입력하세요")
-        if st.button("입장하기", type="primary", use_container_width=True):
-            if pw == correct_pw:
-                st.session_state["authenticated"] = True
-                st.rerun()
-            else:
-                st.error("❌ 비밀번호가 올바르지 않습니다.")
-    return False
-
-if not _check_auth():
-    st.stop()
 
 st.title("🎨 Qoo10 チケットページ ジェネレーター")
 st.caption("엑셀 템플릿에 공연 정보를 입력하고 업로드하면 HTML을 자동 생성합니다. / ExcelテンプレートをアップロードするとHTMLを自動生成します。")
