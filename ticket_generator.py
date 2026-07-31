@@ -907,6 +907,19 @@ function setupTabs(){
 function setupCtrls(){setupTickets();setupNotices();setupTabs();}
 function removeCtrls(){document.querySelectorAll('.__ied_ctrl').forEach(function(b){b.remove();});}
 
+function showSavedMsg(){
+  var msg=document.createElement('div');
+  msg.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);'+
+    'background:#22c55e;color:#fff;padding:12px 28px;border-radius:999px;font-family:sans-serif;'+
+    'font-size:13px;font-weight:700;z-index:999999;box-shadow:0 4px 16px rgba(0,0,0,.4);white-space:nowrap;';
+  msg.textContent='✅ 저장완료！ 아래 [편집본 다운로드] 버튼을 클릭하세요';
+  document.body.appendChild(msg);
+  setTimeout(function(){
+    msg.style.transition='opacity .5s';msg.style.opacity='0';
+    setTimeout(function(){if(msg.parentNode)msg.parentNode.removeChild(msg);},500);
+  },4000);
+}
+
 mk();setupCtrls();
 
 document.getElementById('__ied_ok').addEventListener('click',function(){
@@ -918,24 +931,7 @@ document.getElementById('__ied_ok').addEventListener('click',function(){
   var out='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
   try{localStorage.setItem('ticket_edited_html',out);}catch(e){}
   document.body.appendChild(bar);document.head.appendChild(sty);document.body.appendChild(scr);
-  (function(){
-    try{
-      var bl=new Blob([out],{type:'text/html;charset=utf-8'});
-      var dl=URL.createObjectURL(bl);
-      var a=document.createElement('a');
-      a.href=dl;a.download='ticket_edited.html';a.style.display='none';
-      document.body.appendChild(a);a.click();
-      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(dl);},300);
-    }catch(e){
-      try{
-        var a2=document.createElement('a');
-        a2.href='data:text/html;charset=utf-8,'+encodeURIComponent(out);
-        a2.download='ticket_edited.html';a2.style.display='none';
-        document.body.appendChild(a2);a2.click();
-        setTimeout(function(){document.body.removeChild(a2);},300);
-      }catch(e2){}
-    }
-  })();
+  showSavedMsg();
   mk();setupCtrls();
 });
 document.getElementById('__ied_rs').addEventListener('click',function(){
