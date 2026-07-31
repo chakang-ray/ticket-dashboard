@@ -1445,7 +1445,8 @@ if st.session_state.get('ticket_gen_html'):
         )
         if _edit_mode:
             if st.button(t['edit_dl_btn'], use_container_width=True, type='primary', key='btn_dl_edited'):
-                st.session_state['trigger_edited_dl'] = True
+                st.session_state['edit_dl_count'] = st.session_state.get('edit_dl_count', 0) + 1
+                st.session_state['awaiting_edited'] = True
             st.caption(t['edit_dl_hint'])
     with col_e:
         import urllib.parse as _up
@@ -1468,29 +1469,31 @@ if st.session_state.get('ticket_gen_html'):
             use_container_width=True,
         )
 
-    if st.session_state.get('trigger_edited_dl'):
-        components_v1.html("""
-<script>
-(function(){
-  var h=localStorage.getItem('ticket_edited_html');
-  if(!h){
-    document.body.innerHTML='<p style="color:#c00;font-family:sans-serif;font-size:12px;padding:4px">⚠️ 편집완료 버튼을 먼저 눌러주세요</p>';
-    return;
-  }
-  try{
-    var bl=new Blob([h],{type:'text/html;charset=utf-8'});
-    var url=URL.createObjectURL(bl);
-    var a=document.createElement('a');
-    a.href=url;a.download='ticket_edited.html';a.style.display='none';
-    document.body.appendChild(a);a.click();
-    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},300);
-    document.body.innerHTML='<p style="color:green;font-family:sans-serif;font-size:12px;padding:4px">✅ 다운로드 완료!</p>';
-  }catch(e){
-    document.body.innerHTML='<p style="color:#c00;font-family:sans-serif;font-size:12px;padding:4px">⚠️ 다운로드 실패. 편집완료 버튼을 다시 눌러보세요.</p>';
-  }
-})();
-</script>
-""", height=32)
-        st.session_state['trigger_edited_dl'] = False
+    if _edit_mode and st.session_state.get('awaiting_edited'):
+        try:
+            from streamlit_js_eval import streamlit_js_eval as _jseval
+            _fetch_key = f"edited_html_{st.session_state.get('edit_dl_count', 0)}"
+            _edited_val = _jseval(js_expressions='localStorage.getItem("ticket_edited_html")', key=_fetch_key)
+            if _edited_val is not None:
+                if _edited_val:
+                    st.session_state['edited_html_ready'] = _edited_val
+                else:
+                    st.warning('⚠️ 편집완료 버튼을 먼저 눌러주세요.' if st.session_state.get('ui_lang') == 'ko' else '⚠️ まず編集完了ボタンを押してください。')
+                st.session_state['awaiting_edited'] = False
+        except Exception:
+            st.error('streamlit-js-eval 패키지 오류. 잠시 후 다시 시도해 주세요.')
+            st.session_state['awaiting_edited'] = False
+
+    if _edit_mode and st.session_state.get('edited_html_ready'):
+        st.download_button(
+            '📥 편집본 다운로드 (클릭!)' if st.session_state.get('ui_lang') == 'ko' else '📥 編集版ダウンロード（クリック！）',
+            st.session_state['edited_html_ready'].encode('utf-8'),
+            'ticket_edited.html',
+            'text/html;charset=utf-8',
+            use_container_width=True,
+            key='dl_edited_final',
+            type='primary',
+        )
+        st.session_state['edited_html_ready'] = None
 
     st.text_area(t['src'], gen_html, height=200, key="gen_src")
