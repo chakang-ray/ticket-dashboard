@@ -1474,6 +1474,10 @@ if st.session_state.get('ticket_gen_html'):
             "text/html;charset=utf-8",
             use_container_width=True,
         )
+        if _edit_mode:
+            if st.button(t['edit_dl_btn'], use_container_width=True, type='primary', key='btn_dl_edited'):
+                st.session_state['trigger_edited_dl'] = True
+            st.caption(t['edit_dl_hint'])
     with col_e:
         import urllib.parse as _up
         _title = (orig_data.get('公演タイトル', '')
@@ -1494,15 +1498,6 @@ if st.session_state.get('ticket_gen_html'):
             "application/json",
             use_container_width=True,
         )
-
-    if _edit_mode:
-        st.divider()
-        _ec1, _ec2 = st.columns([3, 1])
-        with _ec1:
-            st.caption(t['edit_dl_hint'])
-        with _ec2:
-            if st.button(t['edit_dl_btn'], use_container_width=True, type='primary', key='btn_dl_edited'):
-                st.session_state['trigger_edited_dl'] = True
 
     if st.session_state.get('trigger_edited_dl'):
         components_v1.html("""
