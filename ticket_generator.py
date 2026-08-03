@@ -733,10 +733,25 @@ var S=['.toptitle','.subtitle.info-date','.description.info-time',
   '.ticketType','.ticketDay','.ticketDate','.ticketPrice',
   '.ticket-notice li','.oshirase dd','.oshirase dt','.title .titlecolor'];
 var O=new Map();
+function _setupDdEnter(dd){
+  dd.addEventListener('keydown',function(ev){
+    if(ev.key==='Enter'&&!ev.shiftKey){
+      ev.preventDefault();
+      var dl=dd.parentNode;
+      var nd=document.createElement('dd');nd.className=dd.className||'list';
+      nd.setAttribute('contenteditable','true');nd.setAttribute('spellcheck','false');
+      nd.addEventListener('click',function(e){e.stopPropagation();});
+      _setupDdEnter(nd);
+      dl.insertBefore(nd,dd.nextSibling);
+      nd.focus();
+    }
+  });
+}
 function mk(){S.forEach(function(s){document.querySelectorAll(s).forEach(function(el){
   if(!O.has(el))O.set(el,el.innerHTML);
   el.setAttribute('contenteditable','true');el.setAttribute('spellcheck','false');
   el.addEventListener('click',function(e){e.stopPropagation();});
+  if(el.matches('.oshirase dd'))_setupDdEnter(el);
 });});}
 function rm(){document.querySelectorAll('[contenteditable]').forEach(function(el){
   el.removeAttribute('contenteditable');el.removeAttribute('spellcheck');});}
@@ -871,6 +886,7 @@ function setupTabs(){
     dd.textContent='内容を入力してください / 내용을 입력하세요';
     dd.setAttribute('contenteditable','true');dd.setAttribute('spellcheck','false');
     dd.addEventListener('click',function(ev){ev.stopPropagation();});
+    _setupDdEnter(dd);
     dl.appendChild(dd);inner.appendChild(dl);panel.appendChild(inner);
     panels.appendChild(panel);
     setupTabs();mk();
