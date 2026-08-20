@@ -1112,8 +1112,10 @@ _UI_TEXT = {
         'draft_save': '💾 초안 저장 (.json)',
         'draft_load': '📂 초안 불러오기 (.json)',
         'draft_ok':   '✅ 초안 로드 완료! (색상 포함)',
-        'c_upload':      '🖼 이미지 파일로 자동 추출',
-        'c_upload_desc': '포스터 이미지를 업로드하시면 해당 색상에 맞추어 포인트 컬러가 자동 추출됩니다.',
+        'c_upload':      '🖼 포스터 이미지 업로드',
+        'c_upload_desc': '이미지를 업로드하면 HTML 포스터로 삽입되고 포인트 컬러가 자동 추출됩니다.',
+        'poster_uploaded': '✅ 포스터 업로드됨 — HTML에 포함돼요',
+        'poster_remove': '🗑 포스터 제거',
         'prev_desktop':  '🖥 데스크탑',
         'prev_mobile':   '📱 모바일',
         'edit_mode_btn':  '✏️ 인라인 편집 모드',
@@ -1160,8 +1162,10 @@ _UI_TEXT = {
         'draft_save': '💾 ドラフトを保存 (.json)',
         'draft_load': '📂 ドラフトを読み込む (.json)',
         'draft_ok':   '✅ ドラフトを読み込みました！（色設定含む）',
-        'c_upload':      '🖼 画像ファイルから自動抽出',
-        'c_upload_desc': 'ポスター画像をアップロードすると、その色に合わせてポイントカラーが自動抽出されます。',
+        'c_upload':      '🖼 ポスター画像をアップロード',
+        'c_upload_desc': 'アップロードするとHTMLのポスターに埋め込まれ、ポイントカラーが自動抽出されます。',
+        'poster_uploaded': '✅ ポスターをアップロード済み — HTMLに埋め込まれます',
+        'poster_remove': '🗑 ポスターを削除',
         'prev_desktop':  '🖥 デスクトップ',
         'prev_mobile':   '📱 モバイル',
         'edit_mode_btn':  '✏️ インライン編集モード',
@@ -1368,14 +1372,17 @@ if tpl_data:
             st.caption(t['c_poster'])
     with _ex2:
         st.caption(t['c_upload_desc'])
+        _poster_key = f'poster_bytes_{_fbase}'
         _img_file = st.file_uploader(
             t['c_upload'],
             type=['jpg', 'jpeg', 'png', 'webp'],
             key=f"poster_img_{_fbase}_{st.session_state[_cnt_key]}",
         )
         if _img_file:
+            _img_bytes = _img_file.read()
             with st.spinner(t['c_spin']):
-                _pal = _extract_palette_from_bytes(_img_file.read())
+                _pal = _extract_palette_from_bytes(_img_bytes)
+            st.session_state[_poster_key] = (_img_bytes, _img_file.type or 'image/jpeg')
             if _pal:
                 st.session_state[_cnt_key] += 1
                 _new_btn = f'cp_btn_{_fbase}_{st.session_state[_cnt_key]}'
@@ -1385,6 +1392,11 @@ if tpl_data:
                 st.rerun()
             else:
                 st.warning(t['c_fail'])
+        if st.session_state.get(_poster_key):
+            st.success(t['poster_uploaded'])
+            if st.button(t['poster_remove'], key=f'poster_rm_{_fbase}', use_container_width=True):
+                del st.session_state[_poster_key]
+                st.rerun()
 
     st.markdown("---")
     st.markdown(f"#### {t['s3']}")
@@ -1392,6 +1404,12 @@ if tpl_data:
         _merged = dict(tpl_data)
         _merged['チケットボタン色'] = picked_btn
         _merged['ポイントカラー']   = picked_pt
+        _poster_key = f'poster_bytes_{_fbase}'
+        if st.session_state.get(_poster_key):
+            import base64 as _b64mod
+            _pb, _pmime = st.session_state[_poster_key]
+            _b64str = _b64mod.b64encode(_pb).decode('ascii')
+            _merged['ポスターURL'] = f'data:{_pmime};base64,{_b64str}'
         result_html, errs = _generate_html(_merged, _merged, _TICKET_CSS, 'ja')
         if errs:
             for err in errs:
