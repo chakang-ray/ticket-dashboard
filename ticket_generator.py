@@ -157,7 +157,7 @@ def _make_template(lottery=False):
         ['【③ チケット一覧 — TICKETS セクション】', '', '最大10件'],
         ['チケットセクション見出し', 'チケット', 'チケットボックスのH2見出し'],
         *([
-            ['応募期間', '2026年○月○日(○) ○○:00 ～ ○月○日(○) 23:59まで', '応募受付期間'],
+            ['申込期間', '2026年○月○日(○) ○○:00 ～ ○月○日(○) 23:59まで', '応募受付期間'],
             ['当落発表日', '2026年○月○日(○) 予定', ''],
             ['入金期限', '2026年○月○日(○) ○○:59まで', ''],
         ] if lottery else [
@@ -496,9 +496,9 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         perf_days.append({'date': d, 'time': g(f'公演日{i}_時間')})
 
     section_title    = g('チケットセクション見出し') or 'チケット'
-    _is_lottery_type = bool(g('応募期間'))
-    sale_period       = g('応募期間') if _is_lottery_type else g('販売期間')
-    sale_period_label = '応募期間' if _is_lottery_type else '販売期間'
+    _is_lottery_type = bool(g('申込期間'))
+    sale_period       = g('申込期間') if _is_lottery_type else g('販売期間')
+    sale_period_label = '申込期間' if _is_lottery_type else '販売期間'
     sale_note        = '' if _is_lottery_type else g('販売期間注記')
     lottery_date     = g('当落発表日')
     payment_deadline = g('入金期限')
