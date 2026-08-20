@@ -123,6 +123,17 @@ _TICKET_CSS = (
     '.oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:var(--point-color);vertical-align:middle;}\n'
     '@media(max-width:768px){.tabwrapper{padding:32px 18px;}.infotab__label{font-size:14px;padding:10px 16px;}.infotab__content{font-size:14px;}}\n'
     '@media(max-width:480px){.tabwrapper{padding:40px 25px;}.infotab__nav{gap:8px;}.infotab__label{font-size:13px;padding:10px 14px;}.infotab__content{font-size:13px;line-height:1.75;}.oshirase{padding-top:10px;}.oshirase .list,.oshirase .list_star,.oshirase .list_important{text-indent:-12px;padding-left:12px;}}\n'
+    '.ev-section{padding:56px 16px 48px;text-align:center;}\n'
+    '.ev-inner{max-width:750px;margin:0 auto;}\n'
+    '.ev-kicker{font-size:11px;font-weight:800;letter-spacing:.22em;color:var(--point-color);text-transform:uppercase;margin:0 0 10px;}\n'
+    '.ev-heading{font-family:"Montserrat",sans-serif;font-weight:900;font-size:60px;margin:0 0 40px;padding:0;line-height:1;}\n'
+    '.ev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;}\n'
+    '.ev-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 20px;text-align:center;}\n'
+    '.ev-label{font-size:10px;font-weight:800;letter-spacing:.22em;color:var(--point-color);text-transform:uppercase;margin:0 0 14px;}\n'
+    '.ev-main{font-size:20px;font-weight:800;color:#fff;line-height:1.35;margin:0 0 8px;}\n'
+    '.ev-sub{font-size:14px;color:rgba(255,255,255,.62);font-weight:500;line-height:1.6;margin:0;}\n'
+    '@media(max-width:768px){.ev-heading{font-size:45px;}.ev-section{padding:40px 16px 36px;}}\n'
+    '@media(max-width:480px){.ev-card{padding:22px 16px;}.ev-main{font-size:17px;}.ev-heading{font-size:38px;margin-bottom:28px;}}\n'
 )
 
 
@@ -540,14 +551,44 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
     if errors:      return None, errors
 
     if perf_days:
-        sched_html = ''.join(
-            f'\n      <div class="info-row">'
-            f'<div class="subtitle info-date">{d["date"]}</div>'
-            f'<div class="description info-time">{d["time"]}</div>'
-            f'</div>'
-            for d in perf_days)
+        _day_label = lbl['perf_datetime']
+        _date_cards = ''
+        for _idx, _d in enumerate(perf_days):
+            _card_label = f'Day {_idx + 1}' if len(perf_days) > 1 else _day_label
+            _sub = f'<p class="ev-sub">{_d["time"]}</p>' if _d["time"] else ''
+            _date_cards += (
+                f'\n      <article class="ev-card">'
+                f'<p class="ev-label">{_card_label}</p>'
+                f'<p class="ev-main">{_d["date"]}</p>'
+                f'{_sub}'
+                f'</article>'
+            )
     else:
-        sched_html = '<div class="info-row"><div class="description">—</div></div>'
+        _date_cards = (
+            f'\n      <article class="ev-card">'
+            f'<p class="ev-label">{lbl["perf_datetime"]}</p>'
+            f'<p class="ev-main">—</p>'
+            f'</article>'
+        )
+    _venue_card = (
+        f'\n      <article class="ev-card">'
+        f'<p class="ev-label">{lbl["venue"]}</p>'
+        f'<p class="ev-main">{venue}</p>'
+        f'</article>'
+    ) if venue else ''
+    sched_sec = (
+        '<!-- schedule -->\n'
+        '<section class="ev-section">\n'
+        '  <div class="ev-inner">\n'
+        '    <p class="ev-kicker">ABOUT THE EVENT</p>\n'
+        '    <h2 class="ev-heading"><span class="titlecolor">SCHEDULE</span></h2>\n'
+        '    <div class="ev-grid">\n'
+        + _date_cards
+        + _venue_card
+        + '\n    </div>\n'
+        '  </div>\n'
+        '</section>\n\n'
+    )
 
     types_distinct = list(dict.fromkeys(t['type'] for t in tickets if t['type']))
 
@@ -653,16 +694,7 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         '<!-- title -->\n'
         f'<div class="toptitle">{title}</div>\n\n'
         + poster_sec
-        + '<!-- schedule -->\n'
-        '<section class="info-block">\n'
-        '  <div class="title"><span class="titlecolor">SCHEDULE</span></div>\n'
-        '  <dl class="info-list">\n'
-        f'    <dt class="subtitle info-label">{lbl["perf_datetime"]}</dt>\n'
-        f'    <dd class="info-body">{sched_html}\n    </dd>\n'
-        f'    <dt class="subtitle info-label info-label--mt">{lbl["venue"]}</dt>\n'
-        f'    <dd class="description info-venue">{venue}</dd>\n'
-        '  </dl>\n'
-        '</section>\n\n'
+        + sched_sec
         '<!-- ticket -->\n'
         '<div class="section-wrap">\n'
         '  <div class="title"><span class="titlecolor">TICKETS</span></div>\n'
