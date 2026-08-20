@@ -126,7 +126,7 @@ _TICKET_CSS = (
 )
 
 
-def _make_template():
+def _make_template(lottery=False):
     wb = _Workbook()
     ws = wb.active
     ws.title = "入力フォーム"
@@ -156,10 +156,14 @@ def _make_template():
         ['', '', ''],
         ['【③ チケット一覧 — TICKETS セクション】', '', '最大10件'],
         ['チケットセクション見出し', 'チケット', 'チケットボックスのH2見出し'],
-        ['販売期間', '2026年○月○日(○) ○○:00 ～ 各公演の2日前 23:59まで', ''],
-        ['販売期間注記', '※予定枚数に達し次第受付終了', '赤字。なければ空白'],
-        ['当落発表日', '', '抽選の場合のみ記入。なければ空白'],
-        ['入金期限',  '', '抽選の場合のみ記入。なければ空白'],
+        *([
+            ['応募期間', '2026年○月○日(○) ○○:00 ～ ○月○日(○) 23:59まで', '応募受付期間'],
+            ['当落発表日', '2026年○月○日(○) 予定', ''],
+            ['入金期限', '2026年○月○日(○) ○○:59まで', ''],
+        ] if lottery else [
+            ['販売期間', '2026年○月○日(○) ○○:00 ～ 各公演の2日前 23:59まで', ''],
+            ['販売期間注記', '※予定枚数に達し次第受付終了', '赤字。なければ空白'],
+        ]),
         ['', '', ''],
     ]
     defaults = [
@@ -492,8 +496,10 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         perf_days.append({'date': d, 'time': g(f'公演日{i}_時間')})
 
     section_title    = g('チケットセクション見出し') or 'チケット'
-    sale_period      = g('販売期間')
-    sale_note        = g('販売期間注記')
+    _is_lottery_type = bool(g('応募期間'))
+    sale_period       = g('応募期間') if _is_lottery_type else g('販売期間')
+    sale_period_label = '応募期間' if _is_lottery_type else '販売期間'
+    sale_note        = '' if _is_lottery_type else g('販売期間注記')
     lottery_date     = g('当落発表日')
     payment_deadline = g('入金期限')
     tickets = []
@@ -626,7 +632,7 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         f'<img src="{esc(poster)}" style="width:{esc(poster_width)};max-width:100%;height:auto;display:block;margin:0 auto;">'
         f'</div>\n\n'
     ) if poster else ''
-    sp_html       = f'      <p class="ticket-note" style="color:BLACK;">販売期間<BR>{sale_period}</p>\n' if sale_period else ''
+    sp_html       = f'      <p class="ticket-note" style="color:BLACK;">{sale_period_label}<BR>{sale_period}</p>\n' if sale_period else ''
     spn_html      = f'      <p class="ticket-note" style="color:red;">{sale_note}</p>\n' if sale_note else ''
     lottery_html  = (f'      <p class="ticket-note" style="color:BLACK;">{lbl["lottery_date"]}<BR>{lottery_date}</p>\n'
                      if lottery_date else '')
@@ -1080,6 +1086,9 @@ _UI_TEXT = {
     'ko': {
         's1':        'Step 1 · 엑셀 템플릿 다운로드',
         's1_cap':    'B열(내용)에만 입력하시면 됩니다. ① 기본정보·디자인 ② 공연개요 ③ 티켓목록 ④ 라인업 ⑤ NOTICE 탭 ⑥ 문의처',
+        'type_label':   '티켓 판매 방식',
+        'type_instant': '즉시구매 (선착순)',
+        'type_lottery': '응모형 (추첨)',
         's2':        'Step 2 · 작성한 엑셀 업로드',
         'dl_tpl':    '↓ 템플릿 다운로드 (.xlsx)',
         'load_ok':   '로드 완료',
@@ -1130,6 +1139,9 @@ _UI_TEXT = {
     'ja': {
         's1':        'Step 1 · Excelテンプレートのダウンロード',
         's1_cap':    'B列（内容）のみ入力してください。① 基本情報・デザイン ② 公演概要 ③ チケット一覧 ④ ラインアップ ⑤ NOTICEタブ ⑥ お問い合わせ',
+        'type_label':   'チケット販売方式',
+        'type_instant': '即時購入（先着順）',
+        'type_lottery': '応募型（抽選）',
         's2':        'Step 2 · 作成したExcelをアップロード',
         'dl_tpl':    '↓ テンプレートをダウンロード (.xlsx)',
         'load_ok':   '読み込み完了',
@@ -1262,9 +1274,16 @@ col_l, col_r = st.columns(2)
 with col_l:
     st.markdown(f"#### {t['s1']}")
     st.caption(t['s1_cap'])
+    _type_sel = st.radio(
+        t['type_label'],
+        [t['type_instant'], t['type_lottery']],
+        horizontal=True,
+        key='ticket_type_sel',
+    )
+    _is_lottery_tpl = _type_sel == t['type_lottery']
     st.download_button(
         t['dl_tpl'],
-        _make_template(),
+        _make_template(lottery=_is_lottery_tpl),
         "ticket_template.xlsx",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
