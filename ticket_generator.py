@@ -695,7 +695,7 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         f'<div class="toptitle">{title}</div>\n\n'
         + poster_sec
         + sched_sec
-        '<!-- ticket -->\n'
+        + '<!-- ticket -->\n'
         '<div class="section-wrap">\n'
         '  <div class="title"><span class="titlecolor">TICKETS</span></div>\n'
         '  <div class="ticket-box">\n'
