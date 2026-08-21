@@ -813,7 +813,8 @@ var S=['.toptitle','.subtitle.info-date','.description.info-time',
   '.description.info-venue','.subtitle.info-label',
   '.ticket-title','.ticket-note',
   '.ticketType','.ticketDay','.ticketDate','.ticketPrice',
-  '.ticket-notice li','.oshirase dd','.oshirase dt','.title .titlecolor'];
+  '.ticket-notice li','.oshirase dd','.oshirase dt','.title .titlecolor',
+  '.ev-card .ev-main','.ev-card .ev-sub'];
 var O=new Map();
 function _setupDdEnter(dd){
   dd.addEventListener('keydown',function(ev){
