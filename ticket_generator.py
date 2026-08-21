@@ -133,8 +133,10 @@ _TICKET_CSS = (
     '.ev-main{font-size:20px;font-weight:800;color:#fff;line-height:1.35;margin:0 0 8px;}\n'
     '.ev-sub{font-size:14px;color:rgba(255,255,255,.62);font-weight:500;line-height:1.6;margin:0;}\n'
     '.ev-addr{font-size:12px;color:rgba(255,255,255,.48);font-weight:400;line-height:1.55;margin:6px 0 16px;}\n'
+    '.ev-addr:empty{display:none;}\n'
     '.ev-map-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);font-size:12px;font-weight:700;letter-spacing:.06em;text-decoration:none;transition:background .18s,border-color .18s;}\n'
     '.ev-map-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:#fff;}\n'
+    '.ev-map-btn[data-hidden]{display:none;}\n'
     '@media(max-width:768px){.ev-heading{font-size:45px;}.ev-section{padding:40px 16px 36px;}}\n'
     '@media(max-width:480px){.ev-card{padding:22px 16px;}.ev-main{font-size:17px;}.ev-heading{font-size:38px;margin-bottom:28px;}}\n'
     '#sticky-nav{position:sticky;top:0;z-index:100;display:flex;justify-content:center;background:rgba(0,0,0,0.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}\n'
@@ -578,20 +580,15 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
             f'<p class="ev-main">—</p>'
             f'</article>'
         )
-    _venue_addr_html = ''
-    if venue_address:
-        _map_q = venue_address.replace(' ', '+')
-        _map_url = f'https://www.google.com/maps/search/?api=1&query={_map_q}'
-        _venue_addr_html = (
-            f'<p class="ev-addr">{venue_address}</p>'
-            f'<a class="ev-map-btn" href="{_map_url}" target="_blank" rel="noopener">'
-            f'Google Map &nbsp;→</a>'
-        )
+    _map_url = ('https://www.google.com/maps/search/?api=1&query='
+                + venue_address.replace(' ', '+')) if venue_address else ''
+    _map_hidden = '' if venue_address else ' data-hidden="1"'
     _venue_card = (
         f'\n      <article class="ev-card">'
         f'<p class="ev-label">{lbl["venue"]}</p>'
         f'<p class="ev-main">{venue}</p>'
-        f'{_venue_addr_html}'
+        f'<p class="ev-addr">{venue_address}</p>'
+        f'<a class="ev-map-btn" href="{_map_url}" target="_blank" rel="noopener"{_map_hidden}>Google Map &nbsp;→</a>'
         f'</article>'
     ) if venue else ''
     sched_sec = (
@@ -1008,6 +1005,18 @@ function showSavedMsg(){
 }
 
 mk();setupCtrls();
+(function(){
+  document.querySelectorAll('.ev-card .ev-addr').forEach(function(addr){
+    addr.addEventListener('input',function(){
+      var btn=this.nextElementSibling;
+      if(btn&&btn.classList.contains('ev-map-btn')){
+        var q=encodeURIComponent(this.textContent.trim());
+        if(q){btn.href='https://www.google.com/maps/search/?api=1&query='+q;btn.removeAttribute('data-hidden');}
+        else{btn.href='';btn.setAttribute('data-hidden','1');}
+      }
+    });
+  });
+})();
 
 document.getElementById('__ied_ok').addEventListener('click',function(){
   removeCtrls();rm();
@@ -1048,6 +1057,9 @@ document.getElementById('__ied_rs').addEventListener('click',function(){
         '[contenteditable]{cursor:text;border-radius:2px;}'
         '[contenteditable]:hover{outline:1px dashed rgba(108,99,255,.65);outline-offset:3px;}'
         '[contenteditable]:focus{outline:2px solid #6C63FF!important;outline-offset:3px;}'
+        '.ev-addr:empty{display:block!important;min-height:1.4em;}'
+        '.ev-addr[contenteditable]:empty::before{content:"住所を入力… (例: 東京都港区北青山2丁目8-35)";color:rgba(255,255,255,.25);pointer-events:none;}'
+        '.ev-map-btn[data-hidden]{display:inline-flex!important;opacity:.35;}'
         '.ticketItem{position:relative!important;}'
         '.__del_t{position:absolute;top:-8px;right:-8px;z-index:10;width:22px;height:22px;'
         'border-radius:50%;border:none;background:#ff4444;color:#fff;font-size:11px;'
