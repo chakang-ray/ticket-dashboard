@@ -132,6 +132,9 @@ _TICKET_CSS = (
     '.ev-label{font-size:10px;font-weight:800;letter-spacing:.22em;color:var(--point-color);text-transform:uppercase;margin:0 0 14px;}\n'
     '.ev-main{font-size:20px;font-weight:800;color:#fff;line-height:1.35;margin:0 0 8px;}\n'
     '.ev-sub{font-size:14px;color:rgba(255,255,255,.62);font-weight:500;line-height:1.6;margin:0;}\n'
+    '.ev-addr{font-size:12px;color:rgba(255,255,255,.48);font-weight:400;line-height:1.55;margin:6px 0 16px;}\n'
+    '.ev-map-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);font-size:12px;font-weight:700;letter-spacing:.06em;text-decoration:none;transition:background .18s,border-color .18s;}\n'
+    '.ev-map-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:#fff;}\n'
     '@media(max-width:768px){.ev-heading{font-size:45px;}.ev-section{padding:40px 16px 36px;}}\n'
     '@media(max-width:480px){.ev-card{padding:22px 16px;}.ev-main{font-size:17px;}.ev-heading{font-size:38px;margin-bottom:28px;}}\n'
     '#sticky-nav{position:sticky;top:0;z-index:100;display:flex;justify-content:center;background:rgba(0,0,0,0.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}\n'
@@ -152,6 +155,7 @@ def _make_template(lottery=False):
         ['ポスターURL', '', '画像URLがあれば入力（なければ空白）'],
         ['ポスター幅',  '100%', '例: 100% / 60% / 400px　デフォルト100%'],
         ['会場', '○○アリーナ', ''],
+        ['会場_住所', '', '例: 東京都港区北青山2丁目8-35（空白でGoogleMapボタン非表示）'],
         ['背景色', '#191919', '例: #191919（黒） / #0a0a1e / #1a0a00'],
         ['チケットボタン色', '#8da0a7', '例: #8da0a7（デフォルト） / #c2185b / #2e5fa3'],
         ['ポイントカラー',   '',        '例: #FF6B6B / #6C63FF　空白でチケットボタン色と同じ'],
@@ -487,9 +491,10 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
     def collect(prefix, max_n):
         return [g(f'{prefix}{i}') for i in range(1, max_n + 1) if g(f'{prefix}{i}')]
 
-    title     = g('タイトル').replace('\\n', '<br>')
-    poster    = g('ポスターURL')
-    venue     = g('会場')
+    title         = g('タイトル').replace('\\n', '<br>')
+    poster        = g('ポスターURL')
+    venue         = g('会場')
+    venue_address = g('会場_住所')
     page_bg     = og('背景色') or '#191919'
     btn_color   = og('チケットボタン色') or '#8da0a7'
     point_color = og('ポイントカラー') or btn_color
@@ -573,10 +578,20 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
             f'<p class="ev-main">—</p>'
             f'</article>'
         )
+    _venue_addr_html = ''
+    if venue_address:
+        _map_q = venue_address.replace(' ', '+')
+        _map_url = f'https://www.google.com/maps/search/?api=1&query={_map_q}'
+        _venue_addr_html = (
+            f'<p class="ev-addr">{venue_address}</p>'
+            f'<a class="ev-map-btn" href="{_map_url}" target="_blank" rel="noopener">'
+            f'Google Map &nbsp;→</a>'
+        )
     _venue_card = (
         f'\n      <article class="ev-card">'
         f'<p class="ev-label">{lbl["venue"]}</p>'
         f'<p class="ev-main">{venue}</p>'
+        f'{_venue_addr_html}'
         f'</article>'
     ) if venue else ''
     sched_sec = (
@@ -814,7 +829,7 @@ var S=['.toptitle','.subtitle.info-date','.description.info-time',
   '.ticket-title','.ticket-note',
   '.ticketType','.ticketDay','.ticketDate','.ticketPrice',
   '.ticket-notice li','.oshirase dd','.oshirase dt','.title .titlecolor',
-  '.ev-card .ev-main','.ev-card .ev-sub'];
+  '.ev-card .ev-main','.ev-card .ev-sub','.ev-card .ev-addr'];
 var O=new Map();
 function _setupDdEnter(dd){
   dd.addEventListener('keydown',function(ev){
