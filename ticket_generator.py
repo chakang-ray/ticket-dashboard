@@ -1041,7 +1041,9 @@ document.getElementById('__ied_ok').addEventListener('click',function(){
   var scr=document.getElementById('__ied_j');
   bar.remove();sty.remove();scr.remove();
   var out='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
-  try{localStorage.setItem('ticket_edited_html',out);}catch(e){}
+  try{(window.parent||window).localStorage.setItem('ticket_edited_html',out);}catch(e){
+    try{localStorage.setItem('ticket_edited_html',out);}catch(e2){}
+  }
   document.body.appendChild(bar);document.head.appendChild(sty);document.body.appendChild(scr);
   showSavedMsg();
   mk();setupCtrls();
