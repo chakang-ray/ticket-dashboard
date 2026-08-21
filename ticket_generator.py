@@ -940,6 +940,7 @@ function setupTabs(){
   var nav=infotabs.querySelector('.infotab__nav');if(!nav)return;
   var panels=infotabs.querySelector('.infotab__panels');if(!panels)return;
   nav.querySelectorAll('.__tab_edit').forEach(function(b){b.remove();});
+  nav.querySelectorAll('.__tab_del').forEach(function(b){b.remove();});
   nav.querySelectorAll('.infotab__label').forEach(function(lbl){
     var eb=document.createElement('button');
     eb.textContent='✏';eb.className='__tab_edit __ied_ctrl';eb.title='탭 이름 수정';
