@@ -956,6 +956,22 @@ function setupTabs(){
       }
     });
     lbl.appendChild(eb);
+    var db=document.createElement('button');
+    db.textContent='✕';db.className='__tab_del __ied_ctrl';db.title='탭 삭제 / タブを削除';
+    db.style.cssText='margin-left:2px;font-size:10px;';
+    db.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      var inputs=infotabs.querySelectorAll('.infotab__input');
+      if(inputs.length<=1){alert('탭이 1개 이하이면 삭제할 수 없습니다.');return;}
+      if(!window.confirm('이 탭을 삭제하시겠습니까?')){return;}
+      var forId=lbl.getAttribute('for');
+      var n=forId.replace('tab','');
+      var inp=document.getElementById(forId);if(inp)inp.remove();
+      var panel=infotabs.querySelector('.panel'+n);if(panel)panel.remove();
+      lbl.remove();
+      setupTabs();mk();
+    });
+    lbl.appendChild(db);
   });
   var ea=document.getElementById('__add_tab');if(ea)ea.remove();
   var ab=_aBtn('__add_tab','＋ タブ追加 / 탭 추가');
