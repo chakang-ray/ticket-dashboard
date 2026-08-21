@@ -757,7 +757,7 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         + lineup_sec
         + '<!-- notice -->\n'
         '<div id="section-notice" class="section-wrap">\n'
-        '  <div class="title"><span class="titlecolor">NOTICE</span></div>\n'
+        '  <div class="title"><p class="ev-kicker" style="margin:0 0 8px;">NOTICE</p><span class="titlecolor">注意事項</span></div>\n'
         '  <div class="tabwrap-outer"><div class="tabwrapper"><div class="infotabs">\n'
         '        ' + tab_inputs + '\n'
         '        <div class="infotab__nav">\n'
