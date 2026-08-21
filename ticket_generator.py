@@ -134,6 +134,9 @@ _TICKET_CSS = (
     '.ev-sub{font-size:14px;color:rgba(255,255,255,.62);font-weight:500;line-height:1.6;margin:0;}\n'
     '@media(max-width:768px){.ev-heading{font-size:45px;}.ev-section{padding:40px 16px 36px;}}\n'
     '@media(max-width:480px){.ev-card{padding:22px 16px;}.ev-main{font-size:17px;}.ev-heading{font-size:38px;margin-bottom:28px;}}\n'
+    '#sticky-nav{position:sticky;top:0;z-index:100;display:flex;justify-content:center;background:rgba(0,0,0,0.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}\n'
+    '.snav-tab{display:inline-flex;align-items:center;padding:14px 36px;color:rgba(255,255,255,0.48);font-family:"Montserrat",sans-serif;font-weight:800;font-size:12px;letter-spacing:.2em;text-decoration:none;border-bottom:3px solid transparent;transition:color .2s,border-color .2s;-webkit-tap-highlight-color:transparent;}\n'
+    '.snav-tab.is-active{color:#fff;border-bottom-color:var(--point-color);}\n'
 )
 
 
@@ -690,13 +693,52 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
     )
 
     title_plain = title.replace('<br>', ' ')
+    _sticky_nav = (
+        '<nav id="sticky-nav">\n'
+        '  <a class="snav-tab is-active" href="#section-ticket" data-target="section-ticket">TICKET</a>\n'
+        '  <a class="snav-tab" href="#section-notice" data-target="section-notice">NOTICE</a>\n'
+        '</nav>\n'
+    )
+    _scrollspy_js = (
+        '<script>\n'
+        '(function(){\n'
+        '  var tabs=document.querySelectorAll(".snav-tab");\n'
+        '  var ids=["section-ticket","section-notice"];\n'
+        '  var sections=ids.map(function(id){return document.getElementById(id);}).filter(Boolean);\n'
+        '  tabs.forEach(function(tab){\n'
+        '    tab.addEventListener("click",function(e){\n'
+        '      e.preventDefault();\n'
+        '      var target=document.getElementById(tab.dataset.target);\n'
+        '      if(target){\n'
+        '        var navH=document.getElementById("sticky-nav").offsetHeight;\n'
+        '        var top=target.getBoundingClientRect().top+window.scrollY-navH-8;\n'
+        '        window.scrollTo({top:top,behavior:"smooth"});\n'
+        '      }\n'
+        '    });\n'
+        '  });\n'
+        '  function updateActive(){\n'
+        '    var navH=document.getElementById("sticky-nav").offsetHeight;\n'
+        '    var scrollY=window.scrollY+navH+60;\n'
+        '    var current=sections[0]?sections[0].id:"";\n'
+        '    sections.forEach(function(s){\n'
+        '      if(s.getBoundingClientRect().top+window.scrollY<=scrollY) current=s.id;\n'
+        '    });\n'
+        '    tabs.forEach(function(tab){\n'
+        '      tab.classList.toggle("is-active",tab.dataset.target===current);\n'
+        '    });\n'
+        '  }\n'
+        '  window.addEventListener("scroll",updateActive,{passive:true});\n'
+        '  updateActive();\n'
+        '})();\n'
+        '</script>\n'
+    )
     _body_content = (
         '<!-- title -->\n'
         f'<div class="toptitle">{title}</div>\n\n'
         + poster_sec
         + sched_sec
         + '<!-- ticket -->\n'
-        '<div class="section-wrap">\n'
+        '<div id="section-ticket" class="section-wrap">\n'
         '  <div class="title"><span class="titlecolor">TICKETS</span></div>\n'
         '  <div class="ticket-box">\n'
         '    <div class="ticket-info">\n'
@@ -714,7 +756,7 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         '</div>\n'
         + lineup_sec
         + '<!-- notice -->\n'
-        '<div class="section-wrap">\n'
+        '<div id="section-notice" class="section-wrap">\n'
         '  <div class="title"><span class="titlecolor">NOTICE</span></div>\n'
         '  <div class="tabwrap-outer"><div class="tabwrapper"><div class="infotabs">\n'
         '        ' + tab_inputs + '\n'
@@ -743,8 +785,10 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         '</head>\n'
         '<body style="margin:0;padding:0;background:' + page_bg + ';">\n'
         '<div id="tc">\n'
+        + _sticky_nav
         + _body_content
         + '</div>\n'
+        + _scrollspy_js
         + '</body>\n</html>\n'
     )
     return html_out, []
