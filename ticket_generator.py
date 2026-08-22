@@ -144,6 +144,112 @@ _TICKET_CSS = (
     '.snav-tab.is-active{color:#fff;border-bottom-color:var(--point-color);}\n'
 )
 
+_TICKET_CSS_T2 = (
+    'html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;}\n'
+    '#AN2026,#AN2026 *{box-sizing:border-box;font-family:"Murecho",sans-serif;}\n'
+    '#AN2026{background:#0b1d40;color:#fff;}\n'
+    '.item_wrap{border-bottom:1px solid transparent;}\n'
+    '.bd_glr_spc:after{background:transparent;}\n'
+    '.item_wrap .prc{line-height:inherit;}\n'
+    '.no-mark::before{content:none !important;}\n'
+    '@media screen and (min-width:768px){#content,#wrap{background-color:#0b1d40;}}\n'
+    '@media screen and (max-width:767px){#content,#wrap{background-color:#0b1d40;}}\n'
+    '.an-hero{position:relative;overflow:hidden;}\n'
+    '.an-hero-kv{position:relative;width:100%;}\n'
+    '.an-hero-kv img{width:100%;height:auto;display:block;max-height:82vh;object-fit:cover;}\n'
+    '.an-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(11,29,64,.2) 0%,rgba(11,29,64,.65) 55%,rgba(11,29,64,.97) 100%);display:flex;align-items:flex-end;}\n'
+    '.an-hero-inner{padding:40px 24px 52px;max-width:820px;margin:0 auto;width:100%;}\n'
+    '.an-hero-no-poster{padding:90px 24px;text-align:center;background:linear-gradient(135deg,#0b1d40 0%,#142444 100%);}\n'
+    '.an-hero-kicker{font-family:"Montserrat",sans-serif;font-size:11px;font-weight:800;letter-spacing:.3em;color:#d49a31;margin:0 0 16px;text-transform:uppercase;}\n'
+    '.an-hero-title{font-family:"Montserrat",sans-serif;font-weight:900;font-size:38px;line-height:1.22;margin:0 0 22px;color:#fff;}\n'
+    '.an-hero-no-poster .an-hero-title{text-align:center;}\n'
+    '.an-hero-date{font-size:16px;font-weight:700;color:rgba(255,255,255,.88);margin:0 0 8px;}\n'
+    '.an-hero-venue{font-size:14px;font-weight:500;color:rgba(255,255,255,.55);margin:0;}\n'
+    '@media(max-width:600px){.an-hero-title{font-size:24px;}.an-hero-inner{padding:28px 16px 40px;}}\n'
+    '.an-float-wrap{position:sticky;top:0;z-index:200;background:rgba(11,29,64,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:10px 16px;text-align:center;}\n'
+    '.an-float-btn{display:inline-block;padding:11px 40px;background:#d49a31;color:#0b1d40;font-family:"Montserrat",sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;border-radius:4px;text-decoration:none;}\n'
+    '.an-float-btn:hover{background:#e0aa45;color:#0b1d40;}\n'
+    '.an-lineup-section{padding:48px 16px 0;text-align:center;background:#0b1d40;}\n'
+    '.an-lineup-section img{max-width:100%;height:auto;display:block;margin:0 auto;}\n'
+    '.an-lineup-kicker{font-family:"Montserrat",sans-serif;font-size:11px;font-weight:800;letter-spacing:.3em;color:#d49a31;margin:0 0 24px;text-transform:uppercase;}\n'
+    '.an-section-kicker{font-family:"Montserrat",sans-serif;font-size:11px;font-weight:800;letter-spacing:.3em;color:#d49a31;text-transform:uppercase;margin:0 0 10px;text-align:center;}\n'
+    '.an-section-title{font-family:"Montserrat",sans-serif;font-weight:900;font-size:52px;margin:0 0 40px;text-align:center;color:#fff;line-height:1;}\n'
+    '@media(max-width:600px){.an-section-title{font-size:36px;margin-bottom:28px;}}\n'
+    '.an-tickets-section{padding:60px 16px;background:#0b1d40;}\n'
+    '.an-tickets-inner{max-width:780px;margin:0 auto;}\n'
+    '.an-lottery-info{background:rgba(255,255,255,.04);border:1px solid rgba(212,154,49,.28);border-radius:14px;padding:30px 26px;margin-bottom:38px;}\n'
+    '.an-lottery-row{display:flex;flex-wrap:wrap;gap:8px 0;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.07);align-items:baseline;}\n'
+    '.an-lottery-row:last-child{border-bottom:none;padding-bottom:0;}\n'
+    '.an-lottery-row:first-child{padding-top:0;}\n'
+    '.an-lottery-label{font-size:11px;font-weight:800;letter-spacing:.12em;color:#d49a31;min-width:128px;flex-shrink:0;}\n'
+    '.an-lottery-value{font-size:15px;font-weight:600;color:rgba(255,255,255,.88);flex:1;line-height:1.55;}\n'
+    '@media(max-width:500px){.an-lottery-row{flex-direction:column;gap:5px;}.an-lottery-label{min-width:auto;}}\n'
+    '.an-ticket-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px;}\n'
+    '.an-ticket-type-label{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 0 6px;font-size:11px;font-weight:800;color:#d49a31;letter-spacing:.18em;}\n'
+    '.an-ticket-type-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(212,154,49,.45) 0%,transparent 100%);}\n'
+    '.an-ticket-type-label:first-child{padding-top:0;}\n'
+    '.an-ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto auto;column-gap:16px;align-items:center;padding:18px 36px;border-radius:8px;background:#fff;color:#0b1d40;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;}\n'
+    '.an-ticketType{grid-column:1/span 2;grid-row:1;text-align:left;font-size:10px;font-weight:800;letter-spacing:.18em;opacity:.5;padding-bottom:7px;border-bottom:1px solid rgba(0,0,0,.1);}\n'
+    '.an-ticketDay{grid-column:1;grid-row:2;text-align:left;font-size:17px;font-weight:800;padding-top:8px;}\n'
+    '.an-ticketDate{grid-column:1;grid-row:3;text-align:left;font-size:13px;font-weight:600;color:rgba(11,29,64,.58);}\n'
+    '.an-ticketPrice{grid-column:2;grid-row:2/span 2;justify-self:end;align-self:center;font-size:22px;white-space:nowrap;font-weight:900;}\n'
+    '.an-ticketBtn::after{content:"";grid-column:3;grid-row:2/span 2;justify-self:end;align-self:center;width:10px;height:10px;border-top:2.5px solid #0b1d40;border-right:2.5px solid #0b1d40;transform:rotate(45deg);}\n'
+    '.an-ticketBtn.is-disabled{pointer-events:none;filter:saturate(.5) brightness(.9);}\n'
+    '.an-ticketBtn.is-disabled::before{content:"";position:absolute;inset:0;z-index:3;background:rgba(255,255,255,.55);display:grid;place-items:center;font-weight:900;letter-spacing:.12em;font-size:16px;color:#333;}\n'
+    '.an-ticketBtn.st-uketsuke-yotei::before{content:"受付予定";}\n'
+    '.an-ticketBtn.st-hanbai-shuryo::before{content:"販売終了";}\n'
+    '.an-ticketBtn.st-soldout::before{content:"SOLD OUT";}\n'
+    '@media(max-width:600px){.an-ticketBtn{grid-template-columns:1fr 18px;grid-template-rows:auto auto auto auto;padding:14px 18px;}.an-ticketDay{font-size:15px;}.an-ticketPrice{grid-column:1;grid-row:4;justify-self:start;font-size:20px;margin-top:8px;}.an-ticketBtn::after{grid-column:2;grid-row:2/span 3;}}\n'
+    '.an-ticket-notice{list-style:none;padding:0;margin:26px auto;font-size:13px;text-align:left;color:rgba(255,255,255,.48);}\n'
+    '.an-ticket-notice li{position:relative;padding-left:1.3em;line-height:1.7;margin-bottom:5px;}\n'
+    '.an-ticket-notice li::before{content:"※";position:absolute;left:0;top:0;}\n'
+    '.an-sched-section{padding:56px 16px;background:rgba(255,255,255,.025);}\n'
+    '.an-sched-inner{max-width:780px;margin:0 auto;}\n'
+    '.an-sched-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;}\n'
+    '.an-sched-card{background:rgba(255,255,255,.05);border:1px solid rgba(212,154,49,.18);border-radius:12px;padding:24px 18px;text-align:center;}\n'
+    '.an-sched-label{font-size:10px;font-weight:800;letter-spacing:.22em;color:#d49a31;text-transform:uppercase;margin:0 0 12px;}\n'
+    '.an-sched-main{font-size:18px;font-weight:800;color:#fff;line-height:1.35;margin:0 0 6px;}\n'
+    '.an-sched-sub{font-size:13px;color:rgba(255,255,255,.52);font-weight:500;margin:0;}\n'
+    '.an-sched-addr{font-size:11px;color:rgba(255,255,255,.38);margin:6px 0 14px;line-height:1.55;}\n'
+    '.an-sched-addr:empty{display:none;}\n'
+    '.an-map-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:6px;border:1px solid rgba(212,154,49,.28);background:rgba(212,154,49,.07);color:rgba(255,255,255,.65);font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.05em;}\n'
+    '.an-map-btn:hover{background:rgba(212,154,49,.18);}\n'
+    '.an-map-btn[data-hidden]{display:none;}\n'
+    '@media(max-width:600px){.an-sched-main{font-size:16px;}.an-sched-section{padding:40px 16px;}}\n'
+    '.an-notice-section{padding:56px 16px 72px;background:#0b1d40;}\n'
+    '.an-notice-inner{max-width:780px;margin:0 auto;}\n'
+    '.an-tabwrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:40px;}\n'
+    '@media(max-width:600px){.an-tabwrap{padding:28px 18px;}}\n'
+    '.an-infotabs{position:relative;}\n'
+    '.an-infotab__input{position:absolute;opacity:0;pointer-events:none;}\n'
+    '.an-infotab__nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}\n'
+    '.an-infotab__label{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:6px;border:1px solid rgba(212,154,49,.38);color:rgba(212,154,49,.7);font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;}\n'
+    '#ant1:checked ~ .an-infotab__nav label[for="ant1"],'
+    '#ant2:checked ~ .an-infotab__nav label[for="ant2"],'
+    '#ant3:checked ~ .an-infotab__nav label[for="ant3"],'
+    '#ant4:checked ~ .an-infotab__nav label[for="ant4"],'
+    '#ant5:checked ~ .an-infotab__nav label[for="ant5"],'
+    '#ant6:checked ~ .an-infotab__nav label[for="ant6"]{background:#d49a31;border-color:#d49a31;color:#0b1d40;}\n'
+    '.an-infotab__content{display:none;font-size:14px;line-height:1.78;color:rgba(255,255,255,.72);}\n'
+    '#ant1:checked ~ .an-infotab__panels .antpanel1{display:block;}\n'
+    '#ant2:checked ~ .an-infotab__panels .antpanel2{display:block;}\n'
+    '#ant3:checked ~ .an-infotab__panels .antpanel3{display:block;}\n'
+    '#ant4:checked ~ .an-infotab__panels .antpanel4{display:block;}\n'
+    '#ant5:checked ~ .an-infotab__panels .antpanel5{display:block;}\n'
+    '#ant6:checked ~ .an-infotab__panels .antpanel6{display:block;}\n'
+    '.an-oshirase dl{margin:0;}\n'
+    '.an-oshirase dd{margin:0;padding:6px 0;}\n'
+    '.an-oshirase dt{position:relative;padding-top:28px;padding-left:18px;font-weight:700;color:#fff;}\n'
+    '.an-oshirase dt::before{content:"■";position:absolute;left:0;top:28px;color:#d49a31;}\n'
+    '.an-oshirase .list{text-indent:-14px;padding-left:14px;}\n'
+    '.an-oshirase .list::before{content:"●";font-size:5px;margin-right:7px;color:#d49a31;vertical-align:middle;}\n'
+    '.an-oshirase .list_star{text-indent:-14px;padding-left:14px;}\n'
+    '.an-oshirase .list_star::before{content:"＊";font-size:13px;margin-right:7px;color:#d49a31;vertical-align:middle;}\n'
+    '.an-oshirase .list_important{text-indent:-14px;padding-left:14px;}\n'
+    '.an-oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:#d49a31;vertical-align:middle;}\n'
+    '@media(max-width:600px){.an-infotab__label{font-size:12px;padding:8px 14px;}.an-infotab__nav{gap:6px;}}\n'
+)
+
 
 def _make_template(lottery=False):
     wb = _Workbook()
@@ -806,6 +912,256 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
     return html_out, []
 
 
+def _generate_html_t2(data, orig_data, lang='ja'):
+    """응모형 Template 2: a-nation 스타일 (다크 네이비/골드)."""
+    lbl = _LANG_LABELS[lang]
+    def g(k): return str(data.get(k, '') or '').strip()
+    def og(k): return str(orig_data.get(k, '') or '').strip()
+    def esc(s): return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+    def linkify(text):
+        return re.sub(r'(https?://[^\s<>"]+)',
+                      lambda m: f'<a href="{esc(m.group(1))}" target="_blank" style="color:#d49a31;">{m.group(1)}</a>',
+                      str(text))
+    def bullet_cls(style):
+        s = str(style or '').strip()
+        if s in ('＊', '*'): return 'list_star'
+        if s == '※':         return 'list_important'
+        return 'list'
+    def collect(prefix, max_n):
+        return [g(f'{prefix}{i}') for i in range(1, max_n + 1) if g(f'{prefix}{i}')]
+
+    title         = g('タイトル').replace('\\n', ' ')
+    poster        = g('ポスターURL')
+    venue         = g('会場')
+    venue_address = g('会場_住所')
+
+    perf_days = []
+    for i in range(1, 6):
+        d = g(f'公演日{i}_日付')
+        if not d: break
+        perf_days.append({'date': d, 'time': g(f'公演日{i}_時間')})
+
+    section_title    = g('チケットセクション見出し') or 'チケット'
+    sale_period      = g('申込期間')
+    lottery_date     = g('当落発表日')
+    payment_deadline = g('入金期限')
+
+    tickets = []
+    for i in range(1, 11):
+        d  = g(f'チケット{i}_公演日付')
+        tp = g(f'チケット{i}_権種名')
+        pr = g(f'チケット{i}_価格')
+        if not d and not tp and not pr: break
+        if not d and not tp: continue
+        tickets.append({
+            'date': d, 'time': g(f'チケット{i}_公演時間'),
+            'type': tp, 'price': pr,
+            'url': og(f'チケット{i}_URL') or '#',
+            'status': og(f'チケット{i}_状態'),
+            'color': og(f'チケット{i}_色'),
+        })
+
+    ticket_notices = collect('チケット注意', 5)
+    lineup_heading = g('ラインアップ見出し')
+    lineup_url     = og('ラインアップ画像URL')
+
+    tabs = []
+    for ti in range(1, 7):
+        name = g(f'タブ{ti}_名称')
+        if not name: break
+        tabs.append({'name': name, 'cls': bullet_cls(g(f'タブ{ti}_スタイル')), 'items': collect(f'タブ{ti}_内容', 30)})
+
+    errors = []
+    if not title:   errors.append('タイトルが入力されていません。')
+    if not tickets: errors.append('チケット情報が入力されていません。')
+    if not tabs:    errors.append('タブ1_名称 が入力されていません。')
+    if errors:      return None, errors
+
+    # Hero
+    if poster:
+        _dates_str = ' / '.join(d['date'] for d in perf_days) if perf_days else ''
+        hero_html = (
+            '<section class="an-hero">'
+            '<div class="an-hero-kv">'
+            f'<img src="{poster}" alt="{esc(title)}">'
+            '<div class="an-hero-overlay">'
+            '<div class="an-hero-inner">'
+            '<p class="an-hero-kicker">TICKET</p>'
+            f'<h1 class="an-hero-title">{esc(title)}</h1>'
+            + (f'<p class="an-hero-date">{esc(_dates_str)}</p>' if _dates_str else '')
+            + (f'<p class="an-hero-venue">{esc(venue)}</p>' if venue else '')
+            + '</div></div></div></section>'
+        )
+    else:
+        _dates_str = ' / '.join(d['date'] for d in perf_days) if perf_days else ''
+        hero_html = (
+            '<section class="an-hero an-hero-no-poster">'
+            '<div class="an-hero-inner">'
+            '<p class="an-hero-kicker">TICKET</p>'
+            f'<h1 class="an-hero-title">{esc(title)}</h1>'
+            + (f'<p class="an-hero-date">{esc(_dates_str)}</p>' if _dates_str else '')
+            + (f'<p class="an-hero-venue">{esc(venue)}</p>' if venue else '')
+            + '</div></section>'
+        )
+
+    # Lineup
+    if lineup_url:
+        _lk = f'<p class="an-lineup-kicker">{esc(lineup_heading)}</p>' if lineup_heading else ''
+        lineup_html = (
+            '<section class="an-lineup-section">'
+            + _lk
+            + f'<img src="{lineup_url}" alt="LINEUP">'
+            + '</section>'
+        )
+    else:
+        lineup_html = ''
+
+    # Lottery info
+    lottery_rows = ''
+    if sale_period:
+        lottery_rows += (f'<div class="an-lottery-row"><span class="an-lottery-label">申込期間</span>'
+                         f'<span class="an-lottery-value">{esc(sale_period)}</span></div>')
+    if lottery_date:
+        lottery_rows += (f'<div class="an-lottery-row"><span class="an-lottery-label">当落発表日</span>'
+                         f'<span class="an-lottery-value">{esc(lottery_date)}</span></div>')
+    if payment_deadline:
+        lottery_rows += (f'<div class="an-lottery-row"><span class="an-lottery-label">入金期限</span>'
+                         f'<span class="an-lottery-value">{esc(payment_deadline)}</span></div>')
+    lottery_info_html = f'<div class="an-lottery-info">{lottery_rows}</div>' if lottery_rows else ''
+
+    # Ticket buttons
+    ticket_html = ''
+    _last_type = None
+    for tk in tickets:
+        st_raw = tk['status']
+        if st_raw in ('受付予定',):
+            st_cls = 'is-disabled st-uketsuke-yotei'
+        elif st_raw in ('販売終了',):
+            st_cls = 'is-disabled st-hanbai-shuryo'
+        elif st_raw.upper() in ('SOLDOUT', 'SOLD OUT', 'SOLD_OUT'):
+            st_cls = 'is-disabled st-soldout'
+        else:
+            st_cls = ''
+        if tk['type'] and tk['type'] != _last_type:
+            ticket_html += f'<li class="an-ticket-type-label">{esc(tk["type"])}</li>'
+            _last_type = tk['type']
+        _btn_style = f' style="background:{tk["color"]};color:#fff;"' if tk['color'] else ''
+        ticket_html += (
+            f'<a class="an-ticketBtn {st_cls}" href="{esc(tk["url"])}" target="_blank"{_btn_style}>'
+            f'<span class="an-ticketType">{esc(tk["type"])}</span>'
+            f'<span class="an-ticketDay">{esc(tk["date"])}</span>'
+            f'<span class="an-ticketDate">{esc(tk["time"])}</span>'
+            f'<span class="an-ticketPrice">{esc(tk["price"])}</span>'
+            f'</a>'
+        )
+
+    ticket_notices_html = ''
+    if ticket_notices:
+        ticket_notices_html = '<ul class="an-ticket-notice">' + ''.join(f'<li>{esc(n)}</li>' for n in ticket_notices) + '</ul>'
+
+    tickets_section = (
+        '<section id="ant-tickets" class="an-tickets-section">'
+        '<div class="an-tickets-inner">'
+        '<p class="an-section-kicker">TICKET</p>'
+        f'<h2 class="an-section-title">{esc(section_title)}</h2>'
+        + lottery_info_html
+        + f'<ul class="an-ticket-list">{ticket_html}</ul>'
+        + ticket_notices_html
+        + '</div></section>'
+    )
+
+    # Schedule
+    _day_label = lbl['perf_datetime']
+    date_cards = ''
+    for _idx, _d in enumerate(perf_days):
+        _card_label = f'Day {_idx + 1}' if len(perf_days) > 1 else _day_label
+        _sub = f'<p class="an-sched-sub">{esc(_d["time"])}</p>' if _d['time'] else ''
+        date_cards += (
+            f'<article class="an-sched-card">'
+            f'<p class="an-sched-label">{_card_label}</p>'
+            f'<p class="an-sched-main">{esc(_d["date"])}</p>'
+            f'{_sub}'
+            f'</article>'
+        )
+    if not date_cards:
+        date_cards = f'<article class="an-sched-card"><p class="an-sched-label">{_day_label}</p><p class="an-sched-main">—</p></article>'
+
+    _map_url = ('https://www.google.com/maps/search/?api=1&query=' + venue_address.replace(' ', '+')) if venue_address else ''
+    _map_hidden = '' if venue_address else ' data-hidden="1"'
+    venue_card = ''
+    if venue:
+        venue_card = (
+            f'<article class="an-sched-card">'
+            f'<p class="an-sched-label">{esc(lbl["venue"])}</p>'
+            f'<p class="an-sched-main">{esc(venue)}</p>'
+            f'<p class="an-sched-addr">{esc(venue_address)}</p>'
+            f'<a class="an-map-btn" href="{_map_url}" target="_blank" rel="noopener"{_map_hidden}>Google Map →</a>'
+            f'</article>'
+        )
+
+    sched_section = (
+        '<section class="an-sched-section">'
+        '<div class="an-sched-inner">'
+        '<p class="an-section-kicker">SCHEDULE</p>'
+        '<h2 class="an-section-title">EVENT INFORMATION</h2>'
+        f'<div class="an-sched-grid">{date_cards}{venue_card}</div>'
+        '</div></section>'
+    )
+
+    # Notice tabs
+    tab_inputs = tab_nav = tab_panels = ''
+    for _i, _tab in enumerate(tabs, 1):
+        _checked = 'checked' if _i == 1 else ''
+        tab_inputs += f'<input type="radio" class="an-infotab__input" name="antabs" id="ant{_i}" {_checked}>\n'
+        tab_nav += f'<label class="an-infotab__label" for="ant{_i}">{esc(_tab["name"])}</label>\n'
+        _cls = _tab['cls']
+        items_html = '\n'.join(
+            f'<dd class="{_cls}">{linkify(esc(item))}</dd>'
+            for item in _tab['items']
+        )
+        tab_panels += f'<div class="an-infotab__content antpanel{_i} an-oshirase"><dl>{items_html}</dl></div>\n'
+
+    notice_section = (
+        '<section class="an-notice-section">'
+        '<div class="an-notice-inner">'
+        '<p class="an-section-kicker">NOTICE</p>'
+        '<h2 class="an-section-title">注意事項</h2>'
+        '<div class="an-tabwrap"><div class="an-infotabs">'
+        + tab_inputs
+        + f'<div class="an-infotab__nav">{tab_nav}</div>'
+        + f'<div class="an-infotab__panels">{tab_panels}</div>'
+        + '</div></div></div></section>'
+    )
+
+    title_plain = esc(title)
+    html_out = (
+        '<!DOCTYPE html>\n'
+        '<html lang="ja">\n'
+        '<head>\n'
+        '<meta charset="UTF-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+        f'<title>{title_plain}</title>\n'
+        '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+        '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Murecho:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">\n'
+        '<link rel="stylesheet" href="https://dp.image-qoo10.jp/dp2016/JP/design/JPPM/fullEvent.css">\n'
+        '<style>\n' + _TICKET_CSS_T2 + '\n</style>\n'
+        '</head>\n'
+        '<body style="margin:0;padding:0;background:#0b1d40;">\n'
+        '<div id="AN2026">\n'
+        + hero_html + '\n'
+        + '<div class="an-float-wrap">'
+        + '<a class="an-float-btn" href="#ant-tickets">チケット購入はこちら</a>'
+        + '</div>\n'
+        + lineup_html + '\n'
+        + tickets_section + '\n'
+        + sched_section + '\n'
+        + notice_section + '\n'
+        + '</div>\n</body>\n</html>\n'
+    )
+    return html_out, []
+
+
 def _block_links(html: str) -> str:
     """미리보기에서 모든 <a> 링크 이동을 차단한다."""
     script = (
@@ -1404,6 +1760,16 @@ with col_l:
         key='ticket_type_sel',
     )
     _is_lottery_tpl = _type_sel == t['type_lottery']
+    if _is_lottery_tpl:
+        _tpl_sel = st.radio(
+            'テンプレート / 템플릿',
+            ['Template 1  (다크)', 'Template 2  (네이비·골드)'],
+            horizontal=True,
+            key='lottery_template_sel',
+        )
+        _use_t2 = _tpl_sel.startswith('Template 2')
+    else:
+        _use_t2 = False
     st.download_button(
         t['dl_tpl'],
         _make_template(lottery=_is_lottery_tpl),
@@ -1552,13 +1918,17 @@ if tpl_data:
             _pb, _pmime = st.session_state[_poster_key]
             _b64str = _b64mod.b64encode(_pb).decode('ascii')
             _merged['ポスターURL'] = f'data:{_pmime};base64,{_b64str}'
-        result_html, errs = _generate_html(_merged, _merged, _TICKET_CSS, 'ja')
+        _use_t2_gen = st.session_state.get('lottery_template_sel', '').startswith('Template 2')
+        if _use_t2_gen:
+            result_html, errs = _generate_html_t2(_merged, _merged, 'ja')
+        else:
+            result_html, errs = _generate_html(_merged, _merged, _TICKET_CSS, 'ja')
         if errs:
             for err in errs:
                 st.error(f"⚠ {err}")
         else:
             st.session_state['ticket_gen_html'] = result_html
-            st.session_state['ticket_gen_bg']   = _merged.get('背景色', '') or '#191919'
+            st.session_state['ticket_gen_bg']   = _merged.get('背景色', '') or '#0b1d40' if _use_t2_gen else _merged.get('背景色', '') or '#191919'
             st.session_state['ticket_gen_data'] = _merged
 
 if st.session_state.get('ticket_gen_html'):
