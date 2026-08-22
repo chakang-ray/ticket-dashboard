@@ -1219,12 +1219,18 @@ def _block_links(html: str) -> str:
 def _inject_editable(html: str, ok_label: str = '✅ 편집완료/다운로드', rs_label: str = '↩ 되돌리기', hint_label: str = '✏️ 클릭하여 편집') -> str:
     """미리보기 HTML에 contenteditable 툴바를 주입한다."""
     _js = r"""(function(){
+var isT2=!!document.getElementById('AN2026');
 var S=['.toptitle','.subtitle.info-date','.description.info-time',
   '.description.info-venue','.subtitle.info-label',
   '.ticket-title','.ticket-note',
   '.ticketType','.ticketDay','.ticketDate','.ticketPrice',
   '.ticket-notice li','.oshirase dd','.oshirase dt','.title .titlecolor',
-  '.ev-card .ev-main','.ev-card .ev-sub','.ev-card .ev-addr'];
+  '.ev-card .ev-main','.ev-card .ev-sub','.ev-card .ev-addr',
+  '.an-hero-title','.an-hero-date','.an-hero-venue',
+  '.an-section-title','.an-lottery-value',
+  '.an-ticketType','.an-ticketDay','.an-ticketDate','.an-ticketPrice',
+  '.an-ticket-notice li','.an-oshirase dd','.an-oshirase dt',
+  '.an-sched-main','.an-sched-sub','.an-sched-addr'];
 var O=new Map();
 function _setupDdEnter(dd){
   dd.addEventListener('keydown',function(ev){
@@ -1244,7 +1250,7 @@ function mk(){S.forEach(function(s){document.querySelectorAll(s).forEach(functio
   if(!O.has(el))O.set(el,el.innerHTML);
   el.setAttribute('contenteditable','true');el.setAttribute('spellcheck','false');
   el.addEventListener('click',function(e){e.stopPropagation();});
-  if(el.matches('.oshirase dd'))_setupDdEnter(el);
+  if(el.matches('.oshirase dd,.an-oshirase dd'))_setupDdEnter(el);
 });});}
 function rm(){document.querySelectorAll('[contenteditable]').forEach(function(el){
   el.removeAttribute('contenteditable');el.removeAttribute('spellcheck');});}
@@ -1252,9 +1258,9 @@ document.addEventListener('click',function(e){var a=e.target.closest('a');if(a){
 
 var _initTL='',_initNL='',_initTabs='';
 (function(){
-  var tl=document.querySelector('.ticketList');
-  var nl=document.querySelector('.ticket-notice');
-  var tw=document.querySelector('.infotabs');
+  var tl=document.querySelector(isT2?'.an-ticket-list':'.ticketList');
+  var nl=document.querySelector(isT2?'.an-ticket-notice':'.ticket-notice');
+  var tw=document.querySelector(isT2?'.an-infotabs':'.infotabs');
   if(tl)_initTL=tl.outerHTML;
   if(nl)_initNL=nl.outerHTML;
   if(tw)_initTabs=tw.outerHTML;
@@ -1271,6 +1277,39 @@ function _aBtn(id,txt){
   return b;
 }
 function setupTickets(){
+  if(isT2){
+    var tl=document.querySelector('.an-ticket-list');if(!tl)return;
+    tl.querySelectorAll('.__del_t').forEach(function(b){b.remove();});
+    tl.querySelectorAll('.an-ticketBtn').forEach(function(a){
+      var b=_dBtn('__del_t');
+      b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();a.remove();});
+      a.appendChild(b);
+    });
+    var ea=document.getElementById('__add_t');if(ea)ea.remove();
+    var ab=_aBtn('__add_t','＋ チケット追加 / 티켓 추가');
+    ab.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      var tl2=document.querySelector('.an-ticket-list');
+      var items=tl2.querySelectorAll('.an-ticketBtn');
+      var last=items[items.length-1];if(!last)return;
+      var clone=last.cloneNode(true);
+      clone.querySelectorAll('.__ied_ctrl').forEach(function(b){b.remove();});
+      clone.classList.remove('is-disabled','st-uketsuke-yotei','st-hanbai-shuryo','st-soldout');
+      clone.href='#';
+      clone.querySelectorAll('span').forEach(function(s){
+        if(s.classList.contains('an-ticketType'))s.textContent='チケット種別';
+        else if(s.classList.contains('an-ticketDay'))s.textContent='0/00(月)';
+        else if(s.classList.contains('an-ticketDate'))s.textContent='00:00開演';
+        else if(s.classList.contains('an-ticketPrice'))s.textContent='¥0,000';
+      });
+      var db=_dBtn('__del_t');
+      db.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();clone.remove();});
+      clone.appendChild(db);
+      tl2.appendChild(clone);mk();
+    });
+    tl.parentNode.insertBefore(ab,tl.nextSibling);
+    return;
+  }
   var tl=document.querySelector('.ticketList');if(!tl)return;
   tl.querySelectorAll('.__del_t').forEach(function(b){b.remove();});
   tl.querySelectorAll('.ticketItem').forEach(function(li){
@@ -1303,7 +1342,8 @@ function setupTickets(){
   tl.parentNode.insertBefore(ab,tl.nextSibling);
 }
 function setupNotices(){
-  var nl=document.querySelector('.ticket-notice');if(!nl)return;
+  var nlSel=isT2?'.an-ticket-notice':'.ticket-notice';
+  var nl=document.querySelector(nlSel);if(!nl)return;
   nl.querySelectorAll('.__del_n').forEach(function(b){b.remove();});
   nl.querySelectorAll('li').forEach(function(li){
     var b=_dBtn('__del_n');
@@ -1314,7 +1354,7 @@ function setupNotices(){
   var ab=_aBtn('__add_n','＋ 注意事項追加 / 주의사항 추가');
   ab.addEventListener('click',function(e){
     e.preventDefault();e.stopPropagation();
-    var nl2=document.querySelector('.ticket-notice');
+    var nl2=document.querySelector(nlSel);
     var li=document.createElement('li');
     li.textContent='注意事項を入力してください';
     li.setAttribute('contenteditable','true');li.setAttribute('spellcheck','false');
@@ -1330,16 +1370,32 @@ function _ensureTabCSS(n){
   var id='__tab_ext_css';
   var el=document.getElementById(id);
   if(!el){el=document.createElement('style');el.id=id;document.head.appendChild(el);}
-  el.textContent+='#tab'+n+':checked ~ .infotab__nav label[for="tab'+n+'"]{background:var(--point-color);color:#121113;}'+
-    '#tab'+n+':checked ~ .infotab__panels .panel'+n+'{display:block;}';
+  if(isT2){
+    el.textContent+='#ant'+n+':checked ~ .an-infotab__nav label[for="ant'+n+'"]{background:#d49a31;border-color:#d49a31;color:#0b1d40;}'+
+      '#ant'+n+':checked ~ .an-infotab__panels .antpanel'+n+'{display:block;}';
+  }else{
+    el.textContent+='#tab'+n+':checked ~ .infotab__nav label[for="tab'+n+'"]{background:var(--point-color);color:#121113;}'+
+      '#tab'+n+':checked ~ .infotab__panels .panel'+n+'{display:block;}';
+  }
 }
 function setupTabs(){
-  var infotabs=document.querySelector('.infotabs');if(!infotabs)return;
-  var nav=infotabs.querySelector('.infotab__nav');if(!nav)return;
-  var panels=infotabs.querySelector('.infotab__panels');if(!panels)return;
+  var tabsSel=isT2?'.an-infotabs':'.infotabs';
+  var inputSel=isT2?'.an-infotab__input':'.infotab__input';
+  var labelSel=isT2?'.an-infotab__label':'.infotab__label';
+  var navSel=isT2?'.an-infotab__nav':'.infotab__nav';
+  var panelsSel=isT2?'.an-infotab__panels':'.infotab__panels';
+  var inputPfx=isT2?'ant':'tab';
+  var inputName=isT2?'antabs':'tab';
+  var labelCls=isT2?'an-infotab__label':'infotab__label';
+  var panelPfx=isT2?'antpanel':'panel';
+  var panelCls=isT2?'an-infotab__content':'infotab__content';
+
+  var infotabs=document.querySelector(tabsSel);if(!infotabs)return;
+  var nav=infotabs.querySelector(navSel);if(!nav)return;
+  var panels=infotabs.querySelector(panelsSel);if(!panels)return;
   nav.querySelectorAll('.__tab_edit').forEach(function(b){b.remove();});
   nav.querySelectorAll('.__tab_del').forEach(function(b){b.remove();});
-  nav.querySelectorAll('.infotab__label').forEach(function(lbl){
+  nav.querySelectorAll(labelSel).forEach(function(lbl){
     var eb=document.createElement('button');
     eb.textContent='✏';eb.className='__tab_edit __ied_ctrl';eb.title='탭 이름 수정';
     eb.addEventListener('click',function(e){
@@ -1360,13 +1416,13 @@ function setupTabs(){
     db.style.cssText='margin-left:2px;font-size:10px;';
     db.addEventListener('click',function(e){
       e.preventDefault();e.stopPropagation();
-      var inputs=infotabs.querySelectorAll('.infotab__input');
+      var inputs=infotabs.querySelectorAll(inputSel);
       if(inputs.length<=1){alert('탭이 1개 이하이면 삭제할 수 없습니다.');return;}
       if(!window.confirm('이 탭을 삭제하시겠습니까?')){return;}
       var forId=lbl.getAttribute('for');
-      var n=forId.replace('tab','');
+      var n=forId.replace(inputPfx,'');
       var inp=document.getElementById(forId);if(inp)inp.remove();
-      var panel=infotabs.querySelector('.panel'+n);if(panel)panel.remove();
+      var panel=infotabs.querySelector('.'+panelPfx+n);if(panel)panel.remove();
       lbl.remove();
       setupTabs();mk();
     });
@@ -1376,28 +1432,33 @@ function setupTabs(){
   var ab=_aBtn('__add_tab','＋ タブ追加 / 탭 추가');
   ab.addEventListener('click',function(e){
     e.preventDefault();e.stopPropagation();
-    var inputs=infotabs.querySelectorAll('.infotab__input');
+    var inputs=infotabs.querySelectorAll(inputSel);
     var n=inputs.length+1;
     _ensureTabCSS(n);
     var inp=document.createElement('input');
-    inp.type='radio';inp.name='tab';inp.id='tab'+n;inp.className='infotab__input';
+    inp.type='radio';inp.name=inputName;inp.id=inputPfx+n;inp.className=inputSel.slice(1);
     infotabs.insertBefore(inp,nav);
     var tname=window.prompt('새 탭 이름 / 新しいタブ名:','タブ'+n);
     if(tname===null||!tname.trim())tname='タブ'+n;
     var lbl=document.createElement('label');
-    lbl.setAttribute('for','tab'+n);lbl.className='infotab__label';
+    lbl.setAttribute('for',inputPfx+n);lbl.className=labelCls;
     lbl.textContent=tname.trim();
     nav.appendChild(lbl);
     var panel=document.createElement('div');
-    panel.className='infotab__content panel'+n;
-    var inner=document.createElement('div');inner.className='oshirase';
-    var dl=document.createElement('dl');
     var dd=document.createElement('dd');dd.className='list';
     dd.textContent='内容を入力してください / 내용을 입력하세요';
     dd.setAttribute('contenteditable','true');dd.setAttribute('spellcheck','false');
     dd.addEventListener('click',function(ev){ev.stopPropagation();});
     _setupDdEnter(dd);
-    dl.appendChild(dd);inner.appendChild(dl);panel.appendChild(inner);
+    var dl=document.createElement('dl');dl.appendChild(dd);
+    if(isT2){
+      panel.className=panelCls+' '+panelPfx+n+' an-oshirase';
+      panel.appendChild(dl);
+    }else{
+      panel.className=panelCls+' '+panelPfx+n;
+      var inner=document.createElement('div');inner.className='oshirase';
+      inner.appendChild(dl);panel.appendChild(inner);
+    }
     panels.appendChild(panel);
     setupTabs();mk();
   });
@@ -1421,10 +1482,10 @@ function showSavedMsg(){
 
 mk();setupCtrls();
 (function(){
-  document.querySelectorAll('.ev-card .ev-addr').forEach(function(addr){
+  document.querySelectorAll('.ev-card .ev-addr,.an-sched-card .an-sched-addr').forEach(function(addr){
     addr.addEventListener('input',function(){
       var btn=this.nextElementSibling;
-      if(btn&&btn.classList.contains('ev-map-btn')){
+      if(btn&&(btn.classList.contains('ev-map-btn')||btn.classList.contains('an-map-btn'))){
         var q=encodeURIComponent(this.textContent.trim());
         if(q){btn.href='https://www.google.com/maps/search/?api=1&query='+q;btn.removeAttribute('data-hidden');}
         else{btn.href='';btn.setAttribute('data-hidden','1');}
@@ -1449,11 +1510,14 @@ document.getElementById('__ied_ok').addEventListener('click',function(){
 });
 document.getElementById('__ied_rs').addEventListener('click',function(){
   O.forEach(function(v,el){if(document.contains(el))el.innerHTML=v;});
-  var tl=document.querySelector('.ticketList');
+  var tlSel=isT2?'.an-ticket-list':'.ticketList';
+  var nlSel=isT2?'.an-ticket-notice':'.ticket-notice';
+  var twSel=isT2?'.an-infotabs':'.infotabs';
+  var tl=document.querySelector(tlSel);
   if(tl&&_initTL){var d=document.createElement('div');d.innerHTML=_initTL;tl.parentNode.replaceChild(d.firstChild,tl);}
-  var nl=document.querySelector('.ticket-notice');
+  var nl=document.querySelector(nlSel);
   if(nl&&_initNL){var d2=document.createElement('div');d2.innerHTML=_initNL;nl.parentNode.replaceChild(d2.firstChild,nl);}
-  var tw=document.querySelector('.infotabs');
+  var tw=document.querySelector(twSel);
   if(tw&&_initTabs){var d3=document.createElement('div');d3.innerHTML=_initTabs;tw.parentNode.replaceChild(d3.firstChild,tw);}
   removeCtrls();mk();setupCtrls();
 });
@@ -1477,6 +1541,10 @@ document.getElementById('__ied_rs').addEventListener('click',function(){
         '.ev-addr:empty{display:block!important;min-height:1.4em;}'
         '.ev-addr[contenteditable]:empty::before{content:"住所を入力… (例: 東京都港区北青山2丁目8-35)";color:rgba(255,255,255,.25);pointer-events:none;}'
         '.ev-map-btn[data-hidden]{display:inline-flex!important;opacity:.35;}'
+        '.an-map-btn[data-hidden]{display:inline-flex!important;opacity:.35;}'
+        '.an-sched-addr:empty{display:block!important;min-height:1.4em;}'
+        '.an-sched-addr[contenteditable]:empty::before{content:"住所を入力… (例: 東京都港区北青山2丁目8-35)";color:rgba(255,255,255,.2);pointer-events:none;}'
+        '.an-ticketBtn{overflow:visible!important;}'
         '.ticketItem{position:relative!important;}'
         '.__del_t{position:absolute;top:-8px;right:-8px;z-index:10;width:22px;height:22px;'
         'border-radius:50%;border:none;background:#ff4444;color:#fff;font-size:11px;'
