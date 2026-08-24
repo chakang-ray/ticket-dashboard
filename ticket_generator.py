@@ -1216,7 +1216,7 @@ def _block_links(html: str) -> str:
     return html.replace('</body>', script + '</body>') if '</body>' in html else html + script
 
 
-def _inject_editable(html: str, ok_label: str = '✅ 편집완료/다운로드', rs_label: str = '↩ 되돌리기', hint_label: str = '✏️ 클릭하여 편집') -> str:
+def _inject_editable(html: str, ok_label: str = '✅ 편집완료/다운로드', rs_label: str = '↩ 되돌리기', hint_label: str = '✏️ 클릭하여 편집', gen_id: str = '0') -> str:
     """미리보기 HTML에 contenteditable 툴바를 주입한다."""
     _js = r"""(function(){
 var isT2=!!document.getElementById('AN2026');
@@ -1522,6 +1522,8 @@ document.getElementById('__ied_rs').addEventListener('click',function(){
   removeCtrls();mk();setupCtrls();
 });
 })();"""
+    _ls_key = f'ticket_edited_html_{gen_id}'
+    _js = _js.replace("'ticket_edited_html'", f"'{_ls_key}'")
     _css = (
         '#__ied_bar{position:fixed;top:10px;right:10px;z-index:99999;'
         'background:rgba(18,18,20,.95);backdrop-filter:blur(8px);border-radius:10px;'
@@ -2040,19 +2042,14 @@ if tpl_data:
             st.session_state['ticket_gen_html'] = result_html
             st.session_state['ticket_gen_bg']   = _merged.get('背景色', '') or '#0b1d40' if _use_t2_gen else _merged.get('背景色', '') or '#191919'
             st.session_state['ticket_gen_data'] = _merged
-            st.session_state['_should_clear_edited'] = True
+            st.session_state['_html_gen_id'] = str(st.session_state.get('_html_gen_counter', 0) + 1)
+            st.session_state['_html_gen_counter'] = st.session_state.get('_html_gen_counter', 0) + 1
             st.session_state['awaiting_edited'] = False
             st.session_state['edited_html_ready'] = None
 
 if st.session_state.get('ticket_gen_html'):
     gen_html  = st.session_state['ticket_gen_html']
     orig_data = st.session_state.get('ticket_gen_data', {})
-
-    if st.session_state.pop('_should_clear_edited', False):
-        components_v1.html(
-            '<script>try{(window.parent||window).localStorage.removeItem("ticket_edited_html");}catch(e){}</script>',
-            height=1,
-        )
 
     st.divider()
     st.markdown(f"#### {t['preview']}")
@@ -2067,7 +2064,8 @@ if st.session_state.get('ticket_gen_html'):
         key="preview_mode",
     )
 
-    _render_html = _inject_editable(gen_html, t['edit_ok_btn'], t['edit_rs_btn'], t['edit_hint']) if _edit_mode else _block_links(gen_html)
+    _cur_gen_id = st.session_state.get('_html_gen_id', '0')
+    _render_html = _inject_editable(gen_html, t['edit_ok_btn'], t['edit_rs_btn'], t['edit_hint'], gen_id=_cur_gen_id) if _edit_mode else _block_links(gen_html)
 
     import html as _html
     if _prev_mode == t['prev_mobile']:
@@ -2138,7 +2136,8 @@ if st.session_state.get('ticket_gen_html'):
         try:
             from streamlit_js_eval import streamlit_js_eval as _jseval
             _fetch_key = f"edited_html_{st.session_state.get('edit_dl_count', 0)}"
-            _edited_val = _jseval(js_expressions='localStorage.getItem("ticket_edited_html")', key=_fetch_key)
+            _cur_ls_key = f"ticket_edited_html_{st.session_state.get('_html_gen_id', '0')}"
+            _edited_val = _jseval(js_expressions=f'localStorage.getItem("{_cur_ls_key}")||""', key=_fetch_key)
             if _edited_val is not None:
                 if _edited_val:
                     st.session_state['edited_html_ready'] = _edited_val
