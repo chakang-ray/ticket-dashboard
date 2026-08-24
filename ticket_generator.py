@@ -2040,10 +2040,19 @@ if tpl_data:
             st.session_state['ticket_gen_html'] = result_html
             st.session_state['ticket_gen_bg']   = _merged.get('背景色', '') or '#0b1d40' if _use_t2_gen else _merged.get('背景色', '') or '#191919'
             st.session_state['ticket_gen_data'] = _merged
+            st.session_state['_should_clear_edited'] = True
+            st.session_state['awaiting_edited'] = False
+            st.session_state['edited_html_ready'] = None
 
 if st.session_state.get('ticket_gen_html'):
     gen_html  = st.session_state['ticket_gen_html']
     orig_data = st.session_state.get('ticket_gen_data', {})
+
+    if st.session_state.pop('_should_clear_edited', False):
+        components_v1.html(
+            '<script>try{(window.parent||window).localStorage.removeItem("ticket_edited_html");}catch(e){}</script>',
+            height=1,
+        )
 
     st.divider()
     st.markdown(f"#### {t['preview']}")
