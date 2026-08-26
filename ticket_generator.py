@@ -63,7 +63,7 @@ _TICKET_CSS = (
     '@media(max-width:480px){.ticket-box,.tabwrapper{border-radius:18px;padding:40px 20px;}}\n'
     '.ticket-info{text-align:center;margin-bottom:36px;padding-bottom:30px;font-size:15px;}\n'
     '.ticket-title{font-size:40px;font-weight:900;margin-bottom:18px;letter-spacing:.02em;}\n'
-    '.ticket-note{font-size:16px;color:#555;margin-bottom:24px;}\n'
+    '.ticket-note{font-size:18px;color:#555;margin-bottom:24px;}\n'
     '.ticket-info p:not(.ticket-title):not(.ticket-note){font-size:18px;color:#666;line-height:1.6;font-weight:600;}\n'
     '@media(max-width:768px){.ticket-title{font-size:30px;}.ticket-info{padding-bottom:12px;margin-bottom:20px;}}\n'
     '.ticketList{list-style:none;margin:0 auto;padding:0;display:flex;flex-direction:column;gap:14px;max-width:540px;}\n'
@@ -624,7 +624,7 @@ def _generate_html(data, orig_data, ticket_css, lang='ja'):
         if not d: break
         perf_days.append({'date': d, 'time': g(f'公演日{i}_時間')})
 
-    section_title    = g('チケットセクション見出し') or 'チケット'
+    section_title    = 'Qoo10先行'
     _is_lottery_type = bool(g('申込期間'))
     sale_period       = g('申込期間') if _is_lottery_type else g('販売期間')
     sale_period_label = '申込期間' if _is_lottery_type else '販売期間'
