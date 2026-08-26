@@ -1199,18 +1199,25 @@ def _generate_html_t2(data, orig_data, lang='ja'):
 
 _JP_FONT_OPTIONS = [
     {
+        'key': 'Noto Sans JP',
+        'label': 'Noto Sans JP ⭐ 추천',
+        'desc_ko': '가독성 1위 — 어떤 배경·크기에서도 선명',
+        'desc_ja': '可読性No.1 — どんな背景・サイズでも鮮明',
+        'url': 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap',
+    },
+    {
+        'key': 'BIZ UDPGothic',
+        'label': 'BIZ UDPGothic',
+        'desc_ko': '선명하고 공식적인 느낌 — 정보 전달 최적화',
+        'desc_ja': 'くっきり・公式感 — 情報伝達に最適化',
+        'url': 'https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap',
+    },
+    {
         'key': 'Murecho',
         'label': 'Murecho（デフォルト）',
         'desc_ko': '기본값 — 둥글고 현대적',
         'desc_ja': 'デフォルト — 丸みがある・現代的',
         'url': 'https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap',
-    },
-    {
-        'key': 'Noto Sans JP',
-        'label': 'Noto Sans JP',
-        'desc_ko': '가독성 최강 — 안정감 있고 전천후',
-        'desc_ja': '読みやすさ最強 — 安定感・万能',
-        'url': 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap',
     },
     {
         'key': 'M PLUS 1p',
@@ -1225,20 +1232,6 @@ _JP_FONT_OPTIONS = [
         'desc_ko': '스타일리시 & 클린 — 세련된 고급감',
         'desc_ja': 'スタイリッシュ・クリーン — ハイエンド感',
         'url': 'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap',
-    },
-    {
-        'key': 'BIZ UDPGothic',
-        'label': 'BIZ UDPGothic',
-        'desc_ko': '깔끔하고 공식적인 느낌 — 정보 전달에 최적',
-        'desc_ja': 'きっちり・公式感 — 情報伝達に最適',
-        'url': 'https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap',
-    },
-    {
-        'key': 'Klee One',
-        'label': 'Klee One',
-        'desc_ko': '우아하고 프리미엄한 느낌 — 고급 공연에',
-        'desc_ja': '上品・プレミアム感 — ハイクラスイベントに',
-        'url': 'https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap',
     },
 ]
 
