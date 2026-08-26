@@ -1501,23 +1501,12 @@ document.getElementById('__ied_ok').addEventListener('click',function(){
   var scr=document.getElementById('__ied_j');
   bar.remove();sty.remove();scr.remove();
   var out='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
-  var href='';
-  try{
-    var blob=new Blob([out],{type:'text/html;charset=utf-8'});
-    href=URL.createObjectURL(blob);
-  }catch(e){
-    href='data:text/html;charset=utf-8,'+encodeURIComponent(out);
-  }
+  try{window.parent.postMessage({type:'ied_done',html:out},'*');}catch(e){}
   bar.innerHTML='';
   var sp=document.createElement('span');
   sp.style.cssText='color:#4ade80;font-weight:700;font-size:13px;white-space:nowrap;';
-  sp.textContent='✅ 편집완료！';
-  var dl=document.createElement('a');
-  dl.href=href;dl.setAttribute('download','ticket_edited.html');
-  dl.style.cssText='background:#6C63FF;color:#fff;padding:6px 14px;border-radius:6px;'+
-    'text-decoration:none;font-weight:700;font-size:12px;white-space:nowrap;cursor:pointer;';
-  dl.textContent='📥 HTML 다운로드 ← 클릭！';
-  bar.appendChild(sp);bar.appendChild(dl);
+  sp.textContent='✅ 편집완료！ 아래 [다운로드] 버튼을 클릭하세요';
+  bar.appendChild(sp);
   document.body.appendChild(bar);document.head.appendChild(sty);document.body.appendChild(scr);
   mk();setupCtrls();
 });
@@ -1550,7 +1539,7 @@ document.getElementById('__ied_rs').addEventListener('click',function(){
         '#__ied_rs{background:transparent;color:rgba(255,255,255,.5);'
         'border:1px solid rgba(255,255,255,.2);}'
         '#__ied_rs:hover{background:rgba(255,255,255,.08);color:#fff;}'
-        '[contenteditable]{cursor:text;border-radius:2px;}'
+        '[contenteditable]{cursor:text;border-radius:2px;user-select:text!important;-webkit-user-select:text!important;}'
         '[contenteditable]:hover{outline:1px dashed rgba(108,99,255,.65);outline-offset:3px;}'
         '[contenteditable]:focus{outline:2px solid #6C63FF!important;outline-offset:3px;}'
         '.ev-addr:empty{display:block!important;min-height:1.4em;}'
@@ -2120,7 +2109,38 @@ if st.session_state.get('ticket_gen_html'):
             use_container_width=True,
         )
         if _edit_mode:
-            st.caption('💡 ' + ('편집 후 미리보기 상단 툴바의 "편집완료/다운로드" 버튼을 클릭하면 바로 다운로드됩니다.' if st.session_state.get('ui_lang') == 'ko' else 'プレビュー上部の「編集完了/ダウンロード」ボタンをクリックするとすぐにダウンロードされます。'))
+            _is_ko = st.session_state.get('ui_lang') == 'ko'
+            _bridge = (
+                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                '<style>body{margin:0;padding:4px 0;background:transparent;font-family:sans-serif;}'
+                '#msg{font-size:11px;color:#888;padding:2px 0;}'
+                '#dl-wrap{display:none;}'
+                '#dl-btn{display:inline-block;padding:8px 18px;background:#6C63FF;color:#fff;'
+                'border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;cursor:pointer;}'
+                '#dl-btn:hover{background:#5a51e8;}</style></head><body>'
+                '<div id="msg">' + ('✏️ 편집 후 미리보기 상단의 "편집완료/다운로드" 버튼을 누르세요.' if _is_ko else '✏️ プレビュー上部の「編集完了/ダウンロード」を押してください。') + '</div>'
+                '<div id="dl-wrap"><a id="dl-btn" download="ticket_edited.html">'
+                + ('📥 편집본 다운로드' if _is_ko else '📥 編集版をダウンロード') +
+                '</a></div>'
+                '<script>'
+                '(function(){'
+                'function handle(ev){'
+                'if(!ev||!ev.data||ev.data.type!=="ied_done")return;'
+                'var html=ev.data.html;'
+                'var href="";'
+                'try{var b=new Blob([html],{type:"text/html;charset=utf-8"});href=URL.createObjectURL(b);}catch(e){'
+                'href="data:text/html;charset=utf-8,"+encodeURIComponent(html);}'
+                'var a=document.getElementById("dl-btn");'
+                'a.href=href;'
+                'document.getElementById("msg").style.display="none";'
+                'document.getElementById("dl-wrap").style.display="block";'
+                '}'
+                'window.addEventListener("message",handle);'
+                'try{window.parent.addEventListener("message",handle);}catch(e){}'
+                '})();'
+                '</script></body></html>'
+            )
+            components_v1.html(_bridge, height=50)
     with col_e:
         import urllib.parse as _up
         _title = (orig_data.get('公演タイトル', '')
