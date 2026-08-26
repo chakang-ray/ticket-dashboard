@@ -16,7 +16,7 @@ st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
 <div style="padding:8px 0 4px;">
   <div style="font-size:11px;font-weight:800;letter-spacing:.3em;color:#6C63FF;margin-bottom:6px;">Qoo10</div>
-  <div style="font-family:'Montserrat',sans-serif;font-size:52px;font-weight:900;line-height:1.05;letter-spacing:-.02em;">Ticket Page Generator</div>
+  <div style="font-family:'Montserrat',sans-serif;font-size:52px;font-weight:900;line-height:1.05;letter-spacing:-.02em;">TICKET Page Generator</div>
   <div style="font-size:13px;color:#999;margin-top:10px;letter-spacing:.02em;">
     티켓 페이지 제너레이터&nbsp;&nbsp;<span style="color:#6C63FF;">·</span>&nbsp;&nbsp;チケットページ ジェネレーター
   </div>
