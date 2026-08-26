@@ -294,7 +294,7 @@ def _make_template(lottery=False):
         ]),
         ['', '', ''],
     ]
-    _st = '受付予定' if lottery else '販売中'
+    _st = '販売中'
     defaults = [
         ('VVIP席', '¥00,000', _st),
         ('VIP席',  '¥00,000', _st),
