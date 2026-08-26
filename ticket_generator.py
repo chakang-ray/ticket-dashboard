@@ -1294,6 +1294,7 @@ function mk(){S.forEach(function(s){document.querySelectorAll(s).forEach(functio
 function rm(){document.querySelectorAll('[contenteditable]').forEach(function(el){
   el.removeAttribute('contenteditable');el.removeAttribute('spellcheck');});}
 document.addEventListener('click',function(e){var a=e.target.closest('a');if(a){e.preventDefault();e.stopPropagation();}},true);
+document.addEventListener('paste',function(e){if(!e.target.isContentEditable)return;e.preventDefault();var t=(e.clipboardData||window.clipboardData).getData('text/plain');document.execCommand('insertText',false,t);},true);
 
 var _initTL='',_initNL='',_initTabs='';
 (function(){
