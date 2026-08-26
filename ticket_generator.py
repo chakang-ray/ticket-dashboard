@@ -190,9 +190,6 @@ _TICKET_CSS_T2 = (
     '.an-lottery-value{font-size:15px;font-weight:600;color:rgba(255,255,255,.88);flex:1;line-height:1.55;}\n'
     '@media(max-width:500px){.an-lottery-row{flex-direction:column;gap:5px;}.an-lottery-label{min-width:auto;}}\n'
     '.an-ticket-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px;}\n'
-    '.an-ticket-type-label{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 0 6px;font-size:11px;font-weight:800;color:#d49a31;letter-spacing:.18em;}\n'
-    '.an-ticket-type-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(212,154,49,.45) 0%,transparent 100%);}\n'
-    '.an-ticket-type-label:first-child{padding-top:0;}\n'
     '.an-ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto auto;column-gap:16px;align-items:center;padding:18px 36px;border-radius:8px;background:#fff;color:#0b1d40;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;}\n'
     '.an-ticketType{grid-column:1/span 2;grid-row:1;text-align:left;font-size:10px;font-weight:800;letter-spacing:.18em;opacity:.5;padding-bottom:7px;border-bottom:1px solid rgba(0,0,0,.1);}\n'
     '.an-ticketDay{grid-column:1;grid-row:2;text-align:left;font-size:17px;font-weight:800;padding-top:8px;}\n'
@@ -1036,7 +1033,6 @@ def _generate_html_t2(data, orig_data, lang='ja'):
 
     # Ticket buttons
     ticket_html = ''
-    _last_type = None
     for tk in tickets:
         st_raw = tk['status']
         if st_raw in ('受付予定',):
@@ -1047,9 +1043,6 @@ def _generate_html_t2(data, orig_data, lang='ja'):
             st_cls = 'is-disabled st-soldout'
         else:
             st_cls = ''
-        if tk['type'] and tk['type'] != _last_type:
-            ticket_html += f'<li class="an-ticket-type-label">{esc(tk["type"])}</li>'
-            _last_type = tk['type']
         _btn_style = f' style="background:{tk["color"]};color:#fff;"' if tk['color'] else ''
         ticket_html += (
             f'<a class="an-ticketBtn {st_cls}" href="{esc(tk["url"])}" target="_blank"{_btn_style}>'
