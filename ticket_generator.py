@@ -287,7 +287,7 @@ def _make_template(lottery=False):
         *([
             ['申込期間', '2026年○月○日(○) ○○:00 ～ ○月○日(○) 23:59まで', '応募受付期間'],
             ['当落発表日', '2026年○月○日(○) 予定', ''],
-            ['入金期限', '2026年○月○日(○) ○○:59まで', ''],
+            ['入金期限', '0000年00月00日まで', ''],
         ] if lottery else [
             ['販売期間', '2026年○月○日(○) ○○:00 ～ 各公演の2日前 23:59まで', ''],
             ['販売期間注記', '※予定枚数に達し次第受付終了', '赤字。なければ空白'],
@@ -295,18 +295,19 @@ def _make_template(lottery=False):
         ['', '', ''],
     ]
     defaults = [
-        ('VIP席', '¥20,000', '販売中'),
-        ('S席',   '¥15,000', '販売中'),
+        ('VVIP席', '¥00,000', '受付予定'),
+        ('VIP席',  '¥00,000', '受付予定'),
+        ('R席',    '¥00,000', '受付予定'),
     ]
     for n in range(1, 11):
         d = defaults[n - 1] if n <= len(defaults) else ('', '', '')
         rows += [
             [f'── チケット{n} ──', '', ''],
-            [f'チケット{n}_公演日付', '2026年○月○日(○)' if n <= 2 else '', ''],
-            [f'チケット{n}_公演時間', '○○:○○開場・○○:○○開演' if n <= 2 else '', ''],
+            [f'チケット{n}_公演日付', '0000年00月00日(土)' if n <= 3 else '', ''],
+            [f'チケット{n}_公演時間', '○○:○○開場・○○:○○開演' if n <= 3 else '', ''],
             [f'チケット{n}_権種名',   d[0], '例: VIP席 / S席 / 一般指定席'],
             [f'チケット{n}_価格',     d[1], ''],
-            [f'チケット{n}_URL',      'https://www.qoo10.jp/...' if n <= 2 else '', '購入URL'],
+            [f'チケット{n}_URL',      'https://www.qoo10.jp/...' if n <= 3 else '', '購入URL'],
             [f'チケット{n}_状態',     d[2], '受付中 / 受付予定 / 販売中 / 販売終了 / SOLDOUT'],
             [f'チケット{n}_色',       '',   '例: #FF6B6B / #6C63FF / #00C896　空白でデフォルト色'],
             ['', '', ''],
@@ -943,7 +944,7 @@ def _generate_html_t2(data, orig_data, lang='ja'):
         if not d: break
         perf_days.append({'date': d, 'time': g(f'公演日{i}_時間')})
 
-    section_title    = g('チケットセクション見出し') or 'チケット'
+    section_title    = 'Qoo10先行'
     sale_period      = g('申込期間')
     lottery_date     = g('当落発表日')
     payment_deadline = g('入金期限')
@@ -1335,7 +1336,7 @@ function setupTickets(){
       clone.href='#';
       clone.querySelectorAll('span').forEach(function(s){
         if(s.classList.contains('an-ticketType'))s.textContent='チケット種別';
-        else if(s.classList.contains('an-ticketDay'))s.textContent='0/00(月)';
+        else if(s.classList.contains('an-ticketDay'))s.textContent='0000年00月00日(土)';
         else if(s.classList.contains('an-ticketDate'))s.textContent='00:00開演';
         else if(s.classList.contains('an-ticketPrice'))s.textContent='¥0,000';
       });
@@ -1367,7 +1368,7 @@ function setupTickets(){
     if(a){a.classList.remove('is-disabled','st-uketsuke-yotei','st-hanbai-shuryo','st-soldout');a.href='#';}
     clone.querySelectorAll('span').forEach(function(s){
       if(s.classList.contains('ticketType'))s.textContent='チケット種別';
-      else if(s.classList.contains('ticketDay'))s.textContent='0/00(月)';
+      else if(s.classList.contains('ticketDay'))s.textContent='0000年00月00日(土)';
       else if(s.classList.contains('ticketDate'))s.textContent='00:00開演';
       else if(s.classList.contains('ticketPrice'))s.textContent='¥0,000';
     });
