@@ -1197,6 +1197,71 @@ def _generate_html_t2(data, orig_data, lang='ja'):
     return html_out, []
 
 
+_JP_FONT_OPTIONS = [
+    {
+        'key': 'Murecho',
+        'label': 'Murecho（デフォルト）',
+        'desc_ko': '기본값 — 둥글고 현대적',
+        'desc_ja': 'デフォルト — 丸みがある・現代的',
+        'url': 'https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap',
+    },
+    {
+        'key': 'Noto Sans JP',
+        'label': 'Noto Sans JP',
+        'desc_ko': '가독성 최강 — 안정감 있고 전천후',
+        'desc_ja': '読みやすさ最強 — 安定感・万能',
+        'url': 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap',
+    },
+    {
+        'key': 'M PLUS 1p',
+        'label': 'M PLUS 1p',
+        'desc_ko': '스마트 & 스포티 — K-pop 공연에 잘 어울림',
+        'desc_ja': 'スマート・スポーティ — Kpopイベントに◎',
+        'url': 'https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700;800;900&display=swap',
+    },
+    {
+        'key': 'Zen Kaku Gothic New',
+        'label': 'Zen Kaku Gothic New',
+        'desc_ko': '스타일리시 & 클린 — 세련된 고급감',
+        'desc_ja': 'スタイリッシュ・クリーン — ハイエンド感',
+        'url': 'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap',
+    },
+    {
+        'key': 'BIZ UDPGothic',
+        'label': 'BIZ UDPGothic',
+        'desc_ko': '깔끔하고 공식적인 느낌 — 정보 전달에 최적',
+        'desc_ja': 'きっちり・公式感 — 情報伝達に最適',
+        'url': 'https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap',
+    },
+    {
+        'key': 'Klee One',
+        'label': 'Klee One',
+        'desc_ko': '우아하고 프리미엄한 느낌 — 고급 공연에',
+        'desc_ja': '上品・プレミアム感 — ハイクラスイベントに',
+        'url': 'https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap',
+    },
+]
+
+
+def _apply_font(html: str, font_key: str) -> str:
+    """선택된 폰트를 HTML에 CSS override로 주입한다."""
+    if font_key == 'Murecho':
+        return html
+    font = next((f for f in _JP_FONT_OPTIONS if f['key'] == font_key), None)
+    if not font:
+        return html
+    override = (
+        f'<style id="__font_override">'
+        f'@import url("{font["url"]}");\n'
+        f'#tc,#tc *,#_special_top{{font-family:"{font_key}",sans-serif!important;}}\n'
+        f'#AN2026,#AN2026 *{{font-family:"{font_key}",sans-serif!important;}}\n'
+        f'</style>\n'
+    )
+    if '</head>' in html:
+        return html.replace('</head>', override + '</head>', 1)
+    return html + override
+
+
 def _block_links(html: str) -> str:
     """미리보기에서 모든 <a> 링크 이동을 차단한다."""
     script = (
@@ -2048,6 +2113,22 @@ if st.session_state.get('ticket_gen_html'):
 
     st.divider()
     st.markdown(f"#### {t['preview']}")
+
+    # 폰트 선택
+    _is_ko = st.session_state.get('ui_lang') == 'ko'
+    _font_labels = [
+        f"{f['key']}  —  {f['desc_ko'] if _is_ko else f['desc_ja']}"
+        for f in _JP_FONT_OPTIONS
+    ]
+    _font_idx = st.selectbox(
+        '🔤 폰트 선택 / フォント選択',
+        options=range(len(_JP_FONT_OPTIONS)),
+        format_func=lambda i: _font_labels[i],
+        key='selected_font_idx',
+        index=0,
+    )
+    _selected_font = _JP_FONT_OPTIONS[_font_idx]['key']
+    gen_html = _apply_font(gen_html, _selected_font)
 
     _edit_mode = st.toggle(t['edit_mode_btn'], key='inline_edit_mode', value=False)
 
