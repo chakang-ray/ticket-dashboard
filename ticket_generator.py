@@ -1501,16 +1501,24 @@ document.getElementById('__ied_ok').addEventListener('click',function(){
   var scr=document.getElementById('__ied_j');
   bar.remove();sty.remove();scr.remove();
   var out='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  var href='';
   try{
     var blob=new Blob([out],{type:'text/html;charset=utf-8'});
-    var a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='ticket_edited.html';
-    document.body.appendChild(a);a.click();
-    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},1000);
-  }catch(e){}
+    href=URL.createObjectURL(blob);
+  }catch(e){
+    href='data:text/html;charset=utf-8,'+encodeURIComponent(out);
+  }
+  bar.innerHTML='';
+  var sp=document.createElement('span');
+  sp.style.cssText='color:#4ade80;font-weight:700;font-size:13px;white-space:nowrap;';
+  sp.textContent='✅ 편집완료！';
+  var dl=document.createElement('a');
+  dl.href=href;dl.setAttribute('download','ticket_edited.html');
+  dl.style.cssText='background:#6C63FF;color:#fff;padding:6px 14px;border-radius:6px;'+
+    'text-decoration:none;font-weight:700;font-size:12px;white-space:nowrap;cursor:pointer;';
+  dl.textContent='📥 HTML 다운로드 ← 클릭！';
+  bar.appendChild(sp);bar.appendChild(dl);
   document.body.appendChild(bar);document.head.appendChild(sty);document.body.appendChild(scr);
-  showSavedMsg();
   mk();setupCtrls();
 });
 document.getElementById('__ied_rs').addEventListener('click',function(){
