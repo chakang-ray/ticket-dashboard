@@ -1214,24 +1214,10 @@ _JP_FONT_OPTIONS = [
     },
     {
         'key': 'Murecho',
-        'label': 'Murecho（デフォルト）',
-        'desc_ko': '기본값 — 둥글고 현대적',
-        'desc_ja': 'デフォルト — 丸みがある・現代的',
+        'label': 'Murecho',
+        'desc_ko': '둥글고 현대적 — 부드러운 느낌',
+        'desc_ja': '丸みがある・現代的 — やわらかい印象',
         'url': 'https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap',
-    },
-    {
-        'key': 'M PLUS 1p',
-        'label': 'M PLUS 1p',
-        'desc_ko': '스마트 & 스포티 — K-pop 공연에 잘 어울림',
-        'desc_ja': 'スマート・スポーティ — Kpopイベントに◎',
-        'url': 'https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700;800;900&display=swap',
-    },
-    {
-        'key': 'Zen Kaku Gothic New',
-        'label': 'Zen Kaku Gothic New',
-        'desc_ko': '스타일리시 & 클린 — 세련된 고급감',
-        'desc_ja': 'スタイリッシュ・クリーン — ハイエンド感',
-        'url': 'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap',
     },
 ]
 
