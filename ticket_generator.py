@@ -294,10 +294,11 @@ def _make_template(lottery=False):
         ]),
         ['', '', ''],
     ]
+    _st = '受付予定' if lottery else '販売中'
     defaults = [
-        ('VVIP席', '¥00,000', '受付予定'),
-        ('VIP席',  '¥00,000', '受付予定'),
-        ('R席',    '¥00,000', '受付予定'),
+        ('VVIP席', '¥00,000', _st),
+        ('VIP席',  '¥00,000', _st),
+        ('R席',    '¥00,000', _st),
     ]
     for n in range(1, 11):
         d = defaults[n - 1] if n <= len(defaults) else ('', '', '')
