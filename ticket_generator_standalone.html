@@ -93,15 +93,13 @@ a.btn-link:hover{background:#222;color:#fff;}
       <label><input type="radio" name="ttype" id="radio-instant" value="instant" checked onchange="onTypeChange()"> <span data-i18n="type_instant">즉시구매 (선착순)</span></label>
       <label><input type="radio" name="ttype" id="radio-lottery" value="lottery" onchange="onTypeChange()"> <span data-i18n="type_lottery">응모형 (추첨)</span></label>
     </div>
-    <div id="tpl-row" style="margin-bottom:10px;">
+    <div id="lottery-tpl-row" class="hidden" style="margin-bottom:10px;">
       <div style="font-size:12px;color:#aaa;margin-bottom:6px;">템플릿 / テンプレート</div>
-      <div class="radio-group" id="instant-tpl-options">
-        <label><input type="radio" name="itpl" id="radio-i-t1" value="t1" checked> Template 1 · 다크</label>
-        <label><input type="radio" name="itpl" id="radio-i-t3" value="t3"> Template 3 · 에디토리얼</label>
-      </div>
-      <div class="radio-group hidden" id="lottery-tpl-options">
-        <label><input type="radio" name="ltpl" id="radio-l-t2" value="t2" checked> Template 2 · 네이비·골드</label>
-        <label><input type="radio" name="ltpl" id="radio-l-t4" value="t4"> Template 4 · 그라디언트·팝</label>
+      <div class="radio-group">
+        <label><input type="radio" name="ltpl" id="radio-t1" value="t1" checked> Template 1 (다크)</label>
+        <label><input type="radio" name="ltpl" id="radio-t2" value="t2"> Template 2 (네이비·골드)</label>
+        <label><input type="radio" name="ltpl" id="radio-t3" value="t3"> Template 3 (에디토리얼)</label>
+        <label><input type="radio" name="ltpl" id="radio-t4" value="t4"> Template 4 (그라디언트·팝)</label>
       </div>
     </div>
     <button class="btn-secondary" id="btn-dl-tpl" onclick="downloadTemplate()" style="width:100%;margin-top:4px;" data-i18n="dl_tpl">↓ 템플릿 다운로드 (.xlsx)</button>
@@ -1531,8 +1529,7 @@ function setLang(lang){
 
 function onTypeChange(){
   state.isLottery=document.getElementById('radio-lottery').checked;
-  document.getElementById('instant-tpl-options').className='radio-group'+(state.isLottery?' hidden':'');
-  document.getElementById('lottery-tpl-options').className='radio-group'+(state.isLottery?'':' hidden');
+  document.getElementById('lottery-tpl-row').className=state.isLottery?'':'hidden';
 }
 
 function downloadTemplate(){
@@ -1631,8 +1628,8 @@ async function extractFromUrl(){
 }
 
 function getVariant(){
-  if(state.isLottery)return document.querySelector('input[name="ltpl"]:checked')?.value||'t2';
-  return document.querySelector('input[name="itpl"]:checked')?.value||'t1';
+  if(state.isLottery)return document.querySelector('input[name="ltpl"]:checked')?.value||'t1';
+  return 't1';
 }
 function callGenerator(merged,variant){
   if(variant==='t2')return generateHtmlT2(merged,merged,'ja');
