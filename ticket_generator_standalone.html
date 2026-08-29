@@ -218,7 +218,10 @@ a.btn-link:hover{background:#222;color:#fff;}
 
     <!-- Source -->
     <div class="section-block">
-      <div style="font-size:12px;color:#aaa;margin-bottom:6px;" data-i18n="src">HTML 소스 (복사용)</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:12px;color:#aaa;" data-i18n="src">HTML 소스 (복사용)</div>
+        <button id="btn-copy-src" onclick="copySrc()" style="background:transparent;border:1px solid #3d3d4d;border-radius:6px;padding:4px 10px;color:#aaa;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='#222';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#aaa'">📋 복사</button>
+      </div>
       <textarea id="src-area" rows="6" readonly></textarea>
     </div>
   </div><!-- /preview-section -->
@@ -1511,6 +1514,21 @@ function updateEmailLink(){
   const subject=encodeURIComponent(`[Qoo10] ${title}`);
   const body=encodeURIComponent('HTML을 다운로드받으셔서 첨부 하시고 메일을 보내주세요.\nHTMLをダウンロードして添付の上、メールをお送りください。');
   document.getElementById('btn-send-email').href=`mailto:chakang@ebay.com?subject=${subject}&body=${body}`;
+}
+
+function copySrc(){
+  const area=document.getElementById('src-area');
+  if(!area||!area.value){alert('복사할 HTML이 없습니다.');return;}
+  navigator.clipboard.writeText(area.value).then(()=>{
+    const btn=document.getElementById('btn-copy-src');
+    const orig=btn.textContent;
+    btn.textContent='✅ 복사됨';btn.style.color='#4ade80';btn.style.borderColor='#4ade80';
+    setTimeout(()=>{btn.textContent=orig;btn.style.color='#aaa';btn.style.borderColor='#3d3d4d';},2000);
+  }).catch(()=>{
+    document.getElementById('src-area').select();
+    document.execCommand('copy');
+    alert('복사되었습니다.');
+  });
 }
 
 // postMessage listener for inline edit download
