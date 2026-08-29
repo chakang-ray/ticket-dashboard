@@ -1517,6 +1517,8 @@ function updateEmailLink(){
 window.addEventListener('message',function(ev){
   if(!ev.data||ev.data.type!=='ied_done')return;
   state.editedHtml=ev.data.html;
+  const srcArea=document.getElementById('src-area');
+  if(srcArea)srcArea.value=state.editedHtml;
   const btn=document.getElementById('btn-dl-edited');
   if(btn){btn.style.background='#16a34a';btn.textContent='📥 편집본 다운로드 (준비됨)';}
 });
