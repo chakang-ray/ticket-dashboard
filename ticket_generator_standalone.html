@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qoo10 Ticket Page Generator</title>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Murecho:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:#0e1117;color:#fafafa;padding:24px 28px;font-size:14px;line-height:1.5;}
+hr{border:none;border-top:1px solid #2d2d3a;margin:16px 0;}
+.columns{display:grid;grid-template-columns:42fr 58fr;gap:32px;margin-top:20px;}
+.step-header{font-size:15px;font-weight:700;margin:18px 0 6px;color:#fafafa;}
+.step-caption{font-size:12px;color:#888;margin-bottom:10px;}
+.section-block{background:#1a1a27;border-radius:10px;padding:16px;margin-bottom:14px;}
+.btn-primary{display:block;width:100%;background:#6C63FF;color:#fff;border:none;border-radius:7px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:13px;text-align:center;transition:background .15s;}
+.btn-primary:hover{background:#5a51e8;}
+.btn-secondary{display:inline-block;background:transparent;color:#aaa;border:1px solid #3d3d4d;border-radius:7px;padding:8px 14px;font-weight:600;cursor:pointer;font-size:13px;transition:all .15s;}
+.btn-secondary:hover{background:#222;color:#fff;}
+.btn-lang{padding:7px 16px;border-radius:7px;border:1px solid #3d3d4d;cursor:pointer;font-size:13px;font-weight:700;transition:all .15s;}
+.btn-lang.active{background:#6C63FF;color:#fff;border-color:#6C63FF;}
+.btn-lang:not(.active){background:transparent;color:#888;}
+input[type=file]{display:none;}
+.file-label{display:block;border:2px dashed #3d3d4d;border-radius:8px;padding:14px;text-align:center;cursor:pointer;color:#888;font-size:13px;transition:all .15s;}
+.file-label:hover{border-color:#6C63FF;color:#ccc;}
+.color-row{display:flex;gap:14px;margin-bottom:10px;}
+.color-group{flex:1;}
+.color-group label{font-size:12px;color:#aaa;display:block;margin-bottom:4px;}
+.color-group input[type=color]{width:100%;height:36px;border:1px solid #3d3d4d;border-radius:7px;cursor:pointer;background:transparent;padding:2px;}
+.msg-success{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25);border-radius:6px;padding:8px 12px;font-size:12px;margin:6px 0;}
+.msg-error{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:8px 12px;font-size:12px;margin:6px 0;}
+.msg-info{background:rgba(108,99,255,.1);color:#a5b4fc;border:1px solid rgba(108,99,255,.25);border-radius:6px;padding:8px 12px;font-size:12px;margin:6px 0;}
+select{background:#1e1e2e;color:#fafafa;border:1px solid #3d3d4d;border-radius:7px;padding:8px 12px;font-size:13px;width:100%;}
+textarea{background:#1e1e2e;color:#fafafa;border:1px solid #3d3d4d;border-radius:7px;padding:10px 12px;font-size:12px;width:100%;font-family:monospace;resize:vertical;}
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
+.action-row>*{flex:1;min-width:100px;}
+a.btn-link{display:flex;align-items:center;justify-content:center;border:1px solid #3d3d4d;border-radius:7px;padding:8px 14px;color:#aaa;text-decoration:none;font-size:13px;font-weight:600;transition:all .15s;white-space:nowrap;}
+a.btn-link:hover{background:#222;color:#fff;}
+.preview-tabs{display:flex;gap:8px;margin-bottom:12px;}
+.preview-tabs button{padding:6px 16px;border-radius:7px;border:1px solid #3d3d4d;background:transparent;color:#888;cursor:pointer;font-size:13px;transition:all .15s;}
+.preview-tabs button.active{background:#6C63FF;color:#fff;border-color:#6C63FF;}
+.phone-wrapper{display:flex;justify-content:center;padding:8px 0;}
+.phone-frame{width:375px;border-radius:44px;border:10px solid #2c2c2e;box-shadow:0 0 0 1px #444,0 20px 60px rgba(0,0,0,.7);overflow:hidden;background:#000;}
+.phone-top{background:#1c1c1e;height:38px;position:relative;}
+.phone-pill{width:110px;height:32px;background:#000;border-radius:0 0 20px 20px;position:absolute;top:0;left:50%;transform:translateX(-50%);}
+.phone-cam{width:9px;height:9px;background:#1c2333;border-radius:50%;position:absolute;top:12px;left:calc(50% + 26px);transform:translateX(-50%);box-shadow:0 0 0 2px #2a2a2e;}
+.phone-screen{width:100%;height:700px;border:none;display:block;}
+.phone-bottom{background:#1c1c1e;height:28px;display:flex;align-items:center;justify-content:center;}
+.phone-bar{width:120px;height:4px;background:#555;border-radius:3px;}
+.val-result{background:#12121e;border-radius:8px;padding:12px 14px;font-size:12px;white-space:pre-wrap;color:#e2e8f0;margin:8px 0;max-height:180px;overflow-y:auto;border:1px solid #2d2d3a;}
+.toggle-row{display:flex;align-items:center;gap:8px;margin:8px 0;}
+.toggle-row input[type=checkbox]{width:16px;height:16px;accent-color:#6C63FF;cursor:pointer;}
+.toggle-row label{cursor:pointer;font-size:13px;color:#ccc;}
+.radio-group{display:flex;gap:16px;margin:8px 0;flex-wrap:wrap;}
+.radio-group label{display:flex;align-items:center;gap:6px;font-size:13px;color:#ccc;cursor:pointer;}
+.hidden{display:none!important;}
+#preview-frame{width:100%;height:750px;border:none;border-radius:8px;background:#111;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div style="padding:8px 0 4px;">
+  <div style="font-size:11px;font-weight:800;letter-spacing:.3em;color:#6C63FF;margin-bottom:6px;">Qoo10</div>
+  <div style="font-family:'Montserrat',sans-serif;font-size:48px;font-weight:900;line-height:1.05;letter-spacing:-.02em;text-transform:uppercase;">Ticket Page Generator</div>
+  <div style="font-size:13px;color:#999;margin-top:8px;">티켓 페이지 제너레이터&nbsp;&nbsp;<span style="color:#6C63FF;">·</span>&nbsp;&nbsp;チケットページ ジェネレーター</div>
+</div>
+
+<hr>
+
+<!-- LANG TOGGLE -->
+<div style="display:flex;gap:8px;margin-bottom:12px;">
+  <button id="lang-ko" class="btn-lang active" onclick="setLang('ko')">🇰🇷 한국어</button>
+  <button id="lang-ja" class="btn-lang" onclick="setLang('ja')">🇯🇵 日本語</button>
+</div>
+
+<hr>
+
+<!-- MAIN COLUMNS -->
+<div class="columns">
+
+<!-- LEFT COLUMN -->
+<div id="col-left">
+
+  <!-- STEP 1 -->
+  <div class="section-block">
+    <div class="step-header" data-i18n="s1">Step 1 · 엑셀 템플릿 다운로드</div>
+    <div class="step-caption" data-i18n="s1_cap">B열(내용)에만 입력하시면 됩니다.</div>
+    <div class="radio-group" id="type-radio-group">
+      <label><input type="radio" name="ttype" id="radio-instant" value="instant" checked onchange="onTypeChange()"> <span data-i18n="type_instant">즉시구매 (선착순)</span></label>
+      <label><input type="radio" name="ttype" id="radio-lottery" value="lottery" onchange="onTypeChange()"> <span data-i18n="type_lottery">응모형 (추첨)</span></label>
+    </div>
+    <div id="lottery-tpl-row" class="hidden" style="margin-bottom:10px;">
+      <div style="font-size:12px;color:#aaa;margin-bottom:6px;">템플릿 / テンプレート</div>
+      <div class="radio-group">
+        <label><input type="radio" name="ltpl" id="radio-t1" value="t1" checked> Template 1 (다크)</label>
+        <label><input type="radio" name="ltpl" id="radio-t2" value="t2"> Template 2 (네이비·골드)</label>
+      </div>
+    </div>
+    <button class="btn-secondary" id="btn-dl-tpl" onclick="downloadTemplate()" style="width:100%;margin-top:4px;" data-i18n="dl_tpl">↓ 템플릿 다운로드 (.xlsx)</button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section-block">
+    <div class="step-header" data-i18n="s2">Step 2 · 작성한 엑셀 업로드</div>
+    <label class="file-label" for="file-xlsx">
+      <span data-i18n="file_xlsx_label">📂 엑셀 파일을 클릭하여 선택 (.xlsx)</span>
+    </label>
+    <input type="file" id="file-xlsx" accept=".xlsx,.xls" onchange="onExcelUpload(this)">
+    <div id="upload-status"></div>
+    <div style="margin-top:10px;">
+      <label class="file-label" for="file-draft" style="padding:10px;" data-i18n-label="draft_load">
+        <span data-i18n="draft_load">📂 초안 불러오기 (.json)</span>
+      </label>
+      <input type="file" id="file-draft" accept=".json" onchange="onDraftUpload(this)">
+    </div>
+  </div>
+
+  <!-- DATA SECTIONS (hidden until data loaded) -->
+  <div id="data-sections" class="hidden">
+
+    <!-- VALIDATION -->
+    <div class="section-block" id="validation-section">
+      <div class="step-header" data-i18n="v_head">🔍 주의사항 자동 검증</div>
+      <div id="v-caption" class="step-caption"></div>
+      <button class="btn-secondary" id="btn-validate" onclick="runValidation()" data-i18n="v_btn">검증하기</button>
+      <div id="val-result" class="val-result hidden"></div>
+    </div>
+
+    <!-- COLORS -->
+    <div class="section-block">
+      <div class="step-header" data-i18n="c_head">🎨 컬러 설정</div>
+      <div class="step-caption" data-i18n="c_cap">엑셀에서 색상을 지정했어도 여기서 덮어씌울 수 있어요.</div>
+      <div class="color-row">
+        <div class="color-group">
+          <label data-i18n="c_btn">🎫 티켓 버튼 색상</label>
+          <input type="color" id="color-btn" value="#8da0a7" oninput="state.pickedBtn=this.value;">
+        </div>
+        <div class="color-group">
+          <label data-i18n="c_pt">✨ 포인트 컬러</label>
+          <input type="color" id="color-pt" value="#8da0a7" oninput="state.pickedPt=this.value;">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+        <div style="flex:1;">
+          <div style="font-size:12px;color:#aaa;margin-bottom:4px;" data-i18n="c_upload">🖼 포스터 이미지 업로드</div>
+          <label class="file-label" for="file-poster" style="padding:10px;font-size:12px;" data-i18n="c_upload_desc">이미지 업로드 → 자동 색상 추출</label>
+          <input type="file" id="file-poster" accept=".jpg,.jpeg,.png,.webp" onchange="onPosterUpload(this)">
+          <div id="poster-status" style="margin-top:6px;"></div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:12px;color:#aaa;margin-bottom:4px;">포스터 URL</div>
+          <input type="text" id="poster-url" placeholder="https://..." style="width:100%;background:#12121e;color:#fafafa;border:1px solid #3d3d4d;border-radius:7px;padding:8px 10px;font-size:12px;" oninput="state.tplData&&(state.tplData['ポスターURL']=this.value)">
+          <button class="btn-secondary" id="btn-extract" onclick="extractFromUrl()" style="width:100%;margin-top:6px;font-size:12px;" data-i18n="c_extract">🖼 URL에서 자동 추출</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="section-block">
+      <div class="step-header" data-i18n="s3">Step 3 · HTML 생성</div>
+      <button class="btn-primary" id="btn-generate" onclick="generateHtml()" data-i18n="gen_btn">✦ HTML 생성하기</button>
+      <div id="gen-error" class="hidden"></div>
+    </div>
+
+  </div><!-- /data-sections -->
+</div><!-- /col-left -->
+
+<!-- RIGHT COLUMN -->
+<div id="col-right">
+  <div id="preview-section" class="hidden">
+    <div class="section-block">
+
+      <!-- Font select -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;color:#aaa;margin-bottom:4px;">🔤 폰트 선택 / フォント選択</div>
+        <select id="font-select" onchange="onFontChange()">
+          <option value="0">Noto Sans JP — 가독성 1위 ⭐ 추천</option>
+          <option value="1">BIZ UDPGothic — 선명하고 공식적인 느낌</option>
+          <option value="2">Murecho — 둥글고 현대적 (기본)</option>
+        </select>
+      </div>
+
+      <!-- Edit toggle -->
+      <div class="toggle-row" style="margin-bottom:10px;">
+        <input type="checkbox" id="toggle-edit" onchange="onEditToggle()">
+        <label for="toggle-edit" data-i18n="edit_mode_btn">✏️ 인라인 편집 모드</label>
+      </div>
+
+      <!-- Preview tabs -->
+      <div class="preview-tabs">
+        <button id="btn-desktop" class="active" onclick="setPreview('desktop')" data-i18n="prev_desktop">🖥 데스크탑</button>
+        <button id="btn-mobile" onclick="setPreview('mobile')" data-i18n="prev_mobile">📱 모바일</button>
+      </div>
+
+      <!-- Preview container -->
+      <div id="preview-container">
+        <iframe id="preview-frame" srcdoc=""></iframe>
+      </div>
+
+    </div>
+
+    <!-- Action buttons -->
+    <div class="section-block">
+      <div class="action-row">
+        <button class="btn-primary" id="btn-dl-html" onclick="downloadHtml()" data-i18n="dl_html">↓ HTML 다운로드</button>
+        <a id="btn-send-email" class="btn-link" href="#" data-i18n="send_btn">📨 담당자에게 전송</a>
+        <button class="btn-secondary" id="btn-save-draft" onclick="saveDraft()" data-i18n="draft_save">💾 초안 저장 (.json)</button>
+      </div>
+      <div id="edit-dl-row" class="hidden" style="margin-top:8px;">
+        <button class="btn-primary" id="btn-dl-edited" onclick="downloadEdited()" style="background:#22c55e;">📥 편집본 다운로드</button>
+        <div class="msg-info" style="margin-top:6px;font-size:12px;" data-i18n="edit_dl_hint">위 툴바의 "편집완료/다운로드" 버튼을 먼저 누르세요.</div>
+      </div>
+    </div>
+
+    <!-- Source -->
+    <div class="section-block">
+      <div style="font-size:12px;color:#aaa;margin-bottom:6px;" data-i18n="src">HTML 소스 (복사용)</div>
+      <textarea id="src-area" rows="6" readonly></textarea>
+    </div>
+  </div><!-- /preview-section -->
+
+  <div id="preview-placeholder" style="display:flex;align-items:center;justify-content:center;height:300px;color:#444;font-size:14px;border:2px dashed #2d2d3a;border-radius:12px;">
+    HTML을 생성하면 여기에 미리보기가 표시됩니다
+  </div>
+</div><!-- /col-right -->
+</div><!-- /columns -->
+
+<script>
+// ─── TICKET CSS T1 ─────────────────────────────────────────────────────────
+const TICKET_CSS = `html,body,#special{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+#tc,#tc *{font-family:"Murecho",sans-serif;}
+#_special_top{font-family:"Murecho",sans-serif;font-optical-sizing:auto;font-style:normal;}
+#special{background-color:var(--page-bg);}
+.item_wrap{border-bottom:1px solid transparent;}
+.bd_glr_spc:after{background:transparent;}
+.item_wrap .prc{line-height:inherit;}
+.item_wrap .prc strong{margin:0 5px;font-size:25px;}
+.no-mark::before{content:none !important;}
+@media screen and (min-width:768px){#content,#wrap{background-color:#fff;}.Pstyle{display:none;position:relative;padding:60px;}#FULLContents{width:100% !important;background-size:cover !important;text-align:center;position:relative;z-index:999;}.fixed{position:fixed;top:0;left:0;z-index:999;width:100%;opacity:0.98;}}
+@media screen and (max-width:767px){#content,#wrap{background-color:var(--page-bg);}}
+.toptitle{color:#fff;text-align:center;font-family:"Montserrat",sans-serif;font-weight:900;font-size:42px;line-height:1.35;letter-spacing:0.02em;padding:40px 16px 30px;}
+@media(max-width:768px){.toptitle{font-size:26px;padding:30px 16px 20px;}}
+.title{font-family:"Montserrat",sans-serif;font-weight:900;font-style:normal;text-align:center;font-size:60px;padding-bottom:30px;}
+.titlecolor{background:linear-gradient(90deg,var(--point-color) 0%,#fff 100%);color:transparent;-webkit-background-clip:text;background-clip:text;}
+.subtitle{font-weight:700;font-size:35px;line-height:1.25;margin:0;text-align:center;color:#fff;}
+.description{font-weight:500;font-size:30px;line-height:1.4;margin:0;text-align:center;color:#fff;}
+#tc dl,#tc dt,#tc dd{margin:0;}
+.info-block{padding:40px 16px 60px;text-align:center;}
+.info-row{padding:18px 0;}
+.info-row+.info-row{padding-top:26px;}
+.info-list{margin:0;}
+.info-label{display:block;color:var(--point-color);}
+.info-label--mt{padding-top:40px;}
+.info-body{margin:0;}
+.info-date{position:relative;display:inline-block;padding-bottom:14px;}
+.info-date::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:#ccc;}
+.info-time{margin-top:12px;}
+.info-venue{margin-top:12px;font-weight:700;}
+@media(max-width:768px){.title{font-size:45px;}.info-time,.info-location{font-size:20px;}.info-block .subtitle.label{font-size:34px;}.info-block .subtitle.date,.info-block .description.time{font-size:38px;}}
+@media(max-width:420px){.info-block .subtitle.label{font-size:30px !important;}.info-block .subtitle{font-size:30px !important;}.info-block .description{font-size:20px !important;font-weight:500;}}
+.section-wrap,.section-wrap *{box-sizing:border-box;}
+.section-wrap{overflow-x:hidden;padding:48px 16px;}
+.ticket-box,.tabwrapper{max-width:750px;width:100%;margin:0 auto;background:#fff;border-radius:28px;}
+.ticket-box{padding:40px 30px;text-align:center;}
+.tabwrapper{padding:40px 50px;}
+.tabwrap-outer{padding:0;}
+@media(max-width:768px){.ticket-box,.tabwrapper{border-radius:22px;padding:40px 20px;}}
+@media(max-width:480px){.ticket-box,.tabwrapper{border-radius:18px;padding:40px 20px;}}
+.ticket-info{text-align:center;margin-bottom:36px;padding-bottom:30px;font-size:15px;}
+.ticket-title{font-size:40px;font-weight:900;margin-bottom:18px;letter-spacing:.02em;}
+.ticket-note{font-size:18px;color:#555;margin-bottom:24px;font-weight:700;}
+.ticket-info p:not(.ticket-title):not(.ticket-note){font-size:18px;color:#666;line-height:1.6;font-weight:600;}
+@media(max-width:768px){.ticket-title{font-size:30px;}.ticket-info{padding-bottom:12px;margin-bottom:20px;}}
+.ticketList{list-style:none;margin:0 auto;padding:0;display:flex;flex-direction:column;gap:14px;max-width:540px;}
+@media(max-width:768px){.ticketList{gap:10px;}}
+.ticket-type-label{list-style:none;display:flex;align-items:center;gap:12px;padding:18px 0 8px;font-size:12px;font-weight:800;color:var(--point-color);letter-spacing:.16em;}
+.ticket-type-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--point-color) 0%,transparent 100%);opacity:0.35;}
+.ticket-type-label:first-child{padding-top:0;}
+.ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto auto;column-gap:16px;row-gap:0;align-items:center;padding:18px 42px;border-radius:999px;background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,rgba(0,0,0,0.18) 100%) var(--btn-color);color:#fff;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;-webkit-tap-highlight-color:rgba(0,0,0,0);-webkit-appearance:none;appearance:none;outline:none !important;user-select:none;-webkit-user-select:none;}
+.ticketType{grid-column:1/span 2;grid-row:1;text-align:left;font-size:15px;font-weight:800;letter-spacing:.08em;opacity:1;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,0.22);}
+.ticketDay{grid-column:1;grid-row:2;text-align:left;letter-spacing:.5px;font-size:18px;font-weight:800;padding-top:8px;}
+.ticketDate{grid-column:1;grid-row:3;text-align:left;font-size:14px;font-weight:600;opacity:.95;}
+.ticketPrice{grid-column:2;grid-row:2/span 2;justify-self:end;align-self:center;font-size:22px;white-space:nowrap;}
+.ticketBtn::after{content:"";grid-column:3;grid-row:2/span 2;justify-self:end;align-self:center;width:10px;height:10px;border-top:2px solid #fff;border-right:2px solid #fff;transform:rotate(45deg);transition:transform .18s ease;z-index:1;}
+.ticketBtn:hover::after{transform:translateX(6px) rotate(45deg);}
+@media(max-width:768px){.ticketBtn{grid-template-columns:1fr 18px;grid-template-rows:auto auto auto auto;padding:16px 22px;border-radius:20px;}.ticketType{grid-column:1/span 2;grid-row:1;padding-bottom:6px;font-size:10px;}.ticketDay{grid-column:1;grid-row:2;font-size:16px;white-space:normal;word-break:keep-all;padding-top:6px;}.ticketDate{grid-column:1;grid-row:3;font-size:13px;white-space:normal;}.ticketPrice{grid-column:1;grid-row:4;justify-self:start;font-size:25px;margin-top:10px;}.ticketBtn::after{grid-column:2;grid-row:2/span 3;align-self:center;justify-self:end;}}
+.ticketBtn.is-disabled{pointer-events:none;cursor:default;filter:saturate(.6) brightness(.95);}
+.ticketBtn.is-disabled .ticketDay,.ticketBtn.is-disabled .ticketDate,.ticketBtn.is-disabled .ticketPrice{opacity:.35;}
+.ticketBtn.is-disabled::before{content:"";position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-weight:900;letter-spacing:.14em;font-size:18px;text-shadow:0 2px 8px rgba(0,0,0,.6);}
+.ticketBtn.st-uketsuke-yotei::before{content:"受付予定";}
+.ticketBtn.st-hanbai-shuryo::before{content:"販売終了";}
+.ticketBtn.st-soldout::before{content:"SOLD OUT";}
+.ticketBtn.is-disabled:hover::after{transform:rotate(45deg);}
+.ticket-notice{list-style:none;padding:0;margin:24px auto;max-width:540px;font-size:14px;text-align:left;font-weight:700;}
+.ticket-notice li{position:relative;padding-left:1.2em;line-height:1.6;margin-bottom:6px;}
+.ticket-notice li::before{content:"※";position:absolute;left:0;top:0;}
+@media(max-width:480px){.ticket-title{font-size:35px;}.ticket-notice{max-width:100%;}}
+.lineup-section{text-align:center;padding:0 16px 20px;}
+.lineup-section img{max-width:100%;height:auto;}
+.tabwrapper,.tabwrapper *{box-sizing:border-box;}
+.infotabs{position:relative;}
+.infotab__input{position:absolute;opacity:0;pointer-events:none;}
+.infotab__nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start;margin-bottom:28px;}
+.infotab__label{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:999px;border:2px solid var(--point-color);color:var(--point-color);font-size:20px;font-weight:700;white-space:nowrap;cursor:pointer;line-height:1;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+#tab1:checked ~ .infotab__nav label[for="tab1"],#tab2:checked ~ .infotab__nav label[for="tab2"],#tab3:checked ~ .infotab__nav label[for="tab3"],#tab4:checked ~ .infotab__nav label[for="tab4"],#tab5:checked ~ .infotab__nav label[for="tab5"],#tab6:checked ~ .infotab__nav label[for="tab6"]{background:var(--point-color);color:#121113;}
+.infotab__content{display:none;font-size:15px;line-height:1.7;}
+#tab1:checked ~ .infotab__panels .panel1{display:block;}
+#tab2:checked ~ .infotab__panels .panel2{display:block;}
+#tab3:checked ~ .infotab__panels .panel3{display:block;}
+#tab4:checked ~ .infotab__panels .panel4{display:block;}
+#tab5:checked ~ .infotab__panels .panel5{display:block;}
+#tab6:checked ~ .infotab__panels .panel6{display:block;}
+.oshirase{font-size:14px;text-align:left;word-break:break-word;padding-top:30px;font-weight:450;}
+.oshirase dl{margin:0;}
+.oshirase dd{margin:0;padding:8px 0;}
+.oshirase dt{position:relative;padding-top:30px;padding-left:18px;font-weight:700;}
+.oshirase dt::before{content:"■";position:absolute;left:0;top:30px;color:var(--point-color);}
+.oshirase .list{text-indent:-14px;padding-left:14px;}
+.oshirase .list::before{content:"●";font-size:5px;margin-right:7px;color:var(--point-color);vertical-align:middle;}
+.oshirase .list_star{text-indent:-14px;padding-left:14px;}
+.oshirase .list_star::before{content:"＊";font-size:13px;margin-right:7px;color:var(--point-color);vertical-align:middle;}
+.oshirase .list_important{text-indent:-14px;padding-left:14px;}
+.oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:var(--point-color);vertical-align:middle;}
+@media(max-width:768px){.tabwrapper{padding:32px 18px;}.infotab__label{font-size:14px;padding:10px 16px;}.infotab__content{font-size:14px;}}
+@media(max-width:480px){.tabwrapper{padding:40px 25px;}.infotab__nav{gap:8px;}.infotab__label{font-size:13px;padding:10px 14px;}.infotab__content{font-size:13px;line-height:1.75;}.oshirase{padding-top:10px;}.oshirase .list,.oshirase .list_star,.oshirase .list_important{text-indent:-12px;padding-left:12px;}}
+.ev-section{padding:56px 16px 48px;text-align:center;}
+.ev-inner{max-width:750px;margin:0 auto;}
+.ev-kicker{font-size:11px;font-weight:800;letter-spacing:.22em;color:var(--point-color);text-transform:uppercase;margin:0 0 10px;}
+.ev-heading{font-family:"Montserrat",sans-serif;font-weight:900;font-size:60px;margin:0 0 40px;padding:0;line-height:1;}
+.ev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;}
+.ev-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 20px;text-align:center;}
+.ev-label{font-size:10px;font-weight:800;letter-spacing:.22em;color:var(--point-color);text-transform:uppercase;margin:0 0 14px;}
+.ev-main{font-size:20px;font-weight:800;color:#fff;line-height:1.35;margin:0 0 8px;}
+.ev-sub{font-size:14px;color:rgba(255,255,255,.62);font-weight:500;line-height:1.6;margin:0;}
+.ev-addr{font-size:12px;color:rgba(255,255,255,.48);font-weight:400;line-height:1.55;margin:6px 0 16px;}
+.ev-addr:empty{display:none;}
+.ev-map-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);font-size:12px;font-weight:700;letter-spacing:.06em;text-decoration:none;transition:background .18s,border-color .18s;}
+.ev-map-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:#fff;}
+.ev-map-btn[data-hidden]{display:none;}
+@media(max-width:768px){.ev-heading{font-size:45px;}.ev-section{padding:40px 16px 36px;}}
+@media(max-width:480px){.ev-card{padding:22px 16px;}.ev-main{font-size:17px;}.ev-heading{font-size:38px;margin-bottom:28px;}}
+#sticky-nav{position:sticky;top:0;z-index:100;display:flex;justify-content:center;background:rgba(0,0,0,0.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+.snav-tab{display:inline-flex;align-items:center;padding:14px 36px;color:rgba(255,255,255,0.48);font-family:"Montserrat",sans-serif;font-weight:800;font-size:12px;letter-spacing:.2em;text-decoration:none;border-bottom:3px solid transparent;transition:color .2s,border-color .2s;-webkit-tap-highlight-color:transparent;}
+.snav-tab.is-active{color:#fff;border-bottom-color:var(--point-color);}`;
+
+// ─── TICKET CSS T2 ─────────────────────────────────────────────────────────
+const TICKET_CSS_T2 = `html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+#AN2026,#AN2026 *{box-sizing:border-box;font-family:"Murecho",sans-serif;}
+#AN2026{background:#0b1d40;color:#fff;}
+.item_wrap{border-bottom:1px solid transparent;}
+.bd_glr_spc:after{background:transparent;}
+.item_wrap .prc{line-height:inherit;}
+.no-mark::before{content:none !important;}
+@media screen and (min-width:768px){#content,#wrap{background-color:#0b1d40;}}
+@media screen and (max-width:767px){#content,#wrap{background-color:#0b1d40;}}
+.an-hero{position:relative;overflow:hidden;}
+.an-hero-kv{position:relative;width:100%;}
+.an-hero-kv img{width:100%;height:auto;display:block;max-height:82vh;object-fit:cover;}
+.an-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(11,29,64,.2) 0%,rgba(11,29,64,.65) 55%,rgba(11,29,64,.97) 100%);display:flex;align-items:flex-end;}
+.an-hero-inner{padding:40px 24px 52px;max-width:820px;margin:0 auto;width:100%;}
+.an-hero-no-poster{padding:90px 24px;text-align:center;background:linear-gradient(135deg,#0b1d40 0%,#142444 100%);}
+.an-hero-kicker{font-family:"Montserrat",sans-serif;font-size:11px;font-weight:800;letter-spacing:.3em;color:#d49a31;margin:0 0 16px;text-transform:uppercase;}
+.an-hero-title{font-family:"Montserrat",sans-serif;font-weight:900;font-size:38px;line-height:1.22;margin:0 0 22px;color:#fff;}
+.an-hero-no-poster .an-hero-title{text-align:center;}
+.an-hero-date{font-size:16px;font-weight:700;color:rgba(255,255,255,.88);margin:0 0 8px;}
+.an-hero-venue{font-size:14px;font-weight:500;color:rgba(255,255,255,.55);margin:0;}
+@media(max-width:600px){.an-hero-title{font-size:24px;}.an-hero-inner{padding:28px 16px 40px;}}
+.an-snav{position:sticky;top:0;z-index:200;background:rgba(11,29,64,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+.an-snav-inner{display:flex;align-items:center;justify-content:space-between;max-width:820px;margin:0 auto;padding:0 16px;}
+.an-snav-links{display:flex;}
+.an-snav-link{display:inline-flex;align-items:center;padding:14px 22px;color:rgba(255,255,255,.45);font-family:"Montserrat",sans-serif;font-weight:800;font-size:12px;letter-spacing:.2em;text-decoration:none;border-bottom:3px solid transparent;transition:color .2s,border-color .2s;-webkit-tap-highlight-color:transparent;}
+.an-snav-link.is-active{color:#fff;border-bottom-color:#d49a31;}
+.an-snav-cta{display:inline-block;padding:8px 24px;background:#d49a31;color:#0b1d40;font-family:"Montserrat",sans-serif;font-weight:800;font-size:12px;letter-spacing:.06em;border-radius:4px;text-decoration:none;white-space:nowrap;}
+.an-snav-cta:hover{background:#e0aa45;color:#0b1d40;}
+@media(max-width:480px){.an-snav-link{padding:12px 14px;font-size:11px;letter-spacing:.14em;}.an-snav-cta{padding:7px 14px;font-size:11px;}}
+.an-lineup-section{padding:48px 16px 0;text-align:center;background:#0b1d40;}
+.an-lineup-section img{max-width:100%;height:auto;display:block;margin:0 auto;}
+.an-lineup-kicker{font-family:"Montserrat",sans-serif;font-size:11px;font-weight:800;letter-spacing:.3em;color:#d49a31;margin:0 0 24px;text-transform:uppercase;}
+.an-section-kicker{font-family:"Montserrat",sans-serif;font-size:11px;font-weight:800;letter-spacing:.3em;color:#d49a31;text-transform:uppercase;margin:0 0 10px;text-align:center;}
+.an-section-title{font-family:"Montserrat",sans-serif;font-weight:900;font-size:52px;margin:0 0 40px;text-align:center;color:#fff;line-height:1;}
+@media(max-width:600px){.an-section-title{font-size:36px;margin-bottom:28px;}}
+.an-tickets-section{padding:60px 16px;background:#0b1d40;}
+.an-tickets-inner{max-width:780px;margin:0 auto;}
+.an-lottery-info{background:rgba(255,255,255,.04);border:1px solid rgba(212,154,49,.28);border-radius:14px;padding:30px 26px;margin-bottom:38px;}
+.an-lottery-row{display:flex;flex-wrap:wrap;gap:8px 0;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.07);align-items:baseline;}
+.an-lottery-row:last-child{border-bottom:none;padding-bottom:0;}
+.an-lottery-row:first-child{padding-top:0;}
+.an-lottery-label{font-size:11px;font-weight:800;letter-spacing:.12em;color:#d49a31;min-width:128px;flex-shrink:0;}
+.an-lottery-value{font-size:15px;font-weight:600;color:rgba(255,255,255,.88);flex:1;line-height:1.55;}
+@media(max-width:500px){.an-lottery-row{flex-direction:column;gap:5px;}.an-lottery-label{min-width:auto;}}
+.an-ticket-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px;}
+.an-ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto auto;column-gap:16px;align-items:center;padding:18px 36px;border-radius:8px;background:#fff;color:#0b1d40;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;}
+.an-ticketType{grid-column:1/span 2;grid-row:1;text-align:left;font-size:15px;font-weight:800;letter-spacing:.08em;opacity:.9;padding-bottom:7px;border-bottom:1px solid rgba(0,0,0,.1);}
+.an-ticketDay{grid-column:1;grid-row:2;text-align:left;font-size:17px;font-weight:800;padding-top:8px;}
+.an-ticketDate{grid-column:1;grid-row:3;text-align:left;font-size:13px;font-weight:600;color:rgba(11,29,64,.58);}
+.an-ticketPrice{grid-column:2;grid-row:2/span 2;justify-self:end;align-self:center;font-size:22px;white-space:nowrap;font-weight:900;}
+.an-ticketBtn::after{content:"";grid-column:3;grid-row:2/span 2;justify-self:end;align-self:center;width:10px;height:10px;border-top:2.5px solid #0b1d40;border-right:2.5px solid #0b1d40;transform:rotate(45deg);}
+.an-ticketBtn.is-disabled{pointer-events:none;filter:saturate(.5) brightness(.9);}
+.an-ticketBtn.is-disabled::before{content:"";position:absolute;inset:0;z-index:3;background:rgba(255,255,255,.55);display:grid;place-items:center;font-weight:900;letter-spacing:.12em;font-size:16px;color:#333;}
+.an-ticketBtn.st-uketsuke-yotei::before{content:"受付予定";}
+.an-ticketBtn.st-hanbai-shuryo::before{content:"販売終了";}
+.an-ticketBtn.st-soldout::before{content:"SOLD OUT";}
+@media(max-width:600px){.an-ticketBtn{grid-template-columns:1fr 18px;grid-template-rows:auto auto auto auto;padding:14px 18px;}.an-ticketDay{font-size:15px;}.an-ticketPrice{grid-column:1;grid-row:4;justify-self:start;font-size:20px;margin-top:8px;}.an-ticketBtn::after{grid-column:2;grid-row:2/span 3;}}
+.an-ticket-notice{list-style:none;padding:0;margin:26px auto;font-size:13px;text-align:left;color:rgba(255,255,255,.48);}
+.an-ticket-notice li{position:relative;padding-left:1.3em;line-height:1.7;margin-bottom:5px;}
+.an-ticket-notice li::before{content:"※";position:absolute;left:0;top:0;}
+.an-sched-section{padding:56px 16px;background:rgba(255,255,255,.025);}
+.an-sched-inner{max-width:780px;margin:0 auto;}
+.an-sched-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;}
+.an-sched-card{background:rgba(255,255,255,.05);border:1px solid rgba(212,154,49,.18);border-radius:12px;padding:24px 18px;text-align:center;}
+.an-sched-label{font-size:10px;font-weight:800;letter-spacing:.22em;color:#d49a31;text-transform:uppercase;margin:0 0 12px;}
+.an-sched-main{font-size:18px;font-weight:800;color:#fff;line-height:1.35;margin:0 0 6px;}
+.an-sched-sub{font-size:13px;color:rgba(255,255,255,.52);font-weight:500;margin:0;}
+.an-sched-addr{font-size:11px;color:rgba(255,255,255,.38);margin:6px 0 14px;line-height:1.55;}
+.an-sched-addr:empty{display:none;}
+.an-map-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:6px;border:1px solid rgba(212,154,49,.28);background:rgba(212,154,49,.07);color:rgba(255,255,255,.65);font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.05em;}
+.an-map-btn:hover{background:rgba(212,154,49,.18);}
+.an-map-btn[data-hidden]{display:none;}
+@media(max-width:600px){.an-sched-main{font-size:16px;}.an-sched-section{padding:40px 16px;}}
+.an-notice-section{padding:56px 16px 72px;background:#0b1d40;}
+.an-notice-inner{max-width:780px;margin:0 auto;}
+.an-tabwrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:40px;}
+@media(max-width:600px){.an-tabwrap{padding:28px 18px;}}
+.an-infotabs{position:relative;}
+.an-infotab__input{position:absolute;opacity:0;pointer-events:none;}
+.an-infotab__nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+.an-infotab__label{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:6px;border:1px solid rgba(212,154,49,.38);color:rgba(212,154,49,.7);font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;}
+#ant1:checked ~ .an-infotab__nav label[for="ant1"],#ant2:checked ~ .an-infotab__nav label[for="ant2"],#ant3:checked ~ .an-infotab__nav label[for="ant3"],#ant4:checked ~ .an-infotab__nav label[for="ant4"],#ant5:checked ~ .an-infotab__nav label[for="ant5"],#ant6:checked ~ .an-infotab__nav label[for="ant6"]{background:#d49a31;border-color:#d49a31;color:#0b1d40;}
+.an-infotab__content{display:none;font-size:14px;line-height:1.78;color:rgba(255,255,255,.72);}
+#ant1:checked ~ .an-infotab__panels .antpanel1{display:block;}
+#ant2:checked ~ .an-infotab__panels .antpanel2{display:block;}
+#ant3:checked ~ .an-infotab__panels .antpanel3{display:block;}
+#ant4:checked ~ .an-infotab__panels .antpanel4{display:block;}
+#ant5:checked ~ .an-infotab__panels .antpanel5{display:block;}
+#ant6:checked ~ .an-infotab__panels .antpanel6{display:block;}
+.an-oshirase dl{margin:0;}
+.an-oshirase dd{margin:0;padding:6px 0;}
+.an-oshirase dt{position:relative;padding-top:28px;padding-left:18px;font-weight:700;color:#fff;}
+.an-oshirase dt::before{content:"■";position:absolute;left:0;top:28px;color:#d49a31;}
+.an-oshirase .list{text-indent:-14px;padding-left:14px;}
+.an-oshirase .list::before{content:"●";font-size:5px;margin-right:7px;color:#d49a31;vertical-align:middle;}
+.an-oshirase .list_star{text-indent:-14px;padding-left:14px;}
+.an-oshirase .list_star::before{content:"＊";font-size:13px;margin-right:7px;color:#d49a31;vertical-align:middle;}
+.an-oshirase .list_important{text-indent:-14px;padding-left:14px;}
+.an-oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:#d49a31;vertical-align:middle;}
+@media(max-width:600px){.an-infotab__label{font-size:12px;padding:8px 14px;}.an-infotab__nav{gap:6px;}}`;
+
+// ─── CONSTANTS ──────────────────────────────────────────────────────────────
+const JP_FONT_OPTIONS = [
+  {key:'Noto Sans JP', url:'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap'},
+  {key:'BIZ UDPGothic', url:'https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap'},
+  {key:'Murecho', url:'https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap'},
+];
+
+const LANG_LABELS = {
+  ja:{perf_datetime:'公演日時',venue:'会場',sold_out:'受付終了',lottery_date:'当落発表日',payment_deadline:'入金期限',
+    l_eticket:'「電子チケットについて」',l_purchase:'「チケットのご購入に関するお問い合わせ」',l_form:'お問い合わせフォーム',
+    l_category:'カテゴリは「イベント／クーポン ＞ 公演・チケット」をご選択ください。',
+    l_id_note:'お問い合わせの際にはタイトルに【{title}】、本文にお客様のID/注文番号（チケット購入済みの場合のみ）をご記載ください。',
+    l_event:'「公演に関するお問い合わせ」'},
+  en:{perf_datetime:'Date & Time',venue:'Venue',sold_out:'Sold Out',lottery_date:'Lottery Result Date',payment_deadline:'Payment Deadline',
+    l_eticket:'"Electronic Ticket Inquiries"',l_purchase:'"Ticket Purchase Inquiries"',l_form:'Contact Form',
+    l_category:'Please select "Events/Coupons > Concerts & Tickets" as the category.',
+    l_id_note:'When contacting us, please include [{title}] in the subject and your customer ID / order number (only if already purchased) in the body.',
+    l_event:'"Performance Inquiries"'},
+  ko:{perf_datetime:'공연일시',venue:'공연장',sold_out:'판매종료',lottery_date:'당락발표일',payment_deadline:'입금기한',
+    l_eticket:'「전자티켓 관련 문의」',l_purchase:'「티켓 구매 관련 문의」',l_form:'문의 양식',
+    l_category:'카테고리는 「이벤트/쿠폰 ＞ 공연・티켓」을 선택해 주세요.',
+    l_id_note:'문의 시 제목에 【{title}】, 본문에 고객 ID/주문번호（티켓 구매 완료 시에만）를 기재해 주세요.',
+    l_event:'「공연 관련 문의」'},
+};
+
+const UI_TEXT = {
+  ko:{s1:'Step 1 · 엑셀 템플릿 다운로드',s1_cap:'B열(내용)에만 입력하시면 됩니다. ① 기본정보·디자인 ② 공연개요 ③ 티켓목록 ④ 라인업 ⑤ NOTICE 탭 ⑥ 문의처',
+    type_label:'티켓 판매 방식',type_instant:'즉시구매 (선착순)',type_lottery:'응모형 (추첨)',
+    s2:'Step 2 · 작성한 엑셀 업로드',dl_tpl:'↓ 템플릿 다운로드 (.xlsx)',load_ok:'로드 완료',load_err:'파일 읽기 오류',
+    v_head:'🔍 주의사항 자동 검증',v_items:'개',v_suffix:'항목에서 중복·상충 문구를 검출합니다.',v_btn:'검증하기',
+    c_head:'🎨 컬러 설정',c_cap:'엑셀에서 색상을 지정했어도 여기서 덮어씌울 수 있어요.',
+    c_btn:'🎫 티켓 버튼 색상',c_pt:'✨ 포인트 컬러',c_extract:'🖼 URL에서 자동 추출',
+    c_upload:'🖼 포스터 이미지 업로드',c_upload_desc:'이미지 업로드 → 자동 색상 추출',
+    c_spin:'포스터에서 색상 추출 중...',c_fail:'색 추출 실패. URL이 직접 접근 가능한지 확인하세요.',
+    s3:'Step 3 · HTML 생성',gen_btn:'✦ HTML 생성하기',preview:'미리보기',dl_html:'↓ HTML 다운로드',
+    src:'HTML 소스 (복사용)',send_btn:'📨 담당자에게 전송',draft_save:'💾 초안 저장 (.json)',draft_load:'📂 초안 불러오기 (.json)',
+    draft_ok:'✅ 초안 로드 완료!',poster_uploaded:'✅ 포스터 업로드됨',poster_remove:'🗑 포스터 제거',
+    prev_desktop:'🖥 데스크탑',prev_mobile:'📱 모바일',
+    edit_mode_btn:'✏️ 인라인 편집 모드',edit_ok_btn:'✅ 편집완료/다운로드',edit_rs_btn:'↩ 되돌리기',
+    edit_hint:'✏️ 클릭하여 편집',edit_dl_hint:'위 툴바의 "편집완료/다운로드" 버튼을 먼저 누르세요.',
+    file_xlsx_label:'📂 엑셀 파일을 클릭하여 선택 (.xlsx)'},
+  ja:{s1:'Step 1 · Excelテンプレートのダウンロード',s1_cap:'B列（内容）のみ入力してください。① 基本情報・デザイン ② 公演概要 ③ チケット一覧 ④ ラインアップ ⑤ NOTICEタブ ⑥ お問い合わせ',
+    type_label:'チケット販売方式',type_instant:'即時購入（先着順）',type_lottery:'応募型（抽選）',
+    s2:'Step 2 · 作成したExcelをアップロード',dl_tpl:'↓ テンプレートをダウンロード (.xlsx)',load_ok:'読み込み完了',load_err:'ファイル読み込みエラー',
+    v_head:'🔍 注意事項の自動チェック',v_items:'件',v_suffix:'の項目から重複・矛盾する文言を検出します。',v_btn:'チェックする',
+    c_head:'🎨 カラー設定',c_cap:'Excelで色を指定していてもここで上書きできます。',
+    c_btn:'🎫 チケットボタン色',c_pt:'✨ ポイントカラー',c_extract:'🖼 URLから自動抽出',
+    c_upload:'🖼 ポスター画像をアップロード',c_upload_desc:'アップロード → 自動カラー抽出',
+    c_spin:'ポスターから色を抽出中...',c_fail:'色の抽出に失敗しました。',
+    s3:'Step 3 · HTML生成',gen_btn:'✦ HTMLを生成する',preview:'プレビュー',dl_html:'↓ HTMLをダウンロード',
+    src:'HTMLソース（コピー用）',send_btn:'📨 担当者に送る',draft_save:'💾 ドラフトを保存 (.json)',draft_load:'📂 ドラフトを読み込む (.json)',
+    draft_ok:'✅ ドラフトを読み込みました！',poster_uploaded:'✅ ポスターをアップロード済み',poster_remove:'🗑 ポスターを削除',
+    prev_desktop:'🖥 デスクトップ',prev_mobile:'📱 モバイル',
+    edit_mode_btn:'✏️ インライン編集モード',edit_ok_btn:'✅ 修正完了・ダウンロード',edit_rs_btn:'↩ 元に戻す',
+    edit_hint:'✏️ クリックして編集',edit_dl_hint:'ツールバーの「修正完了・ダウンロード」を先にクリックしてください。',
+    file_xlsx_label:'📂 Excelファイルをクリックして選択 (.xlsx)'},
+};
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+const state = {
+  uiLang:'ko', isLottery:false, useT2:false,
+  tplData:null, pickedBtn:'#8da0a7', pickedPt:'#8da0a7',
+  posterDataUrl:null, genHtml:null, genData:null,
+  selectedFontIdx:0, editMode:false, previewMode:'desktop',
+  editedHtml:null,
+};
+
+// ─── UTILITIES ──────────────────────────────────────────────────────────────
+function rgbToHsv(r,g,b){const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;let h=0;if(d){if(max===r)h=((g-b)/d)%6;else if(max===g)h=(b-r)/d+2;else h=(r-g)/d+4;h=((h/6)%1+1)%1;}return[h,max===0?0:d/max,max];}
+function hsvToRgb(h,s,v){const i=Math.floor(h*6),f=h*6-i,p=v*(1-s),q=v*(1-f*s),t=v*(1-(1-f)*s);return[[v,t,p],[q,v,p],[p,v,t],[p,q,v],[t,p,v],[v,p,q]][i%6].map(x=>Math.round(x*255));}
+function hexToRgb01(hex){const n=parseInt(hex.slice(1),16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
+function toHex(r,g,b){return'#'+[r,g,b].map(x=>Math.round(x).toString(16).padStart(2,'0')).join('');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+function dlBlob(blob,filename){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
+function seqMatchRatio(a,b){if(a===b)return 1;if(!a||!b)return 0;const s1=new Set(),s2=new Set();for(let i=0;i<a.length-1;i++)s1.add(a.slice(i,i+2));for(let i=0;i<b.length-1;i++)s2.add(b.slice(i,i+2));let inter=0;for(const g of s1)if(s2.has(g))inter++;const u=s1.size+s2.size-inter;return u===0?0:inter/u;}
+function linkify(text){return String(text).replace(/(https?:\/\/[^\s<>"]+)/g,m=>`<a href="${escAttr(m)}" target="_blank">${m}</a>`);}
+function bulletCls(style){const s=String(style||'').trim();if(s==='＊'||s==='*')return'list_star';if(s==='※')return'list_important';if(s==='なし')return'list_none';return'list';}
+
+function makeTicketPalette(baseHex,n){
+  try{const[r,g,b]=hexToRgb01(baseHex);let[h,s,v]=rgbToHsv(r,g,b);s=Math.max(s,0.55);v=Math.min(Math.max(v,0.50),0.80);const golden=0.618033988749895;const out=[];for(let i=0;i<n;i++){const nh=(h+i*golden)%1.0;const[nr,ng,nb]=hsvToRgb(nh,s,v);out.push(toHex(nr,ng,nb));}return out;}catch(e){return Array(n).fill(baseHex);}
+}
+
+async function extractPaletteFromImage(src, n=6){
+  return new Promise(resolve=>{
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>{
+      const c=document.createElement('canvas');c.width=150;c.height=150;
+      const ctx=c.getContext('2d');ctx.drawImage(img,0,0,150,150);
+      const d=ctx.getImageData(0,0,150,150).data;
+      const cands=[];
+      for(let i=0;i<d.length;i+=16){const r=d[i]/255,g=d[i+1]/255,b=d[i+2]/255;const[h,s,v]=rgbToHsv(r,g,b);if(s>0.28&&v>0.22&&v<0.92)cands.push([s,r,g,b]);}
+      cands.sort((a,b)=>b[0]-a[0]);
+      const out=[];
+      for(const[,r,g,b] of cands){const hex=toHex(r*255,g*255,b*255);if(out.length<n&&!out.some(h=>colorDist(h,hex)<30))out.push(hex);if(out.length>=n)break;}
+      resolve(out);
+    };
+    img.onerror=()=>resolve([]);
+    img.src=src;
+  });
+}
+function colorDist(h1,h2){const[r1,g1,b1]=hexToRgb01(h1).map(x=>x*255);const[r2,g2,b2]=hexToRgb01(h2).map(x=>x*255);return Math.sqrt((r1-r2)**2+(g1-g2)**2+(b1-b2)**2);}
+
+function parseExcel(buf){
+  const wb=XLSX.read(buf,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  const result={};
+  for(const row of rows){
+    const key=String(row[0]||'').trim();
+    const val=String(row[1]||'').trim();
+    if(key&&key!=='항목'&&!key.startsWith('【')&&!key.startsWith('──'))result[key]=val;
+  }
+  return result;
+}
+
+// ─── makeTemplate STUB (replaced by Edit) ──────────────────────────────────
+function makeTemplate(isLottery) {
+  const rows = [
+    ['항목','내용','설명 (수정 불필요 / 참고용)'],['','',''],
+    ['【① 基本情報 & デザイン】','',''],
+    ['タイトル','2026 ○○ WORLD TOUR [○○] IN TOKYO','改行したい場合は \\n を入力'],
+    ['ポスターURL','','画像URLがあれば入力（なければ空白）'],
+    ['ポスター幅','100%','例: 100% / 60% / 400px　デフォルト100%'],
+    ['会場','○○アリーナ',''],
+    ['会場_住所','','例: 東京都港区北青山2丁目8-35（空白でGoogleMapボタン非表示）'],
+    ['背景色','#191919','例: #191919（黒） / #0a0a1e / #1a0a00'],
+    ['チケットボタン色','#8da0a7','例: #8da0a7（デフォルト） / #c2185b / #2e5fa3'],
+    ['ポイントカラー','','例: #FF6B6B / #6C63FF　空白でチケットボタン色と同じ'],
+    ['','',''],
+    ['【② 公演概要 — SCHEDULE セクション】','','最大5日'],
+    ['公演日1_日付','2026年○月○日(○)',''],['公演日1_時間','○○:○○開場・○○:○○開演',''],
+    ['公演日2_日付','','2日目がなければ空白'],['公演日2_時間','',''],
+    ['公演日3_日付','',''],['公演日3_時間','',''],
+    ['公演日4_日付','',''],['公演日4_時間','',''],
+    ['公演日5_日付','',''],['公演日5_時間','',''],
+    ['','',''],
+    ['【③ チケット一覧 — TICKETS セクション】','','最大10件'],
+    ['チケットセクション見出し','チケット','チケットボックスのH2見出し'],
+  ];
+  if(isLottery){
+    rows.push(['申込期間','2026年○月○日(○) ○○:00 ～ ○月○日(○) 23:59まで','応募受付期間']);
+    rows.push(['当落発表日','2026年○月○日(○) 13:00 予定','']);
+    rows.push(['入金期限','0000年00月00日まで','']);
+  }else{
+    rows.push(['販売期間','2026年○月○日(○) ○○:00 ～ 各公演の2日前 23:59まで','']);
+    rows.push(['販売期間注記','※予定枚数に達し次第受付終了','赤字。なければ空白']);
+  }
+  rows.push(['','','']);
+  const defs=[['VVIP席','¥00,000','販売中'],['VIP席','¥00,000','販売中'],['R席','¥00,000','販売中']];
+  for(let n=1;n<=10;n++){
+    const d=n<=3?defs[n-1]:['','',''];
+    rows.push([`── チケット${n} ──`,'','']);
+    rows.push([`チケット${n}_公演日付`,n<=3?'0000年00月00日(土)':'','']);
+    rows.push([`チケット${n}_公演時間`,n<=3?'○○:○○開場・○○:○○開演':'','']);
+    rows.push([`チケット${n}_権種名`,d[0],'例: VIP席 / S席 / 一般指定席']);
+    rows.push([`チケット${n}_価格`,d[1],'']);
+    rows.push([`チケット${n}_URL`,n<=3?'https://www.qoo10.jp/...':'','購入URL']);
+    rows.push([`チケット${n}_状態`,d[2],'受付中 / 受付予定 / 販売中 / 販売終了 / SOLDOUT']);
+    rows.push([`チケット${n}_色`,'','例: #FF6B6B / #6C63FF / #00C896　空白でデフォルト色']);
+    rows.push(['','','']);
+  }
+  rows.push(
+    ['【④ チケット注意事項】','','※が付く注意事項'],
+    ['チケット注意1','お一人様４枚まで',''],['チケット注意2','未就学児入場不可',''],
+    ['チケット注意3','録音・録画機材（携帯電話）使用禁止',''],
+    ['チケット注意4','',''],['チケット注意5','',''],['','',''],
+    ['【⑤ ラインアップ（チケットとNOTICEの間）】','',''],
+    ['ラインアップ見出し','LINEUP','空白の場合は見出しなし'],
+    ['ラインアップ画像URL','','画像URLがあれば入力（なければセクション非表示）'],
+    ['','',''],
+    ['【⑥ NOTICE タブ（最大6個）】','','タブ名が空白のタブは非表示'],
+    ['','','']
+  );
+  const tabDefs=[
+    ['前売りのご案内','●',[
+      '本チケットは1名様4枚までご購入いただけます。',
+      'チケット1枚につき1名様のみご入場可能となります。1枚のチケットを複数のお客様で使用することは出来ません。',
+      'チケットは数量限定で販売され、売り切れ次第終了する場合がございます。',
+      'チケットは券面に記載の公演日・会場でのみ有効となります。',
+      'チケットの譲渡・転売が発覚した場合は、チケットの没収の上退場していただきます。',
+      '本公演のチケットご購入には、Qoo10 会員登録（無料）が必要になります。',
+      'お申込みの際のQoo10会員登録情報が購入者本人としてチケットに登録されます。当日はご本人様確認を行う可能性がございますので、お申し込み前に会員登録情報を今一度ご確認ください。',
+      'ご登録情報に不備があった場合のトラブルに関して弊社は責任を負いかねます。',
+      '本公演のチケットは全て電子チケット引取となり、チケット引取にはQoo10アプリが必要となります。',
+      '電子チケットはQoo10で発券されます。',
+      'チケットの発券（座席番号情報の共有）は、公演前日13時頃を予定しております。',
+      '一般販売でチケットをご購入された場合は、公演当日13時より発券（座席番号の表示）が可能となる予定です。',
+      'ご購入いただいたチケットはMy＞チケット一覧よりご確認いただけます。',
+      'ドメイン・指定受信アドレス指定受信を設定されている場合は、【@qoo10.jp】からのメールが受信出来るよう設定してください。',
+      'チケット料金とは別に、下記の手数料が発生致します。',
+      '1) システム利用料：ご購入のチケット1枚につき 000円',
+      '2) 特別販売利用料：ご購入のチケット1枚につき 000円',
+      '3) 発券手数料：ご購入のチケット1枚につき 000円',
+      '営利を目的として、チケットの予約・購入を行い、転売する行為を禁止いたします。',
+      '主催者側等の都合により、受付方式・日時、会場等が変更になる場合もございますのでご了承ください。',
+      'インターネットの途中経路の障害やお客様のご利用されているメールサーバ、端末の設定の問題等による遅配・未配につきましては、弊社はその責任を一切負いません。',
+      '同伴者の方に電子チケットをお渡しする「分配機能」がございます。',
+      '分配先の情報（お名前、電話番号、メールアドレス）は購入時の「購入情報入力」画面でご記入いただく必要がございます。',
+      '分配が可能となるのはチケットの発券以降です。',
+      '分配先情報の修正はできません。',
+      '購入者様ご本人のチケットは分配できません。',
+      '分配先の同伴者様は、分配時にQoo10アプリの会員登録が必要となります。',
+      '分配せずに入場することも可能です。その場合は、購入者様のアプリ上で複数枚の電子チケットを表示し、同伴者様とご一緒にご入場ください。',
+      '海外銀行口座からの送金・国際送金（SWIFT等）はご利用いただけません。',
+      '（Transfers from overseas bank accounts and international wire transfers (including SWIFT) are not supported.）',
+    ]],
+    ['入場のご案内','●',[
+      '公演は全席指定、先着順入場となります。詳細な入場手続きは今後、SNS チャンネルおよびウェブサイトを通じて案内されます。',
+      'ご購入されたチケットの変更、キャンセル、払い戻しはお受けできません。',
+      '公演当日は、ご本人様確認をさせていただく場合がございますので、身分証明書をご持参ください。',
+      '例：運転免許証、旅券(パスポート)、個人番号(マイナンバー)カード、学生証 (写真付きのものに限る)、在留カードなど',
+      '開場・開演時間は変更となる場合がございます。',
+      'ご入場の際は電子チケットをご提示ください。',
+      'ご入場前に電子チケットを表示した状態でお待ちください。',
+      'チケットをお持ちでない方はご入場いただけません。',
+      '再入場はできません。',
+    ]],
+    ['公演に関する注意事項','●',[
+      '本公演はお座席によって一部演出が見えづらい場合がございます。予めご了承ください。',
+      '出演者、開場・開演時間は変更となる場合がございます。詳しくはオフィシャルSNSをご確認ください。',
+      'お申込み・ご購入されたチケットの変更、キャンセル、払い戻しはお受けできません。',
+      '出演アーティストは都合によりキャンセル・変更となる場合があります。その際のチケットの払い戻しはいたしませんので予めご了承ください。 再入場は不可となります。',
+      '入場時全てのお客様を対象にご本人様確認と、手荷物検査を実施予定です。 ご本人様確認と手荷物検査の実施をご確認・ご理解・ご了承の上、チケットをお申し込み・ご購入ください。',
+      '本公演にて手荷物をお預かりすることはできません。 持ち込み禁止物につきましては、必ず入場前にお預けになってからご来場をお願いいたします。',
+      'ご本人様確認の方法、ご手荷物検査の詳細や持ち込み禁止物につきましては随時オフィシャルSNSにて告知いたしますので、ご来場前に必ずご確認をお願いいたします。',
+      'ご本人様確認の際、お申込み・購入時にご入力いただく来場者様情報が有効となります。 ご購入者様の情報は変更できませんので、購入の前に必ずご確認ください。',
+      'チケットの譲渡・転売が発覚した場合は、チケット没収の上退場していただきます。',
+      '各アーティストへのプレゼント、アレンジフラワー(祝い花)、楽屋花の受け取りは行っておりません。 企業様においてもお受け取りできませんのでご了承ください。',
+      '入待ち、出待ち行為は出演者だけでなく、会場や周辺施設・住民のご迷惑となりますので、絶対におやめください。',
+      '公演中会場内の撮影、録音、録画、ストリーミング行為は禁止となります。 禁止行為が発覚した場合、チケット没収の上退場となりますのであらかじめご了承ください。',
+      'チケットの紛失、破棄、盗難、破損、持ち忘れにおいて、いかなる場合もチケットの再発行はいたしません。 また持ち忘れの場合、当日はご入場いただけませんのでかならずお持ちください。',
+      'その他主催者側が要請するルールやマナーを遵守できない場合は入場をお断りもしくは、ご退場いただく場合もございます。',
+      '政府・自治体などの方針に則り、公演の内容やお客様へのご案内および注意事項が変更になる場合がございます。 変更が生じた場合でも、チケットの払戻しはできかねますのであらかじめご了承ください。',
+      '年齢に関わらず、チケット1枚につき、1名様のみご入場いただけます。ご入場時は、有効なチケットが必要となります。3歳未満のお子様は、ご入場いただけません。',
+      '安全のため、3歳未満のお子様は、指定席エリアにご入場いただけません。',
+      '一度のお申し込み・ご購入につき、最大4枚までお申し込み・ご購入いただけます。',
+      'お申し込み・ご購入いただいたチケットは、譲渡不可、払い戻し不可、交換不可となります。原則として、チケットの再発行はいたしかねます。',
+      '一部ゾーン・座席は、会場内の構造物（柱、壁、支柱など）や演出機材、他の座席などにより、視界が制限されることがあります。',
+      '上記を理由に、キャンセルや座席変更、払い戻しはできません。視界が制限される度合いは、座席位置や個人差により異なる場合があります。',
+      '公演当日、制限された視界によるキャンセルや座席変更、払い戻しはお受付いたしかねますので、チケットをご購入いただく前に、チケットプラットフォームの約款を必ずご確認ください。',
+    ]],
+    ['電子チケット・お問い合わせのご案内','●',[
+      '電子チケット使用方法はコチラのURLをご参考ください。',
+      '▶https://www.qoo10.jp/gmkt.inc/Special/Special.aspx?sid=354258',
+      'チケットのご購入に関するお問い合わせ',
+      '▶ お問い合わせフォーム',
+      '※カテゴリは「イベント／クーポン ＞ 公演・チケット」をご選択ください。',
+      '※お問い合わせの際にはタイトルに【公演名】、本文にお客様のID/注文番号(チケット購入済みの場合のみ)をご記載ください。',
+      '公演に関するお問い合わせ',
+      '000-000-0000',
+      '（月･水･金･土 10:00〜18:00)',
+    ]],
+    ['','●',[]],
+    ['','●',[]],
+  ];
+  for(let ti=0;ti<tabDefs.length;ti++){
+    const[name,style,contents]=tabDefs[ti];const n=ti+1;
+    rows.push([`── タブ${n} ──`,'','']);
+    rows.push([`タブ${n}_名称`,name,'タブボタンに表示される名前']);
+    rows.push([`タブ${n}_スタイル`,style,'箇条書きの種類: ●（丸）/ ＊（星）/ ※（重要）/ なし']);
+    for(let ci=1;ci<=30;ci++){
+      const note=ci===1?'자유롭게 수정·삭제 가능 / 自由に編集・削除できます':'';
+      rows.push([`タブ${n}_内容${ci}`,ci<=contents.length?contents[ci-1]:'',note]);
+    }
+    rows.push(['','','']);
+  }
+  rows.push(
+    ['【⑦ お問い合わせ（タブ1末尾に自動挿入）】','',''],
+    ['問合せ_チケットURL','https://www.qoo10.jp/gmkt.inc/CS/NHelpContactUs.aspx',''],
+    ['問合せ_電子チケットURL','https://www.qoo10.jp/gmkt.inc/Special/Special.aspx?sid=354258','なければ空白'],
+    ['問合せ_公演会社名','（株）○○',''],
+    ['問合せ_公演電話','○○-○○○○-○○○○（平日11:00～15:00）',''],
+    ['問合せ_公演タイトル','','空白の場合はタイトル欄を使用'],
+  );
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:26},{wch:68},{wch:42}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'入力フォーム');
+  const buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+  return new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+
+// ─── collectNotices / validateLocal ────────────────────────────────────────
+function collectNotices(data){
+  const items=[];
+  for(let i=1;i<=5;i++){const v=String(data[`チケット注意${i}`]||'').trim();if(v)items.push(['チケット注意事項',v]);}
+  for(let t=1;t<=6;t++){const tn=String(data[`タブ${t}_名称`]||'').trim();if(!tn)break;for(let c=1;c<=30;c++){const v=String(data[`タブ${t}_内容${c}`]||'').trim();if(v)items.push([`タブ${t}「${tn}」`,v]);}}
+  return items;
+}
+
+function validateLocal(items){
+  const results=[];const texts=items.map(i=>i[1]);const sources=items.map(i=>i[0]);
+  const seen={};
+  for(let i=0;i<texts.length;i++){const k=texts[i].trim();if(k in seen)results.push(`🔴 **중복 문구**\n  · [${sources[seen[k]]}] ${texts[i].slice(0,80)}\n  · [${sources[i]}] (동일 내용)`);else seen[k]=i;}
+  const checked=new Set();
+  for(let i=0;i<texts.length;i++)for(let j=i+1;j<texts.length;j++){const k=`${i},${j}`;if(checked.has(k))continue;const r=seqMatchRatio(texts[i],texts[j]);if(r>=0.85&&r<1.0){checked.add(k);results.push(`🟡 **유사 문구** (유사도 ${Math.round(r*100)}%)\n  · [${sources[i]}] ${texts[i].slice(0,70)}\n  · [${sources[j]}] ${texts[j].slice(0,70)}`);}}
+  if(!results.length)return'✅ 자동 검사에서 이상 없음';
+  return results.join('\n\n');
+}
+
+// ─── generateHtmlT1 ─────────────────────────────────────────────────────────
+function generateHtmlT1(data, origData, ticketCss, lang='ja'){
+  const lbl=LANG_LABELS[lang]||LANG_LABELS.ja;
+  const g=k=>String(data[k]||'').trim();
+  const og=k=>String(origData[k]||'').trim();
+  const collect=(pfx,mx)=>{const r=[];for(let i=1;i<=mx;i++){const v=g(`${pfx}${i}`);if(v)r.push(v);}return r;};
+
+  const title=g('タイトル').replace(/\\n/g,'<br>');
+  const poster=g('ポスターURL');
+  const venue=g('会場');
+  const venueAddr=g('会場_住所');
+  const pageBg=og('背景色')||'#191919';
+  const btnColor=og('チケットボタン色')||'#8da0a7';
+  const pointColor=og('ポイントカラー')||btnColor;
+
+  const perfDays=[];
+  for(let i=1;i<=5;i++){const d=g(`公演日${i}_日付`);if(!d)break;perfDays.push({date:d,time:g(`公演日${i}_時間`)});}
+
+  const sectionTitle='Qoo10先行';
+  const isLotteryType=!!g('申込期間');
+  const salePeriod=isLotteryType?g('申込期間'):g('販売期間');
+  const salePeriodLabel=isLotteryType?'申込期間':'販売期間';
+  const saleNote=isLotteryType?'':g('販売期間注記');
+  const lotteryDate=g('当落発表日');
+  const payDeadline=g('入金期限');
+
+  const tickets=[];
+  for(let i=1;i<=10;i++){
+    const d=g(`チケット${i}_公演日付`),tp=g(`チケット${i}_権種名`),pr=g(`チケット${i}_価格`);
+    if(!d&&!tp&&!pr)break;if(!d&&!tp)continue;
+    tickets.push({date:d,time:g(`チケット${i}_公演時間`),type:tp,price:pr,url:og(`チケット${i}_URL`)||'#',status:og(`チケット${i}_状態`),color:og(`チケット${i}_色`)});
+  }
+  const ticketNotices=collect('チケット注意',5);
+  const lineupHeading=g('ラインアップ見出し');
+  const lineupUrl=og('ラインアップ画像URL');
+
+  const tabs=[];
+  for(let t=1;t<=6;t++){const name=g(`タブ${t}_名称`);if(!name)break;tabs.push({name,cls:bulletCls(g(`タブ${t}_スタイル`)),items:collect(`タブ${t}_内容`,30)});}
+
+  const cTicket=og('問合せ_チケットURL');
+  const cEticket=og('問合せ_電子チケットURL');
+  const cName=g('問合せ_公演会社名');
+  const cPhone=g('問合せ_公演電話');
+  const cTitle=g('問合せ_公演タイトル')||g('タイトル').replace(/\\n/g,' ');
+
+  const errors=[];
+  if(!title)errors.push('タイトルが入力されていません。');
+  if(!tickets.length)errors.push('チケット情報が入力されていません。');
+  if(!tabs.length)errors.push('タブ1_名称 が入力されていません。');
+  if(errors.length)return[null,errors];
+
+  // Schedule section
+  let datecards='';
+  if(perfDays.length){
+    perfDays.forEach((d,idx)=>{
+      const lbl2=perfDays.length>1?`Day ${idx+1}`:lbl.perf_datetime;
+      const sub=d.time?`<p class="ev-sub">${d.time}</p>`:'';
+      datecards+=`\n<article class="ev-card"><p class="ev-label">${lbl2}</p><p class="ev-main">${d.date}</p>${sub}</article>`;
+    });
+  }else{datecards=`<article class="ev-card"><p class="ev-label">${lbl.perf_datetime}</p><p class="ev-main">—</p></article>`;}
+  const mapUrl=venueAddr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(venueAddr):'';
+  const mapHidden=venueAddr?'':' data-hidden="1"';
+  const venueCard=venue?`\n<article class="ev-card"><p class="ev-label">${lbl.venue}</p><p class="ev-main">${venue}</p><p class="ev-addr">${venueAddr}</p><a class="ev-map-btn" href="${escAttr(mapUrl)}" target="_blank" rel="noopener"${mapHidden}>Google Map &nbsp;→</a></article>`:'';
+  const schedSec=`<!-- schedule -->\n<section class="ev-section">\n<div class="ev-inner">\n<p class="ev-kicker">ABOUT THE EVENT</p>\n<h2 class="ev-heading"><span class="titlecolor">SCHEDULE</span></h2>\n<div class="ev-grid">${datecards}${venueCard}\n</div>\n</div>\n</section>\n\n`;
+
+  // Ticket buttons
+  let btns='';
+  const DISABLED_MAP={受付予定:'st-uketsuke-yotei',販売終了:'st-hanbai-shuryo',SOLDOUT:'st-soldout'};
+  for(const t of tickets){
+    const stCls=DISABLED_MAP[t.status]||'';
+    const cls=stCls?`is-disabled ${stCls}`:'';
+    const colorStyle=t.color?` style="background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,rgba(0,0,0,0.18) 100%) ${escAttr(t.color)}"` :'';
+    btns+=`\n<li class="ticketItem"><a class="ticketBtn ${cls}"${colorStyle} href="${escAttr(t.url)}"><span class="ticketType">${t.type}</span><span class="ticketDay">${t.date}</span><span class="ticketDate">${t.time}</span><span class="ticketPrice">${t.price}</span></a></li>`;
+  }
+
+  const noticeHtml=ticketNotices.length?`<ul class="ticket-notice">\n${ticketNotices.map(n=>`<li>${n}</li>`).join('\n')}\n</ul>`:'';
+  const lineupSec=lineupUrl?`\n<!-- lineup -->\n<div class="section-wrap" style="padding-bottom:0;">\n${lineupHeading?`<div class="title"><span class="titlecolor">${lineupHeading}</span></div>\n`:''}<div class="lineup-section"><img src="${escAttr(lineupUrl)}" style="max-width:100%;height:auto;"></div>\n</div>\n`:'';
+
+  // Contact block
+  let contact='';
+  if(cEticket)contact+=`\n<dd class="list_none"><span style="background-color:#fff59d;">${lbl.l_eticket}</span></dd>\n<dd class="list_none">▶<a href="${escAttr(cEticket)}" target="_blank">${cEticket}</a></dd>`;
+  if(cTicket){const idNote=lbl.l_id_note.replace('{title}',cTitle);contact+=`\n<dd class="list_none"><span style="background-color:#fff59d;">${lbl.l_purchase}</span></dd>\n<dd class="list_none">${lbl.l_form}<br><a href="${escAttr(cTicket)}" target="_blank">▶${cTicket}</a></dd>\n<dd class="list_none">${lbl.l_category}</dd>\n<dd class="list_none">${idNote}</dd>`;}
+  if(cName||cPhone){const ph=cPhone?`<br>▶${cPhone}`:'';contact+=`\n<dd class="list_none"><span style="background-color:#fff59d;">${lbl.l_event}</span></dd>\n<dd class="list_none">▶${cName}${ph}</dd>`;}
+
+  // Tabs
+  const tabInputs=tabs.map((t,i)=>`<input type="radio" id="tab${i+1}" name="tab" class="infotab__input"${i===0?' checked':''}>`).join('\n');
+  const tabNav=tabs.map((t,i)=>`<label for="tab${i+1}" class="infotab__label">${t.name}</label>`).join('\n');
+  let tabPanels='';
+  tabs.forEach((tab,i)=>{
+    const body=tab.items.map(item=>`<dd class="${tab.cls}">${linkify(item)}</dd>`).join('\n');
+    const extra=i===0?contact:'';
+    tabPanels+=`\n<div class="infotab__content panel${i+1}">\n<div class="oshirase"><dl>\n${body}${extra}\n</dl></div>\n</div>`;
+  });
+
+  const posterWidth=og('ポスター幅')||'100%';
+  const posterSec=poster?`<div style="text-align:center;"><img src="${escAttr(poster)}" style="width:${escAttr(posterWidth)};max-width:100%;height:auto;display:block;margin:0 auto;"></div>\n\n`:'';
+  const spHtml=salePeriod?`<p class="ticket-note" style="color:BLACK;">${salePeriodLabel}<BR>${salePeriod}</p>\n`:'';
+  const spnHtml=saleNote?`<p class="ticket-note" style="color:red;">${saleNote}</p>\n`:'';
+  const lotteryHtml=lotteryDate?`<p class="ticket-note" style="color:BLACK;">${lbl.lottery_date}<BR>${lotteryDate}</p>\n`:'';
+  const deadlineHtml=payDeadline?`<p class="ticket-note" style="color:BLACK;">${lbl.payment_deadline}<BR>${payDeadline}</p>\n`:'';
+
+  const styleBlock=`<style>\n:root{\n--btn-color:${btnColor};\n--point-color:${pointColor};\n--page-bg:${pageBg};\n}\n${ticketCss}\n</style>`;
+
+  const titlePlain=title.replace(/<br>/g,' ');
+  const stickyNav=`<nav id="sticky-nav">\n<a class="snav-tab is-active" href="#section-ticket" data-target="section-ticket">TICKET</a>\n<a class="snav-tab" href="#section-notice" data-target="section-notice">NOTICE</a>\n</nav>\n`;
+  const scrollspyJs=`<script>\n(function(){\nvar tabs=document.querySelectorAll(".snav-tab");\nvar ids=["section-ticket","section-notice"];\nvar sections=ids.map(function(id){return document.getElementById(id);}).filter(Boolean);\ntabs.forEach(function(tab){\ntab.addEventListener("click",function(e){\ne.preventDefault();\nvar target=document.getElementById(tab.dataset.target);\nif(target){var navH=document.getElementById("sticky-nav").offsetHeight;var top=target.getBoundingClientRect().top+window.scrollY-navH-8;window.scrollTo({top:top,behavior:"smooth"});}\n});\n});\nfunction updateActive(){\nvar navH=document.getElementById("sticky-nav").offsetHeight;\nvar scrollY=window.scrollY+navH+60;\nvar current=sections[0]?sections[0].id:"";\nsections.forEach(function(s){if(s.getBoundingClientRect().top+window.scrollY<=scrollY)current=s.id;});\ntabs.forEach(function(tab){tab.classList.toggle("is-active",tab.dataset.target===current);});\n}\nwindow.addEventListener("scroll",updateActive,{passive:true});\nupdateActive();\n})();\n<\/script>\n`;
+
+  const html=`<!DOCTYPE html>\n<html lang="${lang}">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>${titlePlain}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Murecho:wght@100..900&display=swap" rel="stylesheet">\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="https://dp.image-qoo10.jp/dp2016/JP/design/JPPM/fullEvent.css">\n${styleBlock}\n</head>\n<body style="margin:0;padding:0;background:${pageBg};">\n<div id="tc">\n${stickyNav}<div class="toptitle">${title}</div>\n\n${posterSec}${schedSec}<!-- ticket -->\n<div id="section-ticket" class="section-wrap">\n<div class="title"><span class="titlecolor">TICKETS</span></div>\n<div class="ticket-box">\n<div class="ticket-info">\n<h2 class="ticket-title">${sectionTitle}</h2>\n${spHtml}${lotteryHtml}${deadlineHtml}${spnHtml}</div>\n<ul class="ticketList" aria-label="Ticket options">\n${btns}\n</ul>\n${noticeHtml}\n</div>\n</div>\n${lineupSec}<!-- notice -->\n<div id="section-notice" class="section-wrap">\n<div class="title"><p class="ev-kicker" style="margin:0 0 8px;">NOTICE</p><span class="titlecolor">注意事項</span></div>\n<div class="tabwrap-outer"><div class="tabwrapper"><div class="infotabs">\n${tabInputs}\n<div class="infotab__nav">\n${tabNav}\n</div>\n<div class="infotab__panels">\n${tabPanels}\n</div>\n</div></div></div>\n</div>\n</div>\n${scrollspyJs}</body>\n</html>\n`;
+  return[html,[]];
+}
+
+// ─── generateHtmlT2 ─────────────────────────────────────────────────────────
+function generateHtmlT2(data, origData, lang='ja'){
+  const lbl=LANG_LABELS[lang]||LANG_LABELS.ja;
+  const g=k=>String(data[k]||'').trim();
+  const og=k=>String(origData[k]||'').trim();
+  const collect=(pfx,mx)=>{const r=[];for(let i=1;i<=mx;i++){const v=g(`${pfx}${i}`);if(v)r.push(v);}return r;};
+
+  const title=g('タイトル').replace(/\\n/g,' ');
+  const poster=g('ポスターURL');
+  const venue=g('会場');
+  const venueAddr=g('会場_住所');
+  const perfDays=[];
+  for(let i=1;i<=5;i++){const d=g(`公演日${i}_日付`);if(!d)break;perfDays.push({date:d,time:g(`公演日${i}_時間`)});}
+  const sectionTitle='Qoo10先行';
+  const salePeriod=g('申込期間');
+  const lotteryDate=g('当落発表日');
+  const payDeadline=g('入金期限');
+  const tickets=[];
+  for(let i=1;i<=10;i++){
+    const d=g(`チケット${i}_公演日付`),tp=g(`チケット${i}_権種名`),pr=g(`チケット${i}_価格`);
+    if(!d&&!tp&&!pr)break;if(!d&&!tp)continue;
+    tickets.push({date:d,time:g(`チケット${i}_公演時間`),type:tp,price:pr,url:og(`チケット${i}_URL`)||'#',status:og(`チケット${i}_状態`),color:og(`チケット${i}_色`)});
+  }
+  const ticketNotices=collect('チケット注意',5);
+  const lineupHeading=g('ラインアップ見出し');
+  const lineupUrl=og('ラインアップ画像URL');
+  const tabs=[];
+  for(let t=1;t<=6;t++){const name=g(`タブ${t}_名称`);if(!name)break;tabs.push({name,cls:bulletCls(g(`タブ${t}_スタイル`)),items:collect(`タブ${t}_内容`,30)});}
+
+  const errors=[];
+  if(!title)errors.push('タイトルが入力されていません。');
+  if(!tickets.length)errors.push('チケット情報が入力されていません。');
+  if(!tabs.length)errors.push('タブ1_名称 が入力されていません。');
+  if(errors.length)return[null,errors];
+
+  const datesStr=perfDays.map(d=>d.date).join(' / ');
+  const heroHtml=poster
+    ?`<section class="an-hero"><div class="an-hero-kv"><img src="${esc(poster)}" alt="${esc(title)}"><div class="an-hero-overlay"><div class="an-hero-inner"><p class="an-hero-kicker">TICKET</p><h1 class="an-hero-title">${esc(title)}</h1>${datesStr?`<p class="an-hero-date">${esc(datesStr)}</p>`:''} ${venue?`<p class="an-hero-venue">${esc(venue)}</p>`:''}</div></div></div></section>`
+    :`<section class="an-hero an-hero-no-poster"><div class="an-hero-inner"><p class="an-hero-kicker">TICKET</p><h1 class="an-hero-title">${esc(title)}</h1>${datesStr?`<p class="an-hero-date">${esc(datesStr)}</p>`:''} ${venue?`<p class="an-hero-venue">${esc(venue)}</p>`:''}</div></section>`;
+
+  const lineupHtml=lineupUrl?`<section class="an-lineup-section">${lineupHeading?`<p class="an-lineup-kicker">${esc(lineupHeading)}</p>`:''}<img src="${lineupUrl}" alt="LINEUP"></section>`:'';
+
+  let lotteryRows='';
+  if(salePeriod)lotteryRows+=`<div class="an-lottery-row"><span class="an-lottery-label">申込期間</span><span class="an-lottery-value">${esc(salePeriod)}</span></div>`;
+  if(lotteryDate)lotteryRows+=`<div class="an-lottery-row"><span class="an-lottery-label">当落発表日</span><span class="an-lottery-value">${esc(lotteryDate)}</span></div>`;
+  if(payDeadline)lotteryRows+=`<div class="an-lottery-row"><span class="an-lottery-label">入金期限</span><span class="an-lottery-value">${esc(payDeadline)}</span></div>`;
+  const lotteryInfoHtml=lotteryRows?`<div class="an-lottery-info">${lotteryRows}</div>`:'';
+
+  let ticketHtml='';
+  for(const tk of tickets){
+    const stRaw=tk.status;
+    const stCls=stRaw==='受付予定'?'is-disabled st-uketsuke-yotei':stRaw==='販売終了'?'is-disabled st-hanbai-shuryo':/^(SOLDOUT|SOLD OUT|SOLD_OUT)$/i.test(stRaw)?'is-disabled st-soldout':'';
+    const btnStyle=tk.color?` style="background:${tk.color};color:#fff;"`:' ';
+    ticketHtml+=`<a class="an-ticketBtn ${stCls}" href="${escAttr(tk.url)}" target="_blank"${btnStyle}><span class="an-ticketType">${esc(tk.type)}</span><span class="an-ticketDay">${esc(tk.date)}</span><span class="an-ticketDate">${esc(tk.time)}</span><span class="an-ticketPrice">${esc(tk.price)}</span></a>`;
+  }
+  const tnHtml=ticketNotices.length?`<ul class="an-ticket-notice">${ticketNotices.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'';
+  const ticketsSec=`<section id="ant-tickets" class="an-tickets-section"><div class="an-tickets-inner"><p class="an-section-kicker">TICKET</p><h2 class="an-section-title">${esc(sectionTitle)}</h2>${lotteryInfoHtml}<ul class="an-ticket-list">${ticketHtml}</ul>${tnHtml}</div></section>`;
+
+  let dateCards='';
+  perfDays.forEach((d,idx)=>{const lbl2=perfDays.length>1?`Day ${idx+1}`:lbl.perf_datetime;const sub=d.time?`<p class="an-sched-sub">${esc(d.time)}</p>`:'';dateCards+=`<article class="an-sched-card"><p class="an-sched-label">${lbl2}</p><p class="an-sched-main">${esc(d.date)}</p>${sub}</article>`;});
+  if(!dateCards)dateCards=`<article class="an-sched-card"><p class="an-sched-label">${lbl.perf_datetime}</p><p class="an-sched-main">—</p></article>`;
+  const mapUrl2=venueAddr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(venueAddr):'';
+  const mapHidden2=venueAddr?'':' data-hidden="1"';
+  const venueCard2=venue?`<article class="an-sched-card"><p class="an-sched-label">${esc(lbl.venue)}</p><p class="an-sched-main">${esc(venue)}</p><p class="an-sched-addr">${esc(venueAddr)}</p><a class="an-map-btn" href="${escAttr(mapUrl2)}" target="_blank" rel="noopener"${mapHidden2}>Google Map →</a></article>`:'';
+  const schedSec=`<section class="an-sched-section"><div class="an-sched-inner"><p class="an-section-kicker">SCHEDULE</p><h2 class="an-section-title">EVENT INFORMATION</h2><div class="an-sched-grid">${dateCards}${venueCard2}</div></div></section>`;
+
+  let tabInputs='',tabNav='',tabPanels='';
+  tabs.forEach((tab,i)=>{
+    tabInputs+=`<input type="radio" class="an-infotab__input" name="antabs" id="ant${i+1}"${i===0?' checked':''}>\n`;
+    tabNav+=`<label class="an-infotab__label" for="ant${i+1}">${esc(tab.name)}</label>\n`;
+    const items=tab.items.map(item=>`<dd class="${tab.cls}">${linkify(esc(item))}</dd>`).join('\n');
+    tabPanels+=`<div class="an-infotab__content antpanel${i+1} an-oshirase"><dl>${items}</dl></div>\n`;
+  });
+  const noticeSec=`<section id="ant-notice" class="an-notice-section"><div class="an-notice-inner"><p class="an-section-kicker">NOTICE</p><h2 class="an-section-title">注意事項</h2><div class="an-tabwrap"><div class="an-infotabs">${tabInputs}<div class="an-infotab__nav">${tabNav}</div><div class="an-infotab__panels">${tabPanels}</div></div></div></div></section>`;
+
+  const scrollJs=`<script>\n(function(){\nvar links=document.querySelectorAll(".an-snav-link");\nvar ids=["ant-tickets","ant-notice"];\nvar sections=ids.map(function(id){return document.getElementById(id);}).filter(Boolean);\nlinks.forEach(function(link){\nlink.addEventListener("click",function(e){\ne.preventDefault();\nvar target=document.getElementById(link.dataset.target);\nif(target){var navH=document.getElementById("an-sticky-nav").offsetHeight;var top=target.getBoundingClientRect().top+window.scrollY-navH-8;window.scrollTo({top:top,behavior:"smooth"});}\n});\n});\nfunction updateActive(){var navH=document.getElementById("an-sticky-nav").offsetHeight;var scrollY=window.scrollY+navH+60;var current=sections[0]?sections[0].id:"";sections.forEach(function(s){if(s.getBoundingClientRect().top+window.scrollY<=scrollY)current=s.id;});links.forEach(function(link){link.classList.toggle("is-active",link.dataset.target===current);});}\nwindow.addEventListener("scroll",updateActive,{passive:true});\nupdateActive();\n})();\n<\/script>\n`;
+
+  const html=`<!DOCTYPE html>\n<html lang="ja">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>${esc(title)}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Murecho:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="https://dp.image-qoo10.jp/dp2016/JP/design/JPPM/fullEvent.css">\n<style>\n${TICKET_CSS_T2}\n</style>\n</head>\n<body style="margin:0;padding:0;background:#0b1d40;">\n<div id="AN2026">\n${heroHtml}\n<nav class="an-snav" id="an-sticky-nav"><div class="an-snav-inner"><div class="an-snav-links"><a class="an-snav-link is-active" href="#ant-tickets" data-target="ant-tickets">TICKET</a><a class="an-snav-link" href="#ant-notice" data-target="ant-notice">NOTICE</a></div><a class="an-snav-cta" href="#ant-tickets">チケット購入はこちら</a></div></nav>\n${lineupHtml}\n${ticketsSec}\n${schedSec}\n${noticeSec}\n</div>\n${scrollJs}</body>\n</html>\n`;
+  return[html,[]];
+}
+
+// ─── applyFont / blockLinks ──────────────────────────────────────────────────
+function applyFont(html, fontKey){
+  if(fontKey==='Murecho')return html;
+  const font=JP_FONT_OPTIONS.find(f=>f.key===fontKey);
+  if(!font)return html;
+  const override=`<style id="__font_override">@import url("${font.url}");\n#tc,#tc *,#_special_top{font-family:"${fontKey}",sans-serif!important;}\n#AN2026,#AN2026 *{font-family:"${fontKey}",sans-serif!important;}\n</style>\n`;
+  return html.includes('</head>')?html.replace('</head>',override+'</head>'):html+override;
+}
+function blockLinks(html){
+  const script=`<script>document.addEventListener("click",function(e){var a=e.target.closest("a");if(a){e.preventDefault();e.stopPropagation();}},true);<\/script>`;
+  return html.includes('</body>')?html.replace('</body>',script+'</body>'):html+script;
+}
+
+// ─── injectEditable STUB (replaced by Edit) ──────────────────────────────────
+function injectEditable(html, okLabel, rsLabel, hintLabel, genId) {
+  const js = `(function(){
+var isT2=!!document.getElementById('AN2026');
+var S=['.toptitle','.subtitle.info-date','.description.info-time',
+  '.description.info-venue','.subtitle.info-label',
+  '.ticket-title','.ticket-note',
+  '.ticketType','.ticketDay','.ticketDate','.ticketPrice',
+  '.ticket-notice li','.oshirase dd','.oshirase dt','.title .titlecolor',
+  '.ev-card .ev-main','.ev-card .ev-sub','.ev-card .ev-addr',
+  '.an-hero-title','.an-hero-date','.an-hero-venue',
+  '.an-section-title','.an-lottery-value',
+  '.an-ticketType','.an-ticketDay','.an-ticketDate','.an-ticketPrice',
+  '.an-ticket-notice li','.an-oshirase dd','.an-oshirase dt',
+  '.an-sched-main','.an-sched-sub','.an-sched-addr'];
+var O=new Map();
+function _setupDdEnter(dd){
+  dd.addEventListener('keydown',function(ev){
+    if(ev.key==='Enter'&&!ev.shiftKey){
+      ev.preventDefault();
+      var dl=dd.parentNode;
+      var nd=document.createElement('dd');nd.className=dd.className||'list';
+      nd.setAttribute('contenteditable','true');nd.setAttribute('spellcheck','false');
+      nd.addEventListener('click',function(e){e.stopPropagation();});
+      _setupDdEnter(nd);
+      dl.insertBefore(nd,dd.nextSibling);
+      nd.focus();
+    }
+  });
+}
+function mk(){S.forEach(function(s){document.querySelectorAll(s).forEach(function(el){
+  if(!O.has(el))O.set(el,el.innerHTML);
+  el.setAttribute('contenteditable','true');el.setAttribute('spellcheck','false');
+  el.addEventListener('click',function(e){e.stopPropagation();});
+  if(el.matches('.oshirase dd,.an-oshirase dd'))_setupDdEnter(el);
+});});}
+function rm(){document.querySelectorAll('[contenteditable]').forEach(function(el){
+  el.removeAttribute('contenteditable');el.removeAttribute('spellcheck');});}
+document.addEventListener('click',function(e){var a=e.target.closest('a');if(a){e.preventDefault();e.stopPropagation();}},true);
+document.addEventListener('paste',function(e){if(!e.target.isContentEditable)return;e.preventDefault();var t=(e.clipboardData||window.clipboardData).getData('text/plain');document.execCommand('insertText',false,t);},true);
+var _initTL='',_initNL='',_initTabs='';
+(function(){
+  var tl=document.querySelector(isT2?'.an-ticket-list':'.ticketList');
+  var nl=document.querySelector(isT2?'.an-ticket-notice':'.ticket-notice');
+  var tw=document.querySelector(isT2?'.an-infotabs':'.infotabs');
+  if(tl)_initTL=tl.outerHTML;
+  if(nl)_initNL=nl.outerHTML;
+  if(tw)_initTabs=tw.outerHTML;
+})();
+function _dBtn(cls){
+  var b=document.createElement('button');
+  b.className=cls+' __ied_ctrl';b.textContent='\\u2715';
+  return b;
+}
+function _aBtn(id,txt){
+  var b=document.createElement('button');
+  b.id=id;b.className='__ied_add __ied_ctrl';b.textContent=txt;
+  return b;
+}
+function setupTickets(){
+  if(isT2){
+    var tl=document.querySelector('.an-ticket-list');if(!tl)return;
+    tl.querySelectorAll('.__del_t').forEach(function(b){b.remove();});
+    tl.querySelectorAll('.an-ticketBtn').forEach(function(a){
+      var b=_dBtn('__del_t');
+      b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();a.remove();});
+      a.appendChild(b);
+    });
+    var ea=document.getElementById('__add_t');if(ea)ea.remove();
+    var ab=_aBtn('__add_t','\\uff0b \\u30c1\\u30b1\\u30c3\\u30c8\\u8ffd\\u52a0 / \\ud2f0\\ucf13 \\ucd94\\uac00');
+    ab.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      var tl2=document.querySelector('.an-ticket-list');
+      var items=tl2.querySelectorAll('.an-ticketBtn');
+      var last=items[items.length-1];if(!last)return;
+      var clone=last.cloneNode(true);
+      clone.querySelectorAll('.__ied_ctrl').forEach(function(b){b.remove();});
+      clone.classList.remove('is-disabled','st-uketsuke-yotei','st-hanbai-shuryo','st-soldout');
+      clone.href='#';
+      clone.querySelectorAll('span').forEach(function(s){
+        if(s.classList.contains('an-ticketType'))s.textContent='\\u30c1\\u30b1\\u30c3\\u30c8\\u7a2e\\u5225';
+        else if(s.classList.contains('an-ticketDay'))s.textContent='0000\\u5e7400\\u670800\\u65e5(\\u571f)';
+        else if(s.classList.contains('an-ticketDate'))s.textContent='00:00\\u958b\\u6f14';
+        else if(s.classList.contains('an-ticketPrice'))s.textContent='\\xa50,000';
+      });
+      var db=_dBtn('__del_t');
+      db.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();clone.remove();});
+      clone.appendChild(db);
+      tl2.appendChild(clone);mk();
+    });
+    tl.parentNode.insertBefore(ab,tl.nextSibling);
+    return;
+  }
+  var tl=document.querySelector('.ticketList');if(!tl)return;
+  tl.querySelectorAll('.__del_t').forEach(function(b){b.remove();});
+  tl.querySelectorAll('.ticketItem').forEach(function(li){
+    var b=_dBtn('__del_t');
+    b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();li.remove();});
+    li.appendChild(b);
+  });
+  var ea=document.getElementById('__add_t');if(ea)ea.remove();
+  var ab=_aBtn('__add_t','\\uff0b \\u30c1\\u30b1\\u30c3\\u30c8\\u8ffd\\u52a0 / \\ud2f0\\ucf13 \\ucd94\\uac00');
+  ab.addEventListener('click',function(e){
+    e.preventDefault();e.stopPropagation();
+    var tl2=document.querySelector('.ticketList');
+    var items=tl2.querySelectorAll('.ticketItem');
+    var last=items[items.length-1];if(!last)return;
+    var clone=last.cloneNode(true);
+    clone.querySelectorAll('.__ied_ctrl').forEach(function(b){b.remove();});
+    var a=clone.querySelector('.ticketBtn');
+    if(a){a.classList.remove('is-disabled','st-uketsuke-yotei','st-hanbai-shuryo','st-soldout');a.href='#';}
+    clone.querySelectorAll('span').forEach(function(s){
+      if(s.classList.contains('ticketType'))s.textContent='\\u30c1\\u30b1\\u30c3\\u30c8\\u7a2e\\u5225';
+      else if(s.classList.contains('ticketDay'))s.textContent='0000\\u5e7400\\u670800\\u65e5(\\u571f)';
+      else if(s.classList.contains('ticketDate'))s.textContent='00:00\\u958b\\u6f14';
+      else if(s.classList.contains('ticketPrice'))s.textContent='\\xa50,000';
+    });
+    var db=_dBtn('__del_t');
+    db.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();clone.remove();});
+    clone.appendChild(db);
+    tl2.appendChild(clone);mk();
+  });
+  tl.parentNode.insertBefore(ab,tl.nextSibling);
+}
+function setupNotices(){
+  var nlSel=isT2?'.an-ticket-notice':'.ticket-notice';
+  var nl=document.querySelector(nlSel);if(!nl)return;
+  nl.querySelectorAll('.__del_n').forEach(function(b){b.remove();});
+  nl.querySelectorAll('li').forEach(function(li){
+    var b=_dBtn('__del_n');
+    b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();li.remove();});
+    li.appendChild(b);
+  });
+  var ea=document.getElementById('__add_n');if(ea)ea.remove();
+  var ab=_aBtn('__add_n','\\uff0b \\u6ce8\\u610f\\u4e8b\\u9805\\u8ffd\\u52a0 / \\uc8fc\\uc758\\uc0ac\\ud56d \\ucd94\\uac00');
+  ab.addEventListener('click',function(e){
+    e.preventDefault();e.stopPropagation();
+    var nl2=document.querySelector(nlSel);
+    var li=document.createElement('li');
+    li.textContent='\\u6ce8\\u610f\\u4e8b\\u9805\\u3092\\u5165\\u529b\\u3057\\u3066\\u304f\\u3060\\u3055\\u3044';
+    li.setAttribute('contenteditable','true');li.setAttribute('spellcheck','false');
+    li.addEventListener('click',function(ev){ev.stopPropagation();});
+    var b=_dBtn('__del_n');
+    b.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();li.remove();});
+    li.appendChild(b);
+    nl2.appendChild(li);
+  });
+  nl.parentNode.insertBefore(ab,nl.nextSibling);
+}
+function _ensureTabCSS(n){
+  var id='__tab_ext_css';
+  var el=document.getElementById(id);
+  if(!el){el=document.createElement('style');el.id=id;document.head.appendChild(el);}
+  if(isT2){
+    el.textContent+='#ant'+n+':checked ~ .an-infotab__nav label[for="ant'+n+'"]{background:#d49a31;border-color:#d49a31;color:#0b1d40;}'+
+      '#ant'+n+':checked ~ .an-infotab__panels .antpanel'+n+'{display:block;}';
+  }else{
+    el.textContent+='#tab'+n+':checked ~ .infotab__nav label[for="tab'+n+'"]{background:var(--point-color);color:#121113;}'+
+      '#tab'+n+':checked ~ .infotab__panels .panel'+n+'{display:block;}';
+  }
+}
+function setupTabs(){
+  var tabsSel=isT2?'.an-infotabs':'.infotabs';
+  var inputSel=isT2?'.an-infotab__input':'.infotab__input';
+  var labelSel=isT2?'.an-infotab__label':'.infotab__label';
+  var navSel=isT2?'.an-infotab__nav':'.infotab__nav';
+  var panelsSel=isT2?'.an-infotab__panels':'.infotab__panels';
+  var inputPfx=isT2?'ant':'tab';
+  var inputName=isT2?'antabs':'tab';
+  var labelCls=isT2?'an-infotab__label':'infotab__label';
+  var panelPfx=isT2?'antpanel':'panel';
+  var panelCls=isT2?'an-infotab__content':'infotab__content';
+  var infotabs=document.querySelector(tabsSel);if(!infotabs)return;
+  var nav=infotabs.querySelector(navSel);if(!nav)return;
+  var panels=infotabs.querySelector(panelsSel);if(!panels)return;
+  nav.querySelectorAll('.__tab_edit').forEach(function(b){b.remove();});
+  nav.querySelectorAll('.__tab_del').forEach(function(b){b.remove();});
+  nav.querySelectorAll(labelSel).forEach(function(lbl){
+    var eb=document.createElement('button');
+    eb.textContent='\\u270f';eb.className='__tab_edit __ied_ctrl';eb.title='\\ud0ed \\uc774\\ub984 \\uc218\\uc815';
+    eb.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      var cur='';
+      lbl.childNodes.forEach(function(n){if(n.nodeType===3)cur+=n.textContent;});
+      cur=cur.trim();
+      var newName=window.prompt('\\ud0ed \\uc774\\ub984 \\uc218\\uc815 / \\u30bf\\u30d6\\u540d\\u3092\\u7de8\\u96c6:',cur);
+      if(newName!==null&&newName.trim()){
+        while(lbl.firstChild){lbl.removeChild(lbl.firstChild);}
+        lbl.appendChild(document.createTextNode(newName.trim()));
+        lbl.appendChild(eb);
+      }
+    });
+    lbl.appendChild(eb);
+    var db=document.createElement('button');
+    db.textContent='\\u2715';db.className='__tab_del __ied_ctrl';db.title='\\ud0ed \\uc0ad\\uc81c / \\u30bf\\u30d6\\u3092\\u524a\\u9664';
+    db.style.cssText='margin-left:2px;font-size:10px;';
+    db.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      var inputs=infotabs.querySelectorAll(inputSel);
+      if(inputs.length<=1){alert('\\ud0ed\\uc774 1\\uac1c \\uc774\\ud558\\uc774\\uba74 \\uc0ad\\uc81c\\ud560 \\uc218 \\uc5c6\\uc2b5\\ub2c8\\ub2e4.');return;}
+      if(!window.confirm('\\uc774 \\ud0ed\\uc744 \\uc0ad\\uc81c\\ud558\\uc2dc\\uaca0\\uc2b5\\ub2c8\\uae4c?')){return;}
+      var forId=lbl.getAttribute('for');
+      var n=forId.replace(inputPfx,'');
+      var inp=document.getElementById(forId);if(inp)inp.remove();
+      var panel=infotabs.querySelector('.'+panelPfx+n);if(panel)panel.remove();
+      lbl.remove();
+      setupTabs();mk();
+    });
+    lbl.appendChild(db);
+  });
+  var ea=document.getElementById('__add_tab');if(ea)ea.remove();
+  var ab=_aBtn('__add_tab','\\uff0b \\u30bf\\u30d6\\u8ffd\\u52a0 / \\ud0ed \\ucd94\\uac00');
+  ab.addEventListener('click',function(e){
+    e.preventDefault();e.stopPropagation();
+    var inputs=infotabs.querySelectorAll(inputSel);
+    var n=inputs.length+1;
+    _ensureTabCSS(n);
+    var inp=document.createElement('input');
+    inp.type='radio';inp.name=inputName;inp.id=inputPfx+n;inp.className=inputSel.slice(1);
+    infotabs.insertBefore(inp,nav);
+    var tname=window.prompt('\\uc0c8 \\ud0ed \\uc774\\ub984 / \\u65b0\\u3057\\u3044\\u30bf\\u30d6\\u540d:','\\u30bf\\u30d6'+n);
+    if(tname===null||!tname.trim())tname='\\u30bf\\u30d6'+n;
+    var lbl=document.createElement('label');
+    lbl.setAttribute('for',inputPfx+n);lbl.className=labelCls;
+    lbl.textContent=tname.trim();
+    nav.appendChild(lbl);
+    var panel=document.createElement('div');
+    var dd=document.createElement('dd');dd.className='list';
+    dd.textContent='\\u5185\\u5bb9\\u3092\\u5165\\u529b\\u3057\\u3066\\u304f\\u3060\\u3055\\u3044 / \\ub0b4\\uc6a9\\uc744 \\uc785\\ub825\\ud558\\uc138\\uc694';
+    dd.setAttribute('contenteditable','true');dd.setAttribute('spellcheck','false');
+    dd.addEventListener('click',function(ev){ev.stopPropagation();});
+    _setupDdEnter(dd);
+    var dl=document.createElement('dl');dl.appendChild(dd);
+    if(isT2){
+      panel.className=panelCls+' '+panelPfx+n+' an-oshirase';
+      panel.appendChild(dl);
+    }else{
+      panel.className=panelCls+' '+panelPfx+n;
+      var inner=document.createElement('div');inner.className='oshirase';
+      inner.appendChild(dl);panel.appendChild(inner);
+    }
+    panels.appendChild(panel);
+    setupTabs();mk();
+  });
+  nav.parentNode.insertBefore(ab,panels.nextSibling);
+}
+function setupCtrls(){setupTickets();setupNotices();setupTabs();}
+function removeCtrls(){document.querySelectorAll('.__ied_ctrl').forEach(function(b){b.remove();});}
+function showSavedMsg(){
+  var msg=document.createElement('div');
+  msg.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);'+
+    'background:#22c55e;color:#fff;padding:12px 28px;border-radius:999px;font-family:sans-serif;'+
+    'font-size:13px;font-weight:700;z-index:999999;box-shadow:0 4px 16px rgba(0,0,0,.4);white-space:nowrap;';
+  msg.textContent='\\u2705 \\ud3b8\\uc9d1\\ubcf8 \\ub2e4\\uc6b4\\ub85c\\ub4dc\\uac00 \\uc2dc\\uc791\\ub429\\ub2c8\\ub2e4\\uff01';
+  document.body.appendChild(msg);
+  setTimeout(function(){
+    msg.style.transition='opacity .5s';msg.style.opacity='0';
+    setTimeout(function(){if(msg.parentNode)msg.parentNode.removeChild(msg);},500);
+  },4000);
+}
+mk();setupCtrls();
+(function(){
+  document.querySelectorAll('.ev-card .ev-addr,.an-sched-card .an-sched-addr').forEach(function(addr){
+    addr.addEventListener('input',function(){
+      var btn=this.nextElementSibling;
+      if(btn&&(btn.classList.contains('ev-map-btn')||btn.classList.contains('an-map-btn'))){
+        var q=encodeURIComponent(this.textContent.trim());
+        if(q){btn.href='https://www.google.com/maps/search/?api=1&query='+q;btn.removeAttribute('data-hidden');}
+        else{btn.href='';btn.setAttribute('data-hidden','1');}
+      }
+    });
+  });
+})();
+document.getElementById('__ied_ok').addEventListener('click',function(){
+  removeCtrls();rm();
+  var bar=document.getElementById('__ied_bar');
+  var sty=document.getElementById('__ied_s');
+  var scr=document.getElementById('__ied_j');
+  bar.remove();sty.remove();scr.remove();
+  var out='<!DOCTYPE html>\\n'+document.documentElement.outerHTML;
+  try{window.parent.postMessage({type:'ied_done',html:out},'*');}catch(e){}
+  bar.innerHTML='';
+  var sp=document.createElement('span');
+  sp.style.cssText='color:#4ade80;font-weight:700;font-size:13px;white-space:nowrap;';
+  sp.textContent='\\u2705 \\ud3b8\\uc9d1\\uc644\\ub8cc\\uff01 \\uc544\\ub798 [\\ub2e4\\uc6b4\\ub85c\\ub4dc] \\ubc84\\ud2bc\\uc744 \\ud074\\ub9ad\\ud558\\uc138\\uc694';
+  bar.appendChild(sp);
+  document.body.appendChild(bar);document.head.appendChild(sty);document.body.appendChild(scr);
+  mk();setupCtrls();
+});
+document.getElementById('__ied_rs').addEventListener('click',function(){
+  O.forEach(function(v,el){if(document.contains(el))el.innerHTML=v;});
+  var tlSel=isT2?'.an-ticket-list':'.ticketList';
+  var nlSel=isT2?'.an-ticket-notice':'.ticket-notice';
+  var twSel=isT2?'.an-infotabs':'.infotabs';
+  var tl=document.querySelector(tlSel);
+  if(tl&&_initTL){var d=document.createElement('div');d.innerHTML=_initTL;tl.parentNode.replaceChild(d.firstChild,tl);}
+  var nl=document.querySelector(nlSel);
+  if(nl&&_initNL){var d2=document.createElement('div');d2.innerHTML=_initNL;nl.parentNode.replaceChild(d2.firstChild,nl);}
+  var tw=document.querySelector(twSel);
+  if(tw&&_initTabs){var d3=document.createElement('div');d3.innerHTML=_initTabs;tw.parentNode.replaceChild(d3.firstChild,tw);}
+  removeCtrls();mk();setupCtrls();
+});
+})();`;
+  const css = '#__ied_bar{position:fixed;top:10px;right:10px;z-index:99999;' +
+    'background:rgba(18,18,20,.95);backdrop-filter:blur(8px);border-radius:10px;' +
+    'padding:8px 14px;display:flex;align-items:center;gap:8px;font-family:sans-serif;' +
+    'box-shadow:0 4px 20px rgba(0,0,0,.5);}' +
+    '.ied-h{color:rgba(255,255,255,.45);font-size:11px;}' +
+    '.ied-b{border:none;border-radius:6px;padding:6px 12px;cursor:pointer;' +
+    'font-weight:700;font-size:11px;transition:all .15s;white-space:nowrap;}' +
+    '#__ied_ok{background:#6C63FF;color:#fff;}' +
+    '#__ied_ok:hover{background:#5a51e8;}' +
+    '#__ied_rs{background:transparent;color:rgba(255,255,255,.5);' +
+    'border:1px solid rgba(255,255,255,.2);}' +
+    '#__ied_rs:hover{background:rgba(255,255,255,.08);color:#fff;}' +
+    '[contenteditable]{cursor:text;border-radius:2px;user-select:text!important;-webkit-user-select:text!important;}' +
+    '[contenteditable]:hover{outline:1px dashed rgba(108,99,255,.65);outline-offset:3px;}' +
+    '[contenteditable]:focus{outline:2px solid #6C63FF!important;outline-offset:3px;}' +
+    '.ev-addr:empty{display:block!important;min-height:1.4em;}' +
+    '.ev-addr[contenteditable]:empty::before{content:"\\u4f4f\\u6240\\u3092\\u5165\\u529b\\u2026 (\\u4f8b: \\u6771\\u4eac\\u90fd\\u6e2f\\u533a\\u5317\\u9752\\u5c712\\u4e01\\u76ee8-35)";color:rgba(255,255,255,.25);pointer-events:none;}' +
+    '.ev-map-btn[data-hidden]{display:inline-flex!important;opacity:.35;}' +
+    '.an-map-btn[data-hidden]{display:inline-flex!important;opacity:.35;}' +
+    '.an-sched-addr:empty{display:block!important;min-height:1.4em;}' +
+    '.an-sched-addr[contenteditable]:empty::before{content:"\\u4f4f\\u6240\\u3092\\u5165\\u529b\\u2026 (\\u4f8b: \\u6771\\u4eac\\u90fd\\u6e2f\\u533a\\u5317\\u9752\\u5c712\\u4e01\\u76ee8-35)";color:rgba(255,255,255,.2);pointer-events:none;}' +
+    '.an-ticketBtn{overflow:visible!important;}' +
+    '.ticketItem{position:relative!important;}' +
+    '.__del_t{position:absolute;top:-8px;right:-8px;z-index:10;width:22px;height:22px;' +
+    'border-radius:50%;border:none;background:#ff4444;color:#fff;font-size:11px;' +
+    'cursor:pointer;font-weight:700;line-height:22px;text-align:center;' +
+    'box-shadow:0 2px 6px rgba(0,0,0,.3);padding:0;}' +
+    '.__del_n{display:inline-block;margin-left:6px;width:18px;height:18px;' +
+    'border-radius:50%;border:none;background:#ff4444;color:#fff;font-size:10px;' +
+    'cursor:pointer;font-weight:700;line-height:18px;text-align:center;' +
+    'vertical-align:middle;padding:0;}' +
+    '.__ied_add{display:block;margin:10px auto 0;padding:8px 0;max-width:540px;width:100%;' +
+    'border:2px dashed #6C63FF;border-radius:8px;background:transparent;' +
+    'color:#6C63FF;font-size:13px;font-weight:700;cursor:pointer;}' +
+    '.__ied_add:hover{background:rgba(108,99,255,.08);}' +
+    '.__tab_edit{display:inline-block;margin-left:4px;width:16px;height:16px;' +
+    'border-radius:50%;border:none;background:rgba(108,99,255,.7);color:#fff;font-size:9px;' +
+    'cursor:pointer;font-weight:700;line-height:16px;text-align:center;vertical-align:middle;padding:0;}' +
+    '.__tab_edit:hover{background:#6C63FF;}';
+  const inject = '<style id="__ied_s">' + css + '<\/style>\n' +
+    '<div id="__ied_bar">' +
+    '<span class="ied-h">' + hintLabel + '<\/span>' +
+    '<button class="ied-b" id="__ied_rs">' + rsLabel + '<\/button>' +
+    '<button class="ied-b" id="__ied_ok">' + okLabel + '<\/button>' +
+    '<\/div>\n' +
+    '<script id="__ied_j">' + js + '<\/script>';
+  return html.replace('<\/body>', inject + '\n<\/body>');
+}
+
+// ─── UI / EVENT HANDLERS ───────────────────────────────────────────────────
+function t(key){return(UI_TEXT[state.uiLang]||UI_TEXT.ko)[key]||key;}
+
+function setLang(lang){
+  state.uiLang=lang;
+  document.getElementById('lang-ko').className='btn-lang'+(lang==='ko'?' active':'');
+  document.getElementById('lang-ja').className='btn-lang'+(lang==='ja'?' active':'');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.dataset.i18n;const v=t(k);if(v)el.textContent=v;});
+  document.querySelectorAll('[data-i18n-label]').forEach(el=>{const k=el.dataset.i18nLabel;const v=t(k);if(v)el.setAttribute('aria-label',v);});
+  document.getElementById('preview-placeholder').textContent=lang==='ko'?'HTML을 생성하면 여기에 미리보기가 표시됩니다':'HTMLを生成するとここにプレビューが表示されます';
+}
+
+function onTypeChange(){
+  state.isLottery=document.getElementById('radio-lottery').checked;
+  document.getElementById('lottery-tpl-row').className=state.isLottery?'':'hidden';
+}
+
+function downloadTemplate(){
+  if(typeof XLSX==='undefined'){alert('SheetJS가 로드되지 않았습니다.');return;}
+  const isL=state.isLottery;
+  const blob=makeTemplate(isL);
+  if(!blob){alert('템플릿 생성 실패');return;}
+  dlBlob(blob,`ticket_template${isL?'_lottery':''}.xlsx`);
+}
+
+function onExcelUpload(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=parseExcel(e.target.result);
+      state.tplData=data;
+      const cnt=Object.keys(data).length;
+      document.getElementById('upload-status').innerHTML=`<div class="msg-success">✅ ${file.name} ${t('load_ok')} (${cnt}${t('v_items')})</div>`;
+      initDataSections(data);
+    }catch(err){document.getElementById('upload-status').innerHTML=`<div class="msg-error">❌ ${t('load_err')}: ${err.message}</div>`;}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function onDraftUpload(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      state.tplData=data;
+      document.getElementById('upload-status').innerHTML=`<div class="msg-success">✅ ${t('draft_ok')}</div>`;
+      initDataSections(data);
+    }catch(err){document.getElementById('upload-status').innerHTML=`<div class="msg-error">❌ Draft load error: ${err.message}</div>`;}
+  };
+  reader.readAsText(file);
+}
+
+function initDataSections(data){
+  document.getElementById('data-sections').className='';
+  const btn=document.getElementById('color-btn');
+  const pt=document.getElementById('color-pt');
+  const excelBtn=data['チケットボタン色']||'#8da0a7';
+  const excelPt=data['ポイントカラー']||excelBtn;
+  btn.value=excelBtn;pt.value=excelPt;
+  state.pickedBtn=excelBtn;state.pickedPt=excelPt;
+  const notices=collectNotices(data);
+  const vcap=document.getElementById('v-caption');
+  if(vcap)vcap.textContent=`${notices.length}${t('v_items')} ${t('v_suffix')}`;
+  const posterUrl=data['ポスターURL']||'';
+  if(posterUrl)document.getElementById('poster-url').value=posterUrl;
+}
+
+function runValidation(){
+  if(!state.tplData)return;
+  const items=collectNotices(state.tplData);
+  const result=validateLocal(items);
+  const el=document.getElementById('val-result');
+  el.textContent=result;el.className='val-result';
+}
+
+async function onPosterUpload(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const dataUrl=e.target.result;
+    state.posterDataUrl=dataUrl;
+    if(state.tplData)state.tplData['ポスターURL']=dataUrl;
+    document.getElementById('poster-status').innerHTML=`<div class="msg-success">${t('poster_uploaded')}</div>`;
+    const pal=await extractPaletteFromImage(dataUrl);
+    if(pal.length){
+      state.pickedBtn=pal[0];state.pickedPt=pal[0];
+      document.getElementById('color-btn').value=pal[0];
+      document.getElementById('color-pt').value=pal[0];
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function extractFromUrl(){
+  const url=document.getElementById('poster-url').value.trim();
+  if(!url){alert('URL을 입력하세요');return;}
+  try{
+    const img=new Image();img.crossOrigin='anonymous';
+    await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=url;});
+    const c=document.createElement('canvas');c.width=150;c.height=150;
+    const ctx=c.getContext('2d');ctx.drawImage(img,0,0,150,150);
+    const pal=await extractPaletteFromImage(c.toDataURL());
+    if(pal.length){
+      state.pickedBtn=pal[0];state.pickedPt=pal[0];
+      document.getElementById('color-btn').value=pal[0];
+      document.getElementById('color-pt').value=pal[0];
+    }else{alert(t('c_fail'));}
+  }catch(e){alert(t('c_fail')+' (CORS)');}
+}
+
+function generateHtml(){
+  if(!state.tplData){alert('엑셀을 먼저 업로드하세요');return;}
+  const merged=Object.assign({},state.tplData);
+  merged['チケットボタン色']=state.pickedBtn;
+  merged['ポイントカラー']=state.pickedPt;
+  if(state.posterDataUrl)merged['ポスターURL']=state.posterDataUrl;
+
+  state.useT2=document.querySelector('input[name="ltpl"]:checked')?.value==='t2'&&state.isLottery;
+  let result;
+  if(state.useT2)result=generateHtmlT2(merged,merged,'ja');
+  else result=generateHtmlT1(merged,merged,TICKET_CSS,'ja');
+  const[html,errors]=result;
+  const errEl=document.getElementById('gen-error');
+  if(errors.length){errEl.innerHTML=errors.map(e=>`<div class="msg-error">⚠ ${e}</div>`).join('');errEl.className='';return;}
+  errEl.className='hidden';
+  const fontKey=JP_FONT_OPTIONS[parseInt(document.getElementById('font-select').value)||0].key;
+  state.genHtml=applyFont(html,fontKey);
+  state.genData=merged;
+  state.editedHtml=null;
+  document.getElementById('preview-section').className='';
+  document.getElementById('preview-placeholder').className='hidden';
+  document.getElementById('src-area').value=state.genHtml;
+  updateEmailLink();
+  updatePreviewFrame();
+}
+
+function updatePreviewFrame(){
+  const editMode=document.getElementById('toggle-edit').checked;
+  let renderHtml=state.genHtml;
+  if(editMode){
+    const lang=state.uiLang;
+    renderHtml=injectEditable(renderHtml,t('edit_ok_btn'),t('edit_rs_btn'),t('edit_hint'),'1');
+  }else{
+    renderHtml=blockLinks(renderHtml);
+  }
+  if(state.previewMode==='mobile'){
+    document.getElementById('preview-container').innerHTML=`<div class="phone-wrapper"><div class="phone-frame"><div class="phone-top"><div class="phone-pill"></div><div class="phone-cam"></div></div><iframe class="phone-screen" srcdoc="${renderHtml.replace(/"/g,'&quot;')}" scrolling="yes"></iframe><div class="phone-bottom"><div class="phone-bar"></div></div></div></div>`;
+  }else{
+    document.getElementById('preview-container').innerHTML=`<iframe id="preview-frame" srcdoc="${renderHtml.replace(/"/g,'&quot;')}" scrolling="yes" style="width:100%;height:750px;border:none;border-radius:8px;background:#111;"></iframe>`;
+  }
+  const editDlRow=document.getElementById('edit-dl-row');
+  if(editMode)editDlRow.className='';else{editDlRow.className='hidden';state.editedHtml=null;}
+}
+
+function onFontChange(){
+  if(!state.genHtml)return;
+  const idx=parseInt(document.getElementById('font-select').value)||0;
+  const fontKey=JP_FONT_OPTIONS[idx].key;
+  // regenerate with new font
+  const merged=state.genData;
+  if(!merged)return;
+  state.useT2=state.useT2||false;
+  let result;
+  if(state.useT2)result=generateHtmlT2(merged,merged,'ja');
+  else result=generateHtmlT1(merged,merged,TICKET_CSS,'ja');
+  const[html]=result;
+  state.genHtml=applyFont(html,fontKey);
+  document.getElementById('src-area').value=state.genHtml;
+  updatePreviewFrame();
+}
+
+function onEditToggle(){updatePreviewFrame();}
+
+function setPreview(mode){
+  state.previewMode=mode;
+  document.getElementById('btn-desktop').className=mode==='desktop'?'active':'';
+  document.getElementById('btn-mobile').className=mode==='mobile'?'active':'';
+  updatePreviewFrame();
+}
+
+function downloadHtml(){
+  if(!state.genHtml){alert('HTML을 먼저 생성하세요');return;}
+  const title=(state.genData?.['タイトル']||'ticket_page').replace(/[<>:"/\\|?*\s]/g,'_').slice(0,40);
+  dlBlob(new Blob([state.genHtml],{type:'text/html;charset=utf-8'}),`${title}.html`);
+}
+
+function downloadEdited(){
+  if(!state.editedHtml){alert(t('edit_dl_hint'));return;}
+  dlBlob(new Blob([state.editedHtml],{type:'text/html;charset=utf-8'}),'ticket_edited.html');
+}
+
+function saveDraft(){
+  if(!state.genData){alert('데이터가 없습니다');return;}
+  dlBlob(new Blob([JSON.stringify(state.genData,null,2)],{type:'application/json'}),'ticket_draft.json');
+}
+
+function updateEmailLink(){
+  const data=state.genData||{};
+  const title=(data['タイトル']||'Ticket Page').replace(/\\n/g,' ');
+  const subject=encodeURIComponent(`[Qoo10] ${title}`);
+  const body=encodeURIComponent('HTML을 다운로드받으셔서 첨부 하시고 메일을 보내주세요.\nHTMLをダウンロードして添付の上、メールをお送りください。');
+  document.getElementById('btn-send-email').href=`mailto:chakang@ebay.com?subject=${subject}&body=${body}`;
+}
+
+// postMessage listener for inline edit download
+window.addEventListener('message',function(ev){
+  if(!ev.data||ev.data.type!=='ied_done')return;
+  state.editedHtml=ev.data.html;
+  const btn=document.getElementById('btn-dl-edited');
+  if(btn){btn.style.background='#16a34a';btn.textContent='📥 편집본 다운로드 (준비됨)';}
+});
+
+// init
+setLang('ko');
+</script>
+</body>
+</html>
