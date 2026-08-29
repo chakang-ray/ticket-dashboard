@@ -93,11 +93,15 @@ a.btn-link:hover{background:#222;color:#fff;}
       <label><input type="radio" name="ttype" id="radio-instant" value="instant" checked onchange="onTypeChange()"> <span data-i18n="type_instant">즉시구매 (선착순)</span></label>
       <label><input type="radio" name="ttype" id="radio-lottery" value="lottery" onchange="onTypeChange()"> <span data-i18n="type_lottery">응모형 (추첨)</span></label>
     </div>
-    <div id="lottery-tpl-row" class="hidden" style="margin-bottom:10px;">
+    <div id="tpl-row" style="margin-bottom:10px;">
       <div style="font-size:12px;color:#aaa;margin-bottom:6px;">템플릿 / テンプレート</div>
-      <div class="radio-group">
-        <label><input type="radio" name="ltpl" id="radio-t1" value="t1" checked> Template 1 (다크)</label>
-        <label><input type="radio" name="ltpl" id="radio-t2" value="t2"> Template 2 (네이비·골드)</label>
+      <div class="radio-group" id="instant-tpl-options">
+        <label><input type="radio" name="itpl" id="radio-i-t1" value="t1" checked> Template 1 · 다크</label>
+        <label><input type="radio" name="itpl" id="radio-i-t3" value="t3"> Template 3 · 에디토리얼</label>
+      </div>
+      <div class="radio-group hidden" id="lottery-tpl-options">
+        <label><input type="radio" name="ltpl" id="radio-l-t2" value="t2" checked> Template 2 · 네이비·골드</label>
+        <label><input type="radio" name="ltpl" id="radio-l-t4" value="t4"> Template 4 · 그라디언트·팝</label>
       </div>
     </div>
     <button class="btn-secondary" id="btn-dl-tpl" onclick="downloadTemplate()" style="width:100%;margin-top:4px;" data-i18n="dl_tpl">↓ 템플릿 다운로드 (.xlsx)</button>
@@ -452,6 +456,200 @@ const TICKET_CSS_T2 = `html,body{-webkit-text-size-adjust:100%;text-size-adjust:
 .an-oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:#d49a31;vertical-align:middle;}
 @media(max-width:600px){.an-infotab__label{font-size:12px;padding:8px 14px;}.an-infotab__nav{gap:6px;}}`;
 
+// ─── TICKET CSS T3 (Editorial Light) ───────────────────────────────────────
+const TICKET_CSS_T3 = `html,body,#tc{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+#tc,#tc *{font-family:"Murecho",sans-serif;}
+#tc{background:#f5f5f0;color:#111;}
+.item_wrap{border-bottom:1px solid transparent;}
+.bd_glr_spc:after{background:transparent;}
+.no-mark::before{content:none!important;}
+@media screen and (min-width:768px){#content,#wrap{background-color:#f5f5f0;}}
+@media screen and (max-width:767px){#content,#wrap{background-color:#f5f5f0;}}
+.toptitle{color:#111;text-align:center;font-family:"Montserrat",sans-serif;font-weight:900;font-size:42px;line-height:1.35;letter-spacing:.02em;padding:56px 16px 32px;border-bottom:3px solid #111;margin:0;}
+@media(max-width:768px){.toptitle{font-size:26px;padding:36px 16px 22px;}}
+.title{font-family:"Montserrat",sans-serif;font-weight:900;text-align:center;font-size:60px;padding:56px 0 24px;color:#111;border-top:3px solid #111;margin:0;}
+.titlecolor{color:var(--point-color,#111);}
+.subtitle{font-weight:700;font-size:35px;line-height:1.25;margin:0;text-align:center;color:#111;}
+.description{font-weight:500;font-size:30px;line-height:1.4;margin:0;text-align:center;color:#333;}
+#sticky-nav{position:sticky;top:0;z-index:100;display:flex;justify-content:center;background:rgba(245,245,240,.95);backdrop-filter:blur(12px);border-bottom:1.5px solid #ddd;}
+.snav-tab{display:inline-flex;align-items:center;padding:14px 36px;color:rgba(0,0,0,.32);font-family:"Montserrat",sans-serif;font-weight:800;font-size:12px;letter-spacing:.2em;text-decoration:none;border-bottom:3px solid transparent;transition:color .2s,border-color .2s;}
+.snav-tab.is-active{color:#111;border-bottom-color:var(--point-color,#111);}
+.ev-section{padding:56px 16px 48px;text-align:center;background:#f5f5f0;}
+.ev-inner{max-width:750px;margin:0 auto;}
+.ev-kicker{font-size:11px;font-weight:800;letter-spacing:.22em;color:var(--point-color,#111);text-transform:uppercase;margin:0 0 10px;}
+.ev-heading{font-family:"Montserrat",sans-serif;font-weight:900;font-size:60px;margin:0 0 40px;line-height:1;color:#111;}
+.ev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;}
+.ev-card{background:#fff;border:2px solid #111;border-radius:3px;padding:28px 20px;text-align:center;}
+.ev-label{font-size:10px;font-weight:800;letter-spacing:.22em;color:var(--point-color,#111);text-transform:uppercase;margin:0 0 14px;}
+.ev-main{font-size:20px;font-weight:800;color:#111;line-height:1.35;margin:0 0 8px;}
+.ev-sub{font-size:14px;color:#555;font-weight:500;line-height:1.6;margin:0;}
+.ev-addr{font-size:12px;color:#888;font-weight:400;line-height:1.55;margin:6px 0 16px;}
+.ev-addr:empty{display:none;}
+.ev-map-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:2px;border:1.5px solid #111;background:transparent;color:#111;font-size:12px;font-weight:700;letter-spacing:.06em;text-decoration:none;transition:background .18s,color .18s;}
+.ev-map-btn:hover{background:#111;color:#f5f5f0;}
+.ev-map-btn[data-hidden]{display:none;}
+@media(max-width:768px){.ev-heading{font-size:45px;}.ev-section{padding:40px 16px 36px;}}
+@media(max-width:480px){.ev-card{padding:22px 16px;}.ev-main{font-size:17px;}.ev-heading{font-size:38px;margin-bottom:28px;}}
+.section-wrap{overflow-x:hidden;padding:48px 16px;background:#f5f5f0;}
+.ticket-box{max-width:750px;width:100%;margin:0 auto;background:#fff;border:2px solid #111;border-radius:3px;padding:40px 30px;text-align:center;}
+.tabwrapper{max-width:750px;width:100%;margin:0 auto;background:#fff;border:2px solid #111;border-radius:3px;padding:40px 50px;}
+.tabwrap-outer{padding:0;}
+@media(max-width:768px){.ticket-box,.tabwrapper{padding:36px 20px;}}
+.ticket-info{text-align:center;margin-bottom:36px;padding-bottom:28px;border-bottom:1.5px solid #e0e0e0;}
+.ticket-title{font-size:40px;font-weight:900;margin-bottom:18px;letter-spacing:.02em;color:#111;}
+.ticket-note{font-size:18px;color:#333;margin-bottom:24px;font-weight:700;}
+.ticket-info p:not(.ticket-title):not(.ticket-note){font-size:18px;color:#555;line-height:1.6;font-weight:600;}
+@media(max-width:768px){.ticket-title{font-size:30px;}.ticket-info{padding-bottom:12px;margin-bottom:16px;}}
+.ticketList{list-style:none;margin:0 auto;padding:0;display:flex;flex-direction:column;gap:12px;max-width:540px;}
+.ticket-type-label{list-style:none;display:flex;align-items:center;gap:12px;padding:18px 0 8px;font-size:12px;font-weight:800;color:var(--point-color,#111);letter-spacing:.16em;}
+.ticket-type-label::after{content:"";flex:1;height:1.5px;background:#ddd;}
+.ticket-type-label:first-child{padding-top:0;}
+.ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto auto;column-gap:16px;align-items:center;padding:18px 32px;border-radius:3px;background:transparent;color:#111;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;border:2px solid #111;transition:background .18s,color .18s;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+.ticketBtn:hover{background:#111;color:#f5f5f0;}
+.ticketType{grid-column:1/span 2;grid-row:1;text-align:left;font-size:15px;font-weight:800;letter-spacing:.08em;padding-bottom:7px;border-bottom:1px solid rgba(0,0,0,.1);}
+.ticketDay{grid-column:1;grid-row:2;text-align:left;font-size:18px;font-weight:800;padding-top:8px;}
+.ticketDate{grid-column:1;grid-row:3;text-align:left;font-size:14px;font-weight:600;color:#666;}
+.ticketPrice{grid-column:2;grid-row:2/span 2;justify-self:end;align-self:center;font-size:22px;white-space:nowrap;}
+.ticketBtn::after{content:"";grid-column:3;grid-row:2/span 2;justify-self:end;align-self:center;width:10px;height:10px;border-top:2px solid #111;border-right:2px solid #111;transform:rotate(45deg);transition:border-color .18s;}
+.ticketBtn:hover::after{border-color:#f5f5f0;}
+.ticketBtn.is-disabled{pointer-events:none;opacity:.4;}
+.ticketBtn.is-disabled::before{content:"";position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(245,245,240,.7);color:#111;font-weight:900;letter-spacing:.14em;font-size:18px;}
+.ticketBtn.st-uketsuke-yotei::before{content:"受付予定";}
+.ticketBtn.st-hanbai-shuryo::before{content:"販売終了";}
+.ticketBtn.st-soldout::before{content:"SOLD OUT";}
+@media(max-width:768px){.ticketBtn{grid-template-columns:1fr 18px;grid-template-rows:auto auto auto auto;padding:14px 18px;}.ticketType{grid-column:1/span 2;grid-row:1;font-size:10px;padding-bottom:5px;}.ticketDay{grid-column:1;grid-row:2;font-size:16px;padding-top:6px;}.ticketDate{grid-column:1;grid-row:3;font-size:13px;}.ticketPrice{grid-column:1;grid-row:4;justify-self:start;font-size:22px;margin-top:10px;}.ticketBtn::after{grid-column:2;grid-row:2/span 3;}}
+.ticket-notice{list-style:none;padding:0;margin:24px auto;max-width:540px;font-size:14px;text-align:left;font-weight:700;color:#444;}
+.ticket-notice li{position:relative;padding-left:1.2em;line-height:1.6;margin-bottom:6px;}
+.ticket-notice li::before{content:"※";position:absolute;left:0;top:0;color:var(--point-color,#111);}
+.lineup-section{text-align:center;padding:0 16px 20px;background:#f5f5f0;}
+.lineup-section img{max-width:100%;height:auto;}
+.infotabs{position:relative;}
+.infotab__input{position:absolute;opacity:0;pointer-events:none;}
+.infotab__nav{display:flex;flex-wrap:wrap;gap:0;margin-bottom:28px;border-bottom:2px solid #111;}
+.infotab__label{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-bottom:3px solid transparent;margin-bottom:-2px;color:#888;font-size:16px;font-weight:700;cursor:pointer;transition:color .15s,border-color .15s;}
+#tab1:checked ~ .infotab__nav label[for="tab1"],#tab2:checked ~ .infotab__nav label[for="tab2"],#tab3:checked ~ .infotab__nav label[for="tab3"],#tab4:checked ~ .infotab__nav label[for="tab4"],#tab5:checked ~ .infotab__nav label[for="tab5"],#tab6:checked ~ .infotab__nav label[for="tab6"]{color:#111;border-bottom-color:var(--point-color,#111);}
+.infotab__content{display:none;font-size:15px;line-height:1.7;color:#333;}
+#tab1:checked ~ .infotab__panels .panel1{display:block;}
+#tab2:checked ~ .infotab__panels .panel2{display:block;}
+#tab3:checked ~ .infotab__panels .panel3{display:block;}
+#tab4:checked ~ .infotab__panels .panel4{display:block;}
+#tab5:checked ~ .infotab__panels .panel5{display:block;}
+#tab6:checked ~ .infotab__panels .panel6{display:block;}
+.oshirase{font-size:14px;text-align:left;word-break:break-word;padding-top:24px;font-weight:450;}
+.oshirase dl{margin:0;}
+.oshirase dd{margin:0;padding:7px 0;color:#444;}
+.oshirase dt{position:relative;padding-top:28px;padding-left:18px;font-weight:700;color:#111;}
+.oshirase dt::before{content:"■";position:absolute;left:0;top:28px;color:var(--point-color,#111);}
+.oshirase .list{text-indent:-14px;padding-left:14px;}
+.oshirase .list::before{content:"●";font-size:5px;margin-right:7px;color:var(--point-color,#111);vertical-align:middle;}
+.oshirase .list_star{text-indent:-14px;padding-left:14px;}
+.oshirase .list_star::before{content:"＊";font-size:13px;margin-right:7px;color:var(--point-color,#111);vertical-align:middle;}
+.oshirase .list_important{text-indent:-14px;padding-left:14px;}
+.oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:var(--point-color,#111);vertical-align:middle;}
+@media(max-width:768px){.tabwrapper{padding:28px 16px;}.infotab__label{font-size:13px;padding:10px 14px;}}`;
+
+// ─── TICKET CSS T4 (Gradient Pop) ──────────────────────────────────────────
+const TICKET_CSS_T4 = `html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+#AN2026,#AN2026 *{box-sizing:border-box;font-family:"Murecho",sans-serif;}
+#AN2026{background:linear-gradient(135deg,#1a0533 0%,#2d1b69 50%,#0f3460 100%);color:#fff;min-height:100vh;}
+.item_wrap{border-bottom:1px solid transparent;}
+.bd_glr_spc:after{background:transparent;}
+.no-mark::before{content:none!important;}
+@media screen and (min-width:768px){#content,#wrap{background:linear-gradient(135deg,#1a0533 0%,#2d1b69 50%,#0f3460 100%);}}
+@media screen and (max-width:767px){#content,#wrap{background:linear-gradient(135deg,#1a0533 0%,#2d1b69 50%,#0f3460 100%);}}
+.an-hero{position:relative;overflow:hidden;}
+.an-hero-kv{position:relative;width:100%;}
+.an-hero-kv img{width:100%;height:auto;display:block;max-height:82vh;object-fit:cover;}
+.an-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(26,5,51,.2) 0%,rgba(26,5,51,.65) 55%,rgba(26,5,51,.97) 100%);display:flex;align-items:flex-end;}
+.an-hero-inner{padding:40px 24px 52px;max-width:820px;margin:0 auto;width:100%;}
+.an-hero-no-poster{padding:90px 24px;text-align:center;background:transparent;}
+.an-hero-kicker{font-family:"Montserrat",sans-serif;font-size:11px;font-weight:800;letter-spacing:.3em;color:#ff6ebc;margin:0 0 16px;text-transform:uppercase;}
+.an-hero-title{font-family:"Montserrat",sans-serif;font-weight:900;font-size:38px;line-height:1.22;margin:0 0 22px;color:#fff;}
+.an-hero-no-poster .an-hero-title{text-align:center;}
+.an-hero-date{font-size:16px;font-weight:700;color:rgba(255,255,255,.88);margin:0 0 8px;}
+.an-hero-venue{font-size:14px;font-weight:500;color:rgba(255,255,255,.55);margin:0;}
+@media(max-width:600px){.an-hero-title{font-size:24px;}.an-hero-inner{padding:28px 16px 40px;}}
+.an-snav{position:sticky;top:0;z-index:200;background:rgba(26,5,51,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+.an-snav-inner{display:flex;align-items:center;justify-content:space-between;max-width:820px;margin:0 auto;padding:0 16px;}
+.an-snav-links{display:flex;}
+.an-snav-link{display:inline-flex;align-items:center;padding:14px 22px;color:rgba(255,255,255,.45);font-family:"Montserrat",sans-serif;font-weight:800;font-size:12px;letter-spacing:.2em;text-decoration:none;border-bottom:3px solid transparent;transition:color .2s,border-color .2s;}
+.an-snav-link.is-active{color:#fff;border-bottom-color:#ff6ebc;}
+.an-snav-cta{display:inline-block;padding:8px 24px;background:#ff6ebc;color:#1a0533;font-family:"Montserrat",sans-serif;font-weight:800;font-size:12px;letter-spacing:.06em;border-radius:4px;text-decoration:none;white-space:nowrap;}
+.an-snav-cta:hover{background:#ff88cc;color:#1a0533;}
+@media(max-width:480px){.an-snav-link{padding:12px 14px;font-size:11px;}.an-snav-cta{padding:7px 14px;font-size:11px;}}
+.an-lineup-section{padding:48px 16px 0;text-align:center;background:transparent;}
+.an-lineup-section img{max-width:100%;height:auto;display:block;margin:0 auto;}
+.an-lineup-kicker{font-family:"Montserrat",sans-serif;font-size:11px;font-weight:800;letter-spacing:.3em;color:#ff6ebc;margin:0 0 24px;text-transform:uppercase;}
+.an-section-kicker{font-family:"Montserrat",sans-serif;font-size:11px;font-weight:800;letter-spacing:.3em;color:#ff6ebc;text-transform:uppercase;margin:0 0 10px;text-align:center;}
+.an-section-title{font-family:"Montserrat",sans-serif;font-weight:900;font-size:52px;margin:0 0 40px;text-align:center;color:#fff;line-height:1;}
+@media(max-width:600px){.an-section-title{font-size:36px;margin-bottom:28px;}}
+.an-tickets-section{padding:60px 16px;background:transparent;}
+.an-tickets-inner{max-width:780px;margin:0 auto;}
+.an-lottery-info{background:rgba(255,110,188,.08);border:1px solid rgba(255,110,188,.35);border-radius:14px;padding:30px 26px;margin-bottom:38px;}
+.an-lottery-row{display:flex;flex-wrap:wrap;gap:8px 0;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.08);align-items:baseline;}
+.an-lottery-row:last-child{border-bottom:none;padding-bottom:0;}
+.an-lottery-row:first-child{padding-top:0;}
+.an-lottery-label{font-size:11px;font-weight:800;letter-spacing:.12em;color:#ff6ebc;min-width:128px;flex-shrink:0;}
+.an-lottery-value{font-size:15px;font-weight:600;color:rgba(255,255,255,.88);flex:1;line-height:1.55;}
+@media(max-width:500px){.an-lottery-row{flex-direction:column;gap:5px;}.an-lottery-label{min-width:auto;}}
+.an-ticket-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px;}
+.an-ticketBtn{position:relative;display:grid;grid-template-columns:1fr auto 18px;grid-template-rows:auto auto auto;column-gap:16px;align-items:center;padding:18px 36px;border-radius:12px;background:rgba(255,255,255,.1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.22);color:#fff;text-decoration:none;font-weight:700;line-height:1.2;overflow:hidden;transition:background .18s,border-color .18s;}
+.an-ticketBtn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,110,188,.6);}
+.an-ticketType{grid-column:1/span 2;grid-row:1;text-align:left;font-size:15px;font-weight:800;letter-spacing:.08em;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,.15);}
+.an-ticketDay{grid-column:1;grid-row:2;text-align:left;font-size:17px;font-weight:800;padding-top:8px;color:#fff;}
+.an-ticketDate{grid-column:1;grid-row:3;text-align:left;font-size:13px;font-weight:600;color:rgba(255,255,255,.62);}
+.an-ticketPrice{grid-column:2;grid-row:2/span 2;justify-self:end;align-self:center;font-size:22px;white-space:nowrap;font-weight:900;color:#ff6ebc;}
+.an-ticketBtn::after{content:"";grid-column:3;grid-row:2/span 2;justify-self:end;align-self:center;width:10px;height:10px;border-top:2.5px solid rgba(255,255,255,.7);border-right:2.5px solid rgba(255,255,255,.7);transform:rotate(45deg);}
+.an-ticketBtn.is-disabled{pointer-events:none;opacity:.45;}
+.an-ticketBtn.is-disabled::before{content:"";position:absolute;inset:0;z-index:3;background:rgba(26,5,51,.55);display:grid;place-items:center;font-weight:900;letter-spacing:.12em;font-size:16px;color:#fff;}
+.an-ticketBtn.st-uketsuke-yotei::before{content:"受付予定";}
+.an-ticketBtn.st-hanbai-shuryo::before{content:"販売終了";}
+.an-ticketBtn.st-soldout::before{content:"SOLD OUT";}
+@media(max-width:600px){.an-ticketBtn{grid-template-columns:1fr 18px;grid-template-rows:auto auto auto auto;padding:14px 18px;}.an-ticketDay{font-size:15px;}.an-ticketPrice{grid-column:1;grid-row:4;justify-self:start;font-size:20px;margin-top:8px;}.an-ticketBtn::after{grid-column:2;grid-row:2/span 3;}}
+.an-ticket-notice{list-style:none;padding:0;margin:26px auto;font-size:13px;text-align:left;color:rgba(255,255,255,.48);}
+.an-ticket-notice li{position:relative;padding-left:1.3em;line-height:1.7;margin-bottom:5px;}
+.an-ticket-notice li::before{content:"※";position:absolute;left:0;top:0;}
+.an-sched-section{padding:56px 16px;background:rgba(255,255,255,.03);}
+.an-sched-inner{max-width:780px;margin:0 auto;}
+.an-sched-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;}
+.an-sched-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,110,188,.22);border-radius:12px;padding:24px 18px;text-align:center;}
+.an-sched-label{font-size:10px;font-weight:800;letter-spacing:.22em;color:#ff6ebc;text-transform:uppercase;margin:0 0 12px;}
+.an-sched-main{font-size:18px;font-weight:800;color:#fff;line-height:1.35;margin:0 0 6px;}
+.an-sched-sub{font-size:13px;color:rgba(255,255,255,.52);font-weight:500;margin:0;}
+.an-sched-addr{font-size:11px;color:rgba(255,255,255,.38);margin:6px 0 14px;line-height:1.55;}
+.an-sched-addr:empty{display:none;}
+.an-map-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:6px;border:1px solid rgba(255,110,188,.3);background:rgba(255,110,188,.08);color:rgba(255,255,255,.65);font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.05em;}
+.an-map-btn:hover{background:rgba(255,110,188,.2);}
+.an-map-btn[data-hidden]{display:none;}
+@media(max-width:600px){.an-sched-main{font-size:16px;}.an-sched-section{padding:40px 16px;}}
+.an-notice-section{padding:56px 16px 72px;background:transparent;}
+.an-notice-inner{max-width:780px;margin:0 auto;}
+.an-tabwrap{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:40px;}
+@media(max-width:600px){.an-tabwrap{padding:28px 18px;}}
+.an-infotabs{position:relative;}
+.an-infotab__input{position:absolute;opacity:0;pointer-events:none;}
+.an-infotab__nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+.an-infotab__label{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:6px;border:1px solid rgba(255,110,188,.38);color:rgba(255,110,188,.7);font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;}
+#ant1:checked ~ .an-infotab__nav label[for="ant1"],#ant2:checked ~ .an-infotab__nav label[for="ant2"],#ant3:checked ~ .an-infotab__nav label[for="ant3"],#ant4:checked ~ .an-infotab__nav label[for="ant4"],#ant5:checked ~ .an-infotab__nav label[for="ant5"],#ant6:checked ~ .an-infotab__nav label[for="ant6"]{background:#ff6ebc;border-color:#ff6ebc;color:#1a0533;}
+.an-infotab__content{display:none;font-size:14px;line-height:1.78;color:rgba(255,255,255,.72);}
+#ant1:checked ~ .an-infotab__panels .antpanel1{display:block;}
+#ant2:checked ~ .an-infotab__panels .antpanel2{display:block;}
+#ant3:checked ~ .an-infotab__panels .antpanel3{display:block;}
+#ant4:checked ~ .an-infotab__panels .antpanel4{display:block;}
+#ant5:checked ~ .an-infotab__panels .antpanel5{display:block;}
+#ant6:checked ~ .an-infotab__panels .antpanel6{display:block;}
+.an-oshirase dl{margin:0;}
+.an-oshirase dd{margin:0;padding:6px 0;}
+.an-oshirase dt{position:relative;padding-top:28px;padding-left:18px;font-weight:700;color:#fff;}
+.an-oshirase dt::before{content:"■";position:absolute;left:0;top:28px;color:#ff6ebc;}
+.an-oshirase .list{text-indent:-14px;padding-left:14px;}
+.an-oshirase .list::before{content:"●";font-size:5px;margin-right:7px;color:#ff6ebc;vertical-align:middle;}
+.an-oshirase .list_star{text-indent:-14px;padding-left:14px;}
+.an-oshirase .list_star::before{content:"＊";font-size:13px;margin-right:7px;color:#ff6ebc;vertical-align:middle;}
+.an-oshirase .list_important{text-indent:-14px;padding-left:14px;}
+.an-oshirase .list_important::before{content:"※";font-size:14px;margin-right:7px;color:#ff6ebc;vertical-align:middle;}
+@media(max-width:600px){.an-infotab__label{font-size:12px;padding:8px 14px;}.an-infotab__nav{gap:6px;}}`;
+
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 const JP_FONT_OPTIONS = [
   {key:'Noto Sans JP', url:'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap'},
@@ -512,7 +710,7 @@ const UI_TEXT = {
 
 // ─── STATE ──────────────────────────────────────────────────────────────────
 const state = {
-  uiLang:'ko', isLottery:false, useT2:false,
+  uiLang:'ko', isLottery:false, useT2:false, tplVariant:'t1',
   tplData:null, pickedBtn:'#8da0a7', pickedPt:'#8da0a7',
   posterDataUrl:null, genHtml:null, genData:null,
   selectedFontIdx:0, editMode:false, previewMode:'desktop',
@@ -865,7 +1063,7 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
 }
 
 // ─── generateHtmlT2 ─────────────────────────────────────────────────────────
-function generateHtmlT2(data, origData, lang='ja'){
+function generateHtmlT2(data, origData, lang='ja', _css=null, _bodyBg=null){
   const lbl=LANG_LABELS[lang]||LANG_LABELS.ja;
   const g=k=>String(data[k]||'').trim();
   const og=k=>String(origData[k]||'').trim();
@@ -941,8 +1139,17 @@ function generateHtmlT2(data, origData, lang='ja'){
 
   const scrollJs=`<script>\n(function(){\nvar links=document.querySelectorAll(".an-snav-link");\nvar ids=["ant-tickets","ant-notice"];\nvar sections=ids.map(function(id){return document.getElementById(id);}).filter(Boolean);\nlinks.forEach(function(link){\nlink.addEventListener("click",function(e){\ne.preventDefault();\nvar target=document.getElementById(link.dataset.target);\nif(target){var navH=document.getElementById("an-sticky-nav").offsetHeight;var top=target.getBoundingClientRect().top+window.scrollY-navH-8;window.scrollTo({top:top,behavior:"smooth"});}\n});\n});\nfunction updateActive(){var navH=document.getElementById("an-sticky-nav").offsetHeight;var scrollY=window.scrollY+navH+60;var current=sections[0]?sections[0].id:"";sections.forEach(function(s){if(s.getBoundingClientRect().top+window.scrollY<=scrollY)current=s.id;});links.forEach(function(link){link.classList.toggle("is-active",link.dataset.target===current);});}\nwindow.addEventListener("scroll",updateActive,{passive:true});\nupdateActive();\n})();\n<\/script>\n`;
 
-  const html=`<!DOCTYPE html>\n<html lang="ja">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>${esc(title)}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Murecho:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="https://dp.image-qoo10.jp/dp2016/JP/design/JPPM/fullEvent.css">\n<style>\n${TICKET_CSS_T2}\n</style>\n</head>\n<body style="margin:0;padding:0;background:#0b1d40;">\n<div id="AN2026">\n${heroHtml}\n<nav class="an-snav" id="an-sticky-nav"><div class="an-snav-inner"><div class="an-snav-links"><a class="an-snav-link is-active" href="#ant-tickets" data-target="ant-tickets">TICKET</a><a class="an-snav-link" href="#ant-notice" data-target="ant-notice">NOTICE</a></div><a class="an-snav-cta" href="#ant-tickets">チケット購入はこちら</a></div></nav>\n${lineupHtml}\n${ticketsSec}\n${schedSec}\n${noticeSec}\n</div>\n${scrollJs}</body>\n</html>\n`;
+  const html=`<!DOCTYPE html>\n<html lang="ja">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>${esc(title)}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Murecho:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="https://dp.image-qoo10.jp/dp2016/JP/design/JPPM/fullEvent.css">\n<style>\n${_css||TICKET_CSS_T2}\n</style>\n</head>\n<body style="margin:0;padding:0;background:${_bodyBg||'#0b1d40'};">\n<div id="AN2026">\n${heroHtml}\n<nav class="an-snav" id="an-sticky-nav"><div class="an-snav-inner"><div class="an-snav-links"><a class="an-snav-link is-active" href="#ant-tickets" data-target="ant-tickets">TICKET</a><a class="an-snav-link" href="#ant-notice" data-target="ant-notice">NOTICE</a></div><a class="an-snav-cta" href="#ant-tickets">チケット購入はこちら</a></div></nav>\n${lineupHtml}\n${ticketsSec}\n${schedSec}\n${noticeSec}\n</div>\n${scrollJs}</body>\n</html>\n`;
   return[html,[]];
+}
+
+function generateHtmlT3(data, origData, lang='ja'){
+  const lightOrig=Object.assign({},origData,{'背景色':'#f5f5f0'});
+  return generateHtmlT1(data,lightOrig,TICKET_CSS_T3,lang);
+}
+
+function generateHtmlT4(data, origData, lang='ja'){
+  return generateHtmlT2(data,origData,lang,TICKET_CSS_T4,'#1a0533');
 }
 
 // ─── applyFont / blockLinks ──────────────────────────────────────────────────
@@ -1324,7 +1531,8 @@ function setLang(lang){
 
 function onTypeChange(){
   state.isLottery=document.getElementById('radio-lottery').checked;
-  document.getElementById('lottery-tpl-row').className=state.isLottery?'':'hidden';
+  document.getElementById('instant-tpl-options').className='radio-group'+(state.isLottery?' hidden':'');
+  document.getElementById('lottery-tpl-options').className='radio-group'+(state.isLottery?'':' hidden');
 }
 
 function downloadTemplate(){
@@ -1422,6 +1630,17 @@ async function extractFromUrl(){
   }catch(e){alert(t('c_fail')+' (CORS)');}
 }
 
+function getVariant(){
+  if(state.isLottery)return document.querySelector('input[name="ltpl"]:checked')?.value||'t2';
+  return document.querySelector('input[name="itpl"]:checked')?.value||'t1';
+}
+function callGenerator(merged,variant){
+  if(variant==='t2')return generateHtmlT2(merged,merged,'ja');
+  if(variant==='t3')return generateHtmlT3(merged,merged,'ja');
+  if(variant==='t4')return generateHtmlT4(merged,merged,'ja');
+  return generateHtmlT1(merged,merged,TICKET_CSS,'ja');
+}
+
 function generateHtml(){
   if(!state.tplData){alert('엑셀을 먼저 업로드하세요');return;}
   const merged=Object.assign({},state.tplData);
@@ -1429,10 +1648,9 @@ function generateHtml(){
   merged['ポイントカラー']=state.pickedPt;
   if(state.posterDataUrl)merged['ポスターURL']=state.posterDataUrl;
 
-  state.useT2=document.querySelector('input[name="ltpl"]:checked')?.value==='t2'&&state.isLottery;
-  let result;
-  if(state.useT2)result=generateHtmlT2(merged,merged,'ja');
-  else result=generateHtmlT1(merged,merged,TICKET_CSS,'ja');
+  state.tplVariant=getVariant();
+  state.useT2=(state.tplVariant==='t2'||state.tplVariant==='t4');
+  const result=callGenerator(merged,state.tplVariant);
   const[html,errors]=result;
   const errEl=document.getElementById('gen-error');
   if(errors.length){errEl.innerHTML=errors.map(e=>`<div class="msg-error">⚠ ${e}</div>`).join('');errEl.className='';return;}
@@ -1470,14 +1688,9 @@ function onFontChange(){
   if(!state.genHtml)return;
   const idx=parseInt(document.getElementById('font-select').value)||0;
   const fontKey=JP_FONT_OPTIONS[idx].key;
-  // regenerate with new font
   const merged=state.genData;
   if(!merged)return;
-  state.useT2=state.useT2||false;
-  let result;
-  if(state.useT2)result=generateHtmlT2(merged,merged,'ja');
-  else result=generateHtmlT1(merged,merged,TICKET_CSS,'ja');
-  const[html]=result;
+  const[html]=callGenerator(merged,state.tplVariant||'t1');
   state.genHtml=applyFont(html,fontKey);
   document.getElementById('src-area').value=state.genHtml;
   updatePreviewFrame();
