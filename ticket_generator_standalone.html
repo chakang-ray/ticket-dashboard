@@ -770,11 +770,12 @@ function makeTemplate(isLottery) {
     rows.push(['','','']);
   }
   rows.push(
-    ['【⑦ お問い合わせ（タブ1末尾に自動挿入）】','',''],
+    ['【⑦ お問い合わせ】','',''],
     ['問合せ_チケットURL','https://www.qoo10.jp/gmkt.inc/CS/NHelpContactUs.aspx',''],
     ['問合せ_電子チケットURL','https://www.qoo10.jp/gmkt.inc/Special/Special.aspx?sid=354258','なければ空白'],
     ['問合せ_公演会社名','（株）○○',''],
     ['問合せ_公演電話','○○-○○○○-○○○○（平日11:00～15:00）',''],
+    ['問合せ_メールアドレス','','メールアドレス（任意）'],
     ['問合せ_公演タイトル','','空白の場合はタイトル欄を使用'],
   );
   rows.push(
@@ -880,6 +881,7 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
   const cEticket=og('問合せ_電子チケットURL');
   const cName=g('問合せ_公演会社名');
   const cPhone=g('問合せ_公演電話');
+  const cEmail=g('問合せ_メールアドレス');
   const cTitle=g('問合せ_公演タイトル')||g('タイトル').replace(/\\n/g,' ');
 
   const errors=[];
@@ -919,7 +921,7 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
   let contact='';
   if(cEticket)contact+=`\n<dd class="list_none"><span style="background-color:#fff59d;">${lbl.l_eticket}</span></dd>\n<dd class="list_none">▶<a href="${escAttr(cEticket)}" target="_blank">${cEticket}</a></dd>`;
   if(cTicket){const idNote=lbl.l_id_note.replace('{title}',cTitle);contact+=`\n<dd class="list_none"><span style="background-color:#fff59d;">${lbl.l_purchase}</span></dd>\n<dd class="list_none">${lbl.l_form}<br><a href="${escAttr(cTicket)}" target="_blank">▶${cTicket}</a></dd>\n<dd class="list_none">${lbl.l_category}</dd>\n<dd class="list_none">${idNote}</dd>`;}
-  if(cName||cPhone){const ph=cPhone?`<br>▶${cPhone}`:'';contact+=`\n<dd class="list_none"><span style="background-color:#fff59d;">${lbl.l_event}</span></dd>\n<dd class="list_none">▶${cName}${ph}</dd>`;}
+  if(cName||cPhone||cEmail){const ph=cPhone?`<br>▶${cPhone}`:'';const em=cEmail?`<br>▶<a href="mailto:${escAttr(cEmail)}">${cEmail}</a>`:'';contact+=`\n<dd class="list_none"><span style="background-color:#fff59d;">${lbl.l_event}</span></dd>\n<dd class="list_none">▶${cName}${ph}${em}</dd>`;}
 
   // Tabs
   const tabInputs=tabs.map((t,i)=>`<input type="radio" id="tab${i+1}" name="tab" class="infotab__input"${i===0?' checked':''}>`).join('\n');
