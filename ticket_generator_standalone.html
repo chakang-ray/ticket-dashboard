@@ -778,11 +778,12 @@ function makeTemplate(isLottery) {
     ['問合せ_公演タイトル','','空白の場合はタイトル欄を使用'],
   );
   rows.push(
-    ['【⑧ SNS リンク】','','空白の場合は非表示'],
-    ['SNS_X','','X（旧Twitter）のURL'],
+    ['【⑧ 公式ページ・SNS】','','空白の場合は非表示'],
+    ['公式ページ','','公式ホームページのURL'],
+    ['SNS_X(twitter)','','X（旧Twitter）のURL'],
     ['SNS_TikTok','','TikTokのURL'],
     ['SNS_Instagram','','InstagramのURL'],
-    ['SNS_YouTube','','YouTubeチャンネルURL'],
+    ['SNS_Youtube','','YouTubeチャンネルURL'],
   );
   const ws=XLSX.utils.aoa_to_sheet(rows);
   ws['!cols']=[{wch:26},{wch:68},{wch:42}];
@@ -796,10 +797,11 @@ function makeTemplate(isLottery) {
 function buildSocialFooter(data){
   const og=k=>String(data[k]||'').trim();
   const sns=[
-    {key:'SNS_X',       label:'X',         icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/ENT/X.png'},
-    {key:'SNS_TikTok',  label:'TikTok',    icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/ENT/TikTok.png'},
-    {key:'SNS_Instagram',label:'Instagram',icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/ENT/Insta.png'},
-    {key:'SNS_YouTube', label:'YouTube',   icon:null},
+    {key:'公式ページ',       label:'公式ページ',  icon:null},
+    {key:'SNS_X(twitter)', label:'X',         icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/ENT/X.png'},
+    {key:'SNS_TikTok',     label:'TikTok',    icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/ENT/TikTok.png'},
+    {key:'SNS_Instagram',  label:'Instagram', icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/ENT/Insta.png'},
+    {key:'SNS_Youtube',    label:'YouTube',   icon:null},
   ];
   const items=sns.filter(s=>og(s.key));
   if(!items.length)return'';
