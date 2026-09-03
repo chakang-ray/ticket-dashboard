@@ -358,7 +358,11 @@ const TICKET_CSS = `html,body,#special{-webkit-text-size-adjust:100%;text-size-a
 .social-icon--yt{display:block;width:44px;height:44px;border-radius:10px;background:#ff0000;position:relative;}
 .social-icon--yt::before{content:"";position:absolute;top:50%;left:55%;transform:translate(-50%,-50%);border-style:solid;border-width:8px 0 8px 16px;border-color:transparent transparent transparent #fff;}
 .social-label{display:block;line-height:1.3;}
-@media(max-width:480px){.social-list{gap:18px;}.social-icon,.social-icon--yt{width:38px;height:38px;}}`;
+@media(max-width:480px){.social-list{gap:18px;}.social-icon,.social-icon--yt,.social-icon--x,.social-icon--tt,.social-icon--ig,.social-icon--web{width:38px;height:38px;}}
+.social-icon--x{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:#000;}
+.social-icon--tt{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:#010101;}
+.social-icon--ig{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285AEB 90%);}
+.social-icon--web{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:#333;}`;
 
 // ─── TICKET CSS T2 ─────────────────────────────────────────────────────────
 const TICKET_CSS_T2 = `html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
@@ -470,7 +474,11 @@ const TICKET_CSS_T2 = `html,body{-webkit-text-size-adjust:100%;text-size-adjust:
 .social-icon--yt{display:block;width:44px;height:44px;border-radius:10px;background:#ff0000;position:relative;}
 .social-icon--yt::before{content:"";position:absolute;top:50%;left:55%;transform:translate(-50%,-50%);border-style:solid;border-width:8px 0 8px 16px;border-color:transparent transparent transparent #fff;}
 .social-label{display:block;line-height:1.3;}
-@media(max-width:480px){.social-list{gap:18px;}.social-icon,.social-icon--yt{width:38px;height:38px;}}`;
+@media(max-width:480px){.social-list{gap:18px;}.social-icon,.social-icon--yt,.social-icon--x,.social-icon--tt,.social-icon--ig,.social-icon--web{width:38px;height:38px;}}
+.social-icon--x{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:#000;}
+.social-icon--tt{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:#010101;}
+.social-icon--ig{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285AEB 90%);}
+.social-icon--web{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:#333;}`;
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 const JP_FONT_OPTIONS = [
@@ -806,17 +814,17 @@ function buildSocialFooter(data){
   const og=k=>String(data[k]||'').trim();
   const sns=[
     {key:'公式ページ',       label:'公式ページ',  icon:null},
-    {key:'SNS_X(twitter)', label:'X',         icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/ENT/X.png'},
-    {key:'SNS_TikTok',     label:'TikTok',    icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/ENT/TikTok.png'},
-    {key:'SNS_Instagram',  label:'Instagram', icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/ENT/Insta.png'},
-    {key:'SNS_Youtube',    label:'YouTube',   icon:null},
+    {key:'SNS_X(twitter)', label:'X',         icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/SNSfooter/X.png'},
+    {key:'SNS_TikTok',     label:'TikTok',    icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/SNSfooter/TikTok.png'},
+    {key:'SNS_Instagram',  label:'Instagram', icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/SNSfooter/instagram.png'},
+    {key:'SNS_Youtube',    label:'YouTube',   icon:'https://dp.image-qoo10.jp/dp2016/JP/design/event/SNSfooter/youtube.png'},
   ];
   const items=sns.filter(s=>og(s.key));
   if(!items.length)return'';
   const lis=items.map(s=>{
     const iconHtml=s.icon
       ?`<img class="social-icon" src="${escAttr(s.icon)}" alt="" aria-hidden="true">`
-      :`<span class="social-icon--yt" aria-hidden="true"></span>`;
+      :`<span class="social-icon--web" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></span>`;
     return`<li><a class="social-link" href="${escAttr(og(s.key))}" target="_blank" rel="noopener">${iconHtml}<span class="social-label">${s.label}</span></a></li>`;
   }).join('\n');
   return`\n<nav class="social-footer" aria-label="SNS">\n<ul class="social-list">\n${lis}\n</ul>\n</nav>\n`;
