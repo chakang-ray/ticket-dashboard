@@ -109,6 +109,20 @@ tbody td{padding:10px 14px;vertical-align:middle;}
 .empty-state{text-align:center;padding:60px 20px;color:var(--text-sub);}
 .empty-state .icon{font-size:40px;margin-bottom:12px;}
 
+/* ── Password Gate ── */
+.pw-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:16px;}
+.pw-gate .lock-icon{font-size:48px;margin-bottom:8px;}
+.pw-gate h3{font-size:16px;font-weight:700;color:var(--text);}
+.pw-gate p{font-size:13px;color:var(--text-sub);}
+.pw-row{display:flex;gap:8px;margin-top:4px;}
+.pw-row input{padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;letter-spacing:.1em;width:200px;}
+.pw-row input:focus{border-color:var(--accent);}
+.pw-row input.error{border-color:var(--red);animation:shake .3s;}
+.pw-submit{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+.pw-submit:hover{opacity:.85;}
+.pw-error{font-size:12px;color:var(--red);height:16px;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
 @media(max-width:640px){
   .header{padding:20px 16px 0;}
   .tabs{padding:0 16px;}
@@ -173,6 +187,21 @@ tbody td{padding:10px 14px;vertical-align:middle;}
 
   <!-- ══ PANEL 2: 공연 실적 ══ -->
   <div class="panel" id="panel-history">
+
+    <!-- 비밀번호 게이트 -->
+    <div class="pw-gate" id="pw-gate">
+      <div class="lock-icon">🔒</div>
+      <h3>비밀번호를 입력하세요</h3>
+      <p>이 탭은 내부 관계자만 열람할 수 있습니다.</p>
+      <div class="pw-row">
+        <input type="password" id="pw-input" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkPw()">
+        <button class="pw-submit" onclick="checkPw()">확인</button>
+      </div>
+      <div class="pw-error" id="pw-error"></div>
+    </div>
+
+    <!-- 실적 본문 (인증 후 표시) -->
+    <div id="history-content" style="display:none;">
     <div class="setup-banner" id="setup-banner">
       <h3>⚙️ Google Sheets 연동 설정</h3>
       <ol class="setup-steps">
@@ -241,6 +270,7 @@ tbody td{padding:10px 14px;vertical-align:middle;}
       <div class="icon">📋</div>
       <div>검색 결과가 없습니다.</div>
     </div>
+    </div><!-- /history-content -->
   </div>
 
 </div>
@@ -339,6 +369,29 @@ const VENUES = [
   {name_jp:"上野の森美術館",name_kr:"우에노노모리 미술관",city:"東京都台東区",capacity_seated:null,capacity_standing:1000,category:"홀",website:"https://www.ueno-mori.org"}
 ];
 
+// ─── Password ─────────────────────────────────────────────────────────────────
+const HISTORY_PW = 'ebay2026';
+
+function checkPw() {
+  const input = document.getElementById('pw-input');
+  const err = document.getElementById('pw-error');
+  if (input.value === HISTORY_PW) {
+    sessionStorage.setItem('historyAuth', '1');
+    document.getElementById('pw-gate').style.display = 'none';
+    document.getElementById('history-content').style.display = 'block';
+    if (sheetUrl) loadSheet(sheetUrl);
+  } else {
+    err.textContent = '비밀번호가 올바르지 않습니다.';
+    input.classList.add('error');
+    input.value = '';
+    setTimeout(() => { input.classList.remove('error'); err.textContent = ''; }, 1500);
+  }
+}
+
+function isHistoryAuthed() {
+  return sessionStorage.getItem('historyAuth') === '1';
+}
+
 // ─── State ────────────────────────────────────────────────────────────────────
 let venueSortKey = 'cap_max';
 let venueSortAsc = false;
@@ -355,10 +408,10 @@ function init() {
   document.getElementById('venue-count-badge').textContent = VENUES.length + '개 공연장 수록';
   renderVenues();
 
-  // restore sheet URL
+  // restore sheet URL (인증된 세션에서만 자동 로드)
   if (sheetUrl) {
     document.getElementById('sheet-url-input').value = sheetUrl;
-    loadSheet(sheetUrl);
+    if (isHistoryAuthed()) loadSheet(sheetUrl);
   }
 }
 
@@ -423,6 +476,10 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='venues')||(i===1&&tab==='history')));
   document.getElementById('panel-venues').classList.toggle('active', tab === 'venues');
   document.getElementById('panel-history').classList.toggle('active', tab === 'history');
+  if (tab === 'history' && isHistoryAuthed()) {
+    document.getElementById('pw-gate').style.display = 'none';
+    document.getElementById('history-content').style.display = 'block';
+  }
 }
 
 // ─── Google Sheets ────────────────────────────────────────────────────────────
