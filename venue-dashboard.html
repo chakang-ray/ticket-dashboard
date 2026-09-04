@@ -72,6 +72,8 @@ tbody td{padding:10px 14px;vertical-align:middle;}
 .cat-아레나{background:rgba(74,222,128,.12);color:#86efac;}
 .cat-홀{background:rgba(250,204,21,.12);color:#fde68a;}
 .cat-라이브하우스{background:rgba(248,113,113,.12);color:#fca5a5;}
+.cat-야외·특설{background:rgba(52,211,153,.12);color:#6ee7b7;}
+.cat-해외{background:rgba(251,146,60,.12);color:#fdba74;}
 .link-btn{display:inline-flex;align-items:center;gap:4px;color:var(--accent);text-decoration:none;font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid rgba(108,142,245,.25);transition:background .15s;}
 .link-btn:hover{background:rgba(108,142,245,.1);}
 
@@ -143,6 +145,8 @@ tbody td{padding:10px 14px;vertical-align:middle;}
         <option value="아레나">아레나</option>
         <option value="홀">홀</option>
         <option value="라이브하우스">라이브하우스</option>
+        <option value="야외·특설">야외·특설</option>
+        <option value="해외">해외</option>
       </select>
       <select id="venue-region" onchange="renderVenues()">
         <option value="">전체 지역</option>
@@ -302,7 +306,25 @@ const VENUES = [
   {name_jp:"CLUB CITTA'",name_kr:"클럽 치타",city:"神奈川県川崎市",capacity_seated:null,capacity_standing:1300,category:"라이브하우스",website:"https://www.clubcitta.co.jp"},
   {name_jp:"DIAMOND HALL",name_kr:"다이아몬드 홀",city:"愛知県名古屋市",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.diamond-hall.com"},
   {name_jp:"LIQUIDROOM",name_kr:"리퀴드룸",city:"東京都渋谷区",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.liquidroom.net"},
-  {name_jp:"DRUM LOGOS",name_kr:"드럼 로고스",city:"福岡県福岡市",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.drum-logos.com"}
+  {name_jp:"DRUM LOGOS",name_kr:"드럼 로고스",city:"福岡県福岡市",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.drum-logos.com"},
+  // ── 추가 공연장 ──
+  {name_jp:"海の中道海浜公園",name_kr:"우미노나카미치 해변공원",city:"福岡県福岡市",capacity_seated:null,capacity_standing:50000,category:"야외·특설",website:"https://uminonakamichi.jp"},
+  {name_jp:"海の森公園",name_kr:"우미노모리 공원",city:"東京都江東区",capacity_seated:null,capacity_standing:30000,category:"야외·특설",website:"https://www.uminomori.metro.tokyo.lg.jp"},
+  {name_jp:"ハウステンボス パノラマビュー会場",name_kr:"하우스텐보스 파노라마뷰 회장",city:"長崎県佐世保市",capacity_seated:null,capacity_standing:30000,category:"야외·특설",website:"https://www.huistenbosch.co.jp"},
+  {name_jp:"飛行船シアター",name_kr:"히코센 시어터",city:"東京都渋谷区",capacity_seated:null,capacity_standing:800,category:"라이브하우스",website:"https://www.hikosen.info"},
+  {name_jp:"KINTEX EXHIBITION 1",name_kr:"킨텍스 전시홀 1",city:"경기도 고양시",capacity_seated:null,capacity_standing:8000,category:"해외",website:"https://www.kintex.com"},
+  {name_jp:"室町三井ホール＆カンファレンス",name_kr:"무로마치 미쓰이 홀",city:"東京都中央区",capacity_seated:620,capacity_standing:null,category:"홀",website:"https://www.mitsuifudosan.co.jp/coredo_muromachi/"},
+  {name_jp:"Kanadevia Hall（カナデビアホール）",name_kr:"카나데비아 홀",city:"大阪府大阪市",capacity_seated:2400,capacity_standing:null,category:"홀",website:"https://www.kanadevia-hall.jp"},
+  {name_jp:"新宿住友ビル 三角広場",name_kr:"신주쿠 스미토모빌 삼각광장",city:"東京都新宿区",capacity_seated:null,capacity_standing:2000,category:"야외·특설",website:"https://www.sumitomo-rd.co.jp/building/shinjuku/"},
+  {name_jp:"京王アリーナ TOKYO",name_kr:"게이오 아레나 도쿄",city:"東京都多摩市",capacity_seated:5000,capacity_standing:null,category:"아레나",website:"https://www.keio-arena-tokyo.jp"},
+  {name_jp:"立川ステージガーデン",name_kr:"타치카와 스테이지가든",city:"東京都立川市",capacity_seated:2001,capacity_standing:null,category:"홀",website:"https://tachikawa-stage-garden.jp"},
+  {name_jp:"第一生命ホール",name_kr:"다이이치생명 홀",city:"東京都中央区",capacity_seated:720,capacity_standing:null,category:"홀",website:"https://www.triton.or.jp/hall/"},
+  {name_jp:"釜山アシアド主競技場",name_kr:"부산 아시아드 주경기장",city:"부산광역시",capacity_seated:53787,capacity_standing:null,category:"해외",website:"https://www.bsports.or.kr"},
+  {name_jp:"Kai Tak Stadium",name_kr:"카이탁 스타디움",city:"九龍 (Hong Kong)",capacity_seated:50000,capacity_standing:null,category:"해외",website:"https://www.kaitakstadium.hk"},
+  {name_jp:"Inspire Arena",name_kr:"인스파이어 아레나",city:"인천광역시",capacity_seated:15000,capacity_standing:null,category:"해외",website:"https://www.inspirearena.co.kr"},
+  {name_jp:"秩父宮ラグビー場",name_kr:"치치부노미야 럭비장",city:"東京都港区",capacity_seated:24000,capacity_standing:null,category:"스타디움",website:"https://www.rugby-japan.jp/chichibu/"},
+  {name_jp:"お台場 a-nation 特設会場",name_kr:"오다이바 a-nation 특설회장",city:"東京都港区",capacity_seated:null,capacity_standing:20000,category:"야외·특설",website:"https://a-nation.net"},
+  {name_jp:"上野の森美術館",name_kr:"우에노노모리 미술관",city:"東京都台東区",capacity_seated:null,capacity_standing:1000,category:"홀",website:"https://www.ueno-mori.org"}
 ];
 
 // ─── State ────────────────────────────────────────────────────────────────────
