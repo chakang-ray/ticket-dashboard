@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>공연장 DB & 공연실적</title>
+<title>공연장 DB</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -23,22 +23,14 @@
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;font-size:14px;min-height:100vh;}
 
 /* ── Header ── */
-.header{padding:28px 32px 0;max-width:1400px;margin:0 auto;}
-.header-top{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+.header{padding:28px 32px 24px;max-width:1400px;margin:0 auto;}
+.header-top{display:flex;align-items:center;gap:16px;}
 .header-top h1{font-size:22px;font-weight:700;letter-spacing:-.02em;}
 .header-top h1 span{color:var(--accent);}
 .badge{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--surface2);color:var(--text-sub);border:1px solid var(--border);}
 
-/* ── Tabs ── */
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);max-width:1400px;margin:0 auto;padding:0 32px;}
-.tab-btn{padding:10px 20px;font-size:13px;font-weight:600;background:none;border:none;color:var(--text-sub);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;}
-.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
-.tab-btn:hover:not(.active){color:var(--text);}
-
-/* ── Tab Content ── */
-.tab-content{max-width:1400px;margin:0 auto;padding:24px 32px 48px;}
-.panel{display:none;}
-.panel.active{display:block;}
+/* ── Content ── */
+.tab-content{max-width:1400px;margin:0 auto;padding:0 32px 48px;}
 
 /* ── Controls Bar ── */
 .controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
@@ -78,55 +70,9 @@ tbody td{padding:10px 14px;vertical-align:middle;}
 .link-btn{display:inline-flex;align-items:center;gap:4px;color:var(--accent);text-decoration:none;font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid rgba(108,142,245,.25);transition:background .15s;}
 .link-btn:hover{background:rgba(108,142,245,.1);}
 
-/* ── Stats row ── */
-.stats-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;flex:1;min-width:120px;}
-.stat-label{font-size:11px;color:var(--text-sub);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;}
-.stat-value{font-size:22px;font-weight:700;}
-
-/* ── Setup Banner ── */
-.setup-banner{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:20px;}
-.setup-banner h3{font-size:15px;font-weight:700;margin-bottom:12px;color:var(--accent);}
-.setup-steps{list-style:none;counter-reset:step;}
-.setup-steps li{counter-increment:step;display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;font-size:13px;color:var(--text-sub);}
-.setup-steps li::before{content:counter(step);min-width:22px;height:22px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:1px;}
-.setup-steps code{background:var(--surface2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:var(--text);}
-.url-input-row{display:flex;gap:8px;margin-top:8px;}
-.url-input-row input{flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:monospace;outline:none;}
-.url-input-row input:focus{border-color:var(--accent);}
-.btn-apply{padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
-.btn-apply:hover{opacity:.85;}
-.sheet-cols{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
-.col-chip{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--text-sub);}
-.col-chip strong{color:var(--text);}
-
-/* ── Sell-through rate colors ── */
-.rate-high{color:var(--green);font-weight:700;}
-.rate-mid{color:var(--yellow);font-weight:700;}
-.rate-low{color:var(--red);font-weight:700;}
-
-/* ── Empty state ── */
-.empty-state{text-align:center;padding:60px 20px;color:var(--text-sub);}
-.empty-state .icon{font-size:40px;margin-bottom:12px;}
-
-/* ── Password Gate ── */
-.pw-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:16px;}
-.pw-gate .lock-icon{font-size:48px;margin-bottom:8px;}
-.pw-gate h3{font-size:16px;font-weight:700;color:var(--text);}
-.pw-gate p{font-size:13px;color:var(--text-sub);}
-.pw-row{display:flex;gap:8px;margin-top:4px;}
-.pw-row input{padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;letter-spacing:.1em;width:200px;}
-.pw-row input:focus{border-color:var(--accent);}
-.pw-row input.error{border-color:var(--red);animation:shake .3s;}
-.pw-submit{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
-.pw-submit:hover{opacity:.85;}
-.pw-error{font-size:12px;color:var(--red);height:16px;}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-
 @media(max-width:640px){
-  .header{padding:20px 16px 0;}
-  .tabs{padding:0 16px;}
-  .tab-content{padding:16px 16px 40px;}
+  .header{padding:20px 16px 16px;}
+  .tab-content{padding:0 16px 40px;}
 }
 </style>
 </head>
@@ -134,149 +80,51 @@ tbody td{padding:10px 14px;vertical-align:middle;}
 
 <div class="header">
   <div class="header-top">
-    <h1>🎵 공연장 <span>DB</span> & 공연실적</h1>
+    <h1>🎵 공연장 <span>DB</span></h1>
     <span class="badge" id="venue-count-badge">로딩 중...</span>
   </div>
 </div>
 
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('venues')">🏟 공연장 DB</button>
-  <button class="tab-btn" onclick="switchTab('history')">📊 공연 실적</button>
-</div>
-
 <div class="tab-content">
-
-  <!-- ══ PANEL 1: 공연장 DB ══ -->
-  <div class="panel active" id="panel-venues">
-    <div class="controls">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="venue-search" placeholder="공연장명 검색 (일본어·한국어·지역)" oninput="renderVenues()">
-      </div>
-      <select id="venue-cat" onchange="renderVenues()">
-        <option value="">전체 카테고리</option>
-        <option value="돔">돔</option>
-        <option value="스타디움">스타디움</option>
-        <option value="아레나">아레나</option>
-        <option value="홀">홀</option>
-        <option value="라이브하우스">라이브하우스</option>
-        <option value="야외·특설">야외·특설</option>
-        <option value="한국">한국</option>
-        <option value="해외">해외</option>
-      </select>
-      <select id="venue-region" onchange="renderVenues()">
-        <option value="">전체 지역</option>
-      </select>
-      <div class="count-badge"><strong id="venue-count">0</strong>&nbsp;개 공연장</div>
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="venue-search" placeholder="공연장명 검색 (일본어·한국어·지역)" oninput="renderVenues()">
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th onclick="sortVenues('name_jp')">공연장명 <span class="sort-icon">↕</span></th>
-            <th onclick="sortVenues('city')">지역 <span class="sort-icon">↕</span></th>
-            <th>카테고리</th>
-            <th onclick="sortVenues('cap_max')" class="sorted">수용인원 <span class="sort-icon">↓</span></th>
-            <th>홈페이지</th>
-          </tr>
-        </thead>
-        <tbody id="venue-tbody"></tbody>
-      </table>
-    </div>
+    <select id="venue-cat" onchange="renderVenues()">
+      <option value="">전체 카테고리</option>
+      <option value="돔">돔</option>
+      <option value="스타디움">스타디움</option>
+      <option value="아레나">아레나</option>
+      <option value="홀">홀</option>
+      <option value="라이브하우스">라이브하우스</option>
+      <option value="야외·특설">야외·특설</option>
+      <option value="한국">한국</option>
+      <option value="해외">해외</option>
+    </select>
+    <select id="venue-region" onchange="renderVenues()">
+      <option value="">전체 지역</option>
+    </select>
+    <div class="count-badge"><strong id="venue-count">0</strong>&nbsp;개 공연장</div>
   </div>
-
-  <!-- ══ PANEL 2: 공연 실적 ══ -->
-  <div class="panel" id="panel-history">
-
-    <!-- 비밀번호 게이트 -->
-    <div class="pw-gate" id="pw-gate">
-      <div class="lock-icon">🔒</div>
-      <h3>비밀번호를 입력하세요</h3>
-      <p>이 탭은 내부 관계자만 열람할 수 있습니다.</p>
-      <div class="pw-row">
-        <input type="password" id="pw-input" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkPw()">
-        <button class="pw-submit" onclick="checkPw()">확인</button>
-      </div>
-      <div class="pw-error" id="pw-error"></div>
-    </div>
-
-    <!-- 실적 본문 (인증 후 표시) -->
-    <div id="history-content" style="display:none;">
-    <div class="setup-banner" id="setup-banner">
-      <h3>⚙️ Google Sheets 연동 설정</h3>
-      <ol class="setup-steps">
-        <li>Google Sheets를 새로 만들고, 아래 열 순서대로 헤더를 입력하세요 (1행).</li>
-        <li>공연 실적 데이터를 2행부터 입력하세요.</li>
-        <li><code>파일 → 공유 → 웹에 게시 → CSV → 게시</code> 후 URL을 복사하세요.</li>
-        <li>아래에 URL을 붙여넣고 적용을 누르세요.</li>
-      </ol>
-      <div style="margin-top:14px;">
-        <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px;">📋 시트 열 구성 (순서 고정)</div>
-        <div class="sheet-cols">
-          <span class="col-chip"><strong>A</strong> 년도</span>
-          <span class="col-chip"><strong>B</strong> 공연타이틀</span>
-          <span class="col-chip"><strong>C</strong> 공연일</span>
-          <span class="col-chip"><strong>D</strong> 공연장</span>
-          <span class="col-chip"><strong>E</strong> 응모&amp;판매기간</span>
-          <span class="col-chip"><strong>F</strong> 판매건수</span>
-          <span class="col-chip"><strong>G</strong> 판매매수</span>
-          <span class="col-chip"><strong>H</strong> Capacity</span>
-          <span class="col-chip" style="color:var(--accent);">📐 판매율 자동계산</span>
-        </div>
-        <div class="url-input-row" style="margin-top:14px;">
-          <input type="text" id="sheet-url-input" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv&gid=...">
-          <button class="btn-apply" onclick="applySheetUrl()">적용</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="sheet-connected" style="display:none;margin-bottom:14px;display:none;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
-      <span style="font-size:12px;color:var(--text-sub);">🔗 연결된 시트:</span>
-      <span id="sheet-url-preview" style="font-size:11px;color:var(--accent);font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-      <button onclick="resetSheetUrl()" style="padding:5px 12px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);font-size:12px;cursor:pointer;">URL 변경</button>
-    </div>
-
-    <div class="stats-row" id="history-stats" style="display:none;"></div>
-
-    <div class="controls" id="history-controls" style="display:none;">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="history-search" placeholder="아티스트·공연명·공연장 검색" oninput="renderHistory()">
-      </div>
-      <select id="history-year" onchange="renderHistory()"><option value="">전체 년도</option></select>
-      <select id="history-artist" onchange="renderHistory()"><option value="">전체 타이틀</option></select>
-      <div class="count-badge"><strong id="history-count">0</strong>&nbsp;건</div>
-    </div>
-
-    <div class="table-wrap" id="history-table-wrap" style="display:none;">
-      <table>
-        <thead>
-          <tr>
-            <th>년도</th>
-            <th>공연타이틀</th>
-            <th>공연일</th>
-            <th>공연장</th>
-            <th>응모&amp;판매기간</th>
-            <th>판매건수</th>
-            <th>판매매수</th>
-            <th>Capacity</th>
-            <th>판매율</th>
-          </tr>
-        </thead>
-        <tbody id="history-tbody"></tbody>
-      </table>
-    </div>
-    <div class="empty-state" id="history-empty" style="display:none;">
-      <div class="icon">📋</div>
-      <div>검색 결과가 없습니다.</div>
-    </div>
-    </div><!-- /history-content -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortVenues('name_jp')">공연장명 <span class="sort-icon">↕</span></th>
+          <th onclick="sortVenues('city')">지역 <span class="sort-icon">↕</span></th>
+          <th>카테고리</th>
+          <th onclick="sortVenues('cap_max')" class="sorted">수용인원 <span class="sort-icon">↓</span></th>
+          <th>홈페이지</th>
+        </tr>
+      </thead>
+      <tbody id="venue-tbody"></tbody>
+    </table>
   </div>
-
 </div>
 
 <script>
-// ─── Venue Seed Data (72개) ───────────────────────────────────────────────────
+// ─── Venue Seed Data ──────────────────────────────────────────────────────────
 const VENUES = [
   {name_jp:"東京ドーム",name_kr:"도쿄돔",city:"東京都文京区",capacity_seated:55000,capacity_standing:null,category:"돔",website:"https://www.tokyo-dome.co.jp"},
   {name_jp:"京セラドーム大阪",name_kr:"교세라돔 오사카",city:"大阪府大阪市",capacity_seated:55000,capacity_standing:null,category:"돔",website:"https://www.kyoceradome-osaka.jp"},
@@ -349,7 +197,6 @@ const VENUES = [
   {name_jp:"DIAMOND HALL",name_kr:"다이아몬드 홀",city:"愛知県名古屋市",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.diamond-hall.com"},
   {name_jp:"LIQUIDROOM",name_kr:"리퀴드룸",city:"東京都渋谷区",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.liquidroom.net"},
   {name_jp:"DRUM LOGOS",name_kr:"드럼 로고스",city:"福岡県福岡市",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.drum-logos.com"},
-  // ── 추가 공연장 ──
   {name_jp:"海の中道海浜公園",name_kr:"우미노나카미치 해변공원",city:"福岡県福岡市",capacity_seated:null,capacity_standing:50000,category:"야외·특설",website:"https://uminonakamichi.jp"},
   {name_jp:"海の森公園",name_kr:"우미노모리 공원",city:"東京都江東区",capacity_seated:null,capacity_standing:30000,category:"야외·특설",website:"https://www.uminomori.metro.tokyo.lg.jp"},
   {name_jp:"ハウステンボス パノラマビュー会場",name_kr:"하우스텐보스 파노라마뷰 회장",city:"長崎県佐世保市",capacity_seated:null,capacity_standing:30000,category:"야외·특설",website:"https://www.huistenbosch.co.jp"},
@@ -369,50 +216,18 @@ const VENUES = [
   {name_jp:"上野の森美術館",name_kr:"우에노노모리 미술관",city:"東京都台東区",capacity_seated:null,capacity_standing:1000,category:"홀",website:"https://www.ueno-mori.org"}
 ];
 
-// ─── Password ─────────────────────────────────────────────────────────────────
-const HISTORY_PW = 'ebay2026';
-
-function checkPw() {
-  const input = document.getElementById('pw-input');
-  const err = document.getElementById('pw-error');
-  if (input.value === HISTORY_PW) {
-    sessionStorage.setItem('historyAuth', '1');
-    document.getElementById('pw-gate').style.display = 'none';
-    document.getElementById('history-content').style.display = 'block';
-    if (sheetUrl) loadSheet(sheetUrl);
-  } else {
-    err.textContent = '비밀번호가 올바르지 않습니다.';
-    input.classList.add('error');
-    input.value = '';
-    setTimeout(() => { input.classList.remove('error'); err.textContent = ''; }, 1500);
-  }
-}
-
-function isHistoryAuthed() {
-  return sessionStorage.getItem('historyAuth') === '1';
-}
-
 // ─── State ────────────────────────────────────────────────────────────────────
 let venueSortKey = 'cap_max';
 let venueSortAsc = false;
-let historyData = [];
-let sheetUrl = localStorage.getItem('venueSheetUrl') || '';
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 function init() {
-  // region filter
   const regions = [...new Set(VENUES.map(v => v.city.replace(/(都|道|府|県).*/,'$1').trim()))].sort();
   const sel = document.getElementById('venue-region');
   regions.forEach(r => { const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); });
 
   document.getElementById('venue-count-badge').textContent = VENUES.length + '개 공연장 수록';
   renderVenues();
-
-  // restore sheet URL (인증된 세션에서만 자동 로드)
-  if (sheetUrl) {
-    document.getElementById('sheet-url-input').value = sheetUrl;
-    if (isHistoryAuthed()) loadSheet(sheetUrl);
-  }
 }
 
 // ─── Venue Rendering ──────────────────────────────────────────────────────────
@@ -454,7 +269,6 @@ function renderVenues() {
     const seated = v.capacity_seated ? v.capacity_seated.toLocaleString() + '석' : '—';
     const standing = v.capacity_standing ? v.capacity_standing.toLocaleString() + '명(스탠딩)' : '';
     const capMain = capMax(v).toLocaleString();
-    const capSub = standing || (v.capacity_seated ? '' : '');
     return `<tr>
       <td>
         <div class="venue-name-jp">${v.name_jp}</div>
@@ -463,150 +277,10 @@ function renderVenues() {
       <td><span class="city-tag">${v.city}</span></td>
       <td><span class="cat-badge cat-${v.category}">${v.category}</span></td>
       <td>
-        <div class="cap-main">${capMain.toLocaleString()}</div>
+        <div class="cap-main">${capMain}</div>
         <div class="cap-sub">${seated}${standing ? ' / ' + standing : ''}</div>
       </td>
       <td>${v.website ? `<a href="${v.website}" target="_blank" class="link-btn">↗ 홈페이지</a>` : '—'}</td>
-    </tr>`;
-  }).join('');
-}
-
-// ─── Tab Switch ───────────────────────────────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='venues')||(i===1&&tab==='history')));
-  document.getElementById('panel-venues').classList.toggle('active', tab === 'venues');
-  document.getElementById('panel-history').classList.toggle('active', tab === 'history');
-  if (tab === 'history' && isHistoryAuthed()) {
-    document.getElementById('pw-gate').style.display = 'none';
-    document.getElementById('history-content').style.display = 'block';
-  }
-}
-
-// ─── Google Sheets ────────────────────────────────────────────────────────────
-function applySheetUrl() {
-  const url = document.getElementById('sheet-url-input').value.trim();
-  if (!url) return;
-  sheetUrl = url;
-  localStorage.setItem('venueSheetUrl', url);
-  loadSheet(url);
-}
-
-function resetSheetUrl() {
-  localStorage.removeItem('venueSheetUrl');
-  sheetUrl = '';
-  historyData = [];
-  document.getElementById('sheet-connected').style.display = 'none';
-  document.getElementById('setup-banner').style.display = 'block';
-  document.getElementById('history-controls').style.display = 'none';
-  document.getElementById('history-table-wrap').style.display = 'none';
-  document.getElementById('history-stats').style.display = 'none';
-  document.getElementById('sheet-url-input').value = '';
-}
-
-function loadSheet(url) {
-  fetch(url)
-    .then(r => { if (!r.ok) throw new Error('fetch fail'); return r.text(); })
-    .then(csv => {
-      historyData = parseCSV(csv);
-      renderHistoryUI();
-    })
-    .catch(() => alert('시트를 불러오지 못했습니다.\nURL이 올바른지, 게시 설정이 되어 있는지 확인해주세요.'));
-}
-
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return [];
-  return lines.slice(1).map(line => {
-    const cols = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-      else cur += ch;
-    }
-    cols.push(cur.trim());
-    return {
-      year: cols[0]||'', title: cols[1]||'', date: cols[2]||'',
-      venue: cols[3]||'', period: cols[4]||'',
-      orders: parseInt(cols[5])||0, sold: parseInt(cols[6])||0,
-      capacity: parseInt(cols[7])||0
-    };
-  }).filter(r => r.year || r.title || r.venue);
-}
-
-function renderHistoryUI() {
-  document.getElementById('setup-banner').style.display = 'none';
-  const conn = document.getElementById('sheet-connected');
-  conn.style.display = 'flex';
-  document.getElementById('sheet-url-preview').textContent = sheetUrl;
-  document.getElementById('history-controls').style.display = 'flex';
-  document.getElementById('history-table-wrap').style.display = 'block';
-
-  // year dropdown
-  const years = [...new Set(historyData.map(r => r.year).filter(Boolean))].sort((a,b)=>b-a);
-  document.getElementById('history-year').innerHTML = '<option value="">전체 년도</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
-  // title dropdown
-  const titles = [...new Set(historyData.map(r => r.title).filter(Boolean))].sort();
-  const sel = document.getElementById('history-artist');
-  sel.innerHTML = '<option value="">전체 타이틀</option>' + titles.map(t=>`<option value="${t}">${t}</option>`).join('');
-
-  renderHistoryStats();
-  renderHistory();
-}
-
-function renderHistoryStats() {
-  const valid = historyData.filter(r => r.capacity > 0 && r.sold > 0);
-  const totalSold = historyData.reduce((s,r) => s + r.sold, 0);
-  const totalOrders = historyData.reduce((s,r) => s + r.orders, 0);
-  const avgRate = valid.length ? Math.round(valid.reduce((s,r) => s + r.sold/r.capacity*100, 0) / valid.length) : 0;
-  const maxCap = Math.max(...historyData.map(r => r.capacity), 0);
-
-  document.getElementById('history-stats').style.display = 'flex';
-  document.getElementById('history-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">총 공연 건수</div><div class="stat-value">${historyData.length}</div></div>
-    <div class="stat-card"><div class="stat-label">총 판매건수</div><div class="stat-value">${totalOrders.toLocaleString()}</div></div>
-    <div class="stat-card"><div class="stat-label">총 판매매수</div><div class="stat-value">${totalSold.toLocaleString()}</div></div>
-    <div class="stat-card"><div class="stat-label">평균 판매율</div><div class="stat-value" style="color:${avgRate>=90?'var(--green)':avgRate>=70?'var(--yellow)':'var(--red)'}">${avgRate}%</div></div>
-    <div class="stat-card"><div class="stat-label">최대 Capacity</div><div class="stat-value">${maxCap.toLocaleString()}</div></div>
-  `;
-}
-
-function renderHistory() {
-  const q = document.getElementById('history-search').value.toLowerCase();
-  const year = document.getElementById('history-year').value;
-  const artist = document.getElementById('history-artist').value;
-
-  let list = historyData.filter(r => {
-    if (year && r.year !== year) return false;
-    if (artist && r.title !== artist) return false;
-    if (q && !r.title.toLowerCase().includes(q) && !r.venue.toLowerCase().includes(q) && !r.date.toLowerCase().includes(q)) return false;
-    return true;
-  });
-
-  document.getElementById('history-count').textContent = list.length;
-
-  if (list.length === 0) {
-    document.getElementById('history-empty').style.display = 'block';
-    document.getElementById('history-tbody').innerHTML = '';
-    return;
-  }
-  document.getElementById('history-empty').style.display = 'none';
-
-  document.getElementById('history-tbody').innerHTML = list.map(r => {
-    const rate = r.capacity > 0 && r.sold > 0 ? (r.sold / r.capacity * 100).toFixed(1) : null;
-    const rateCls = rate === null ? '' : rate >= 90 ? 'rate-high' : rate >= 70 ? 'rate-mid' : 'rate-low';
-    const rateStr = rate !== null ? `<span class="${rateCls}">${rate}%</span>` : '—';
-    return `<tr>
-      <td>${r.year}</td>
-      <td>${r.title}</td>
-      <td>${r.date}</td>
-      <td>${r.venue}</td>
-      <td style="color:var(--text-sub);font-size:12px;">${r.period}</td>
-      <td>${r.orders > 0 ? r.orders.toLocaleString() : '—'}</td>
-      <td>${r.sold > 0 ? r.sold.toLocaleString() : '—'}</td>
-      <td>${r.capacity > 0 ? r.capacity.toLocaleString() : '—'}</td>
-      <td>${rateStr}</td>
     </tr>`;
   }).join('');
 }
