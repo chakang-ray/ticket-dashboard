@@ -201,6 +201,12 @@ tbody td{padding:10px 14px;vertical-align:middle;}
       </div>
     </div>
 
+    <div id="sheet-connected" style="display:none;margin-bottom:14px;display:none;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+      <span style="font-size:12px;color:var(--text-sub);">🔗 연결된 시트:</span>
+      <span id="sheet-url-preview" style="font-size:11px;color:var(--accent);font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button onclick="resetSheetUrl()" style="padding:5px 12px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);font-size:12px;cursor:pointer;">URL 변경</button>
+    </div>
+
     <div class="stats-row" id="history-stats" style="display:none;"></div>
 
     <div class="controls" id="history-controls" style="display:none;">
@@ -428,6 +434,18 @@ function applySheetUrl() {
   loadSheet(url);
 }
 
+function resetSheetUrl() {
+  localStorage.removeItem('venueSheetUrl');
+  sheetUrl = '';
+  historyData = [];
+  document.getElementById('sheet-connected').style.display = 'none';
+  document.getElementById('setup-banner').style.display = 'block';
+  document.getElementById('history-controls').style.display = 'none';
+  document.getElementById('history-table-wrap').style.display = 'none';
+  document.getElementById('history-stats').style.display = 'none';
+  document.getElementById('sheet-url-input').value = '';
+}
+
 function loadSheet(url) {
   fetch(url)
     .then(r => { if (!r.ok) throw new Error('fetch fail'); return r.text(); })
@@ -462,6 +480,9 @@ function parseCSV(text) {
 
 function renderHistoryUI() {
   document.getElementById('setup-banner').style.display = 'none';
+  const conn = document.getElementById('sheet-connected');
+  conn.style.display = 'flex';
+  document.getElementById('sheet-url-preview').textContent = sheetUrl;
   document.getElementById('history-controls').style.display = 'flex';
   document.getElementById('history-table-wrap').style.display = 'block';
 
