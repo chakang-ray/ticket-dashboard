@@ -314,7 +314,7 @@ let sheetUrl = localStorage.getItem('venueSheetUrl') || '';
 // ─── Init ─────────────────────────────────────────────────────────────────────
 function init() {
   // region filter
-  const regions = [...new Set(VENUES.map(v => v.city.replace(/[市区郡町村].*/,'').trim()))].sort();
+  const regions = [...new Set(VENUES.map(v => v.city.replace(/(都|道|府|県).*/,'$1').trim()))].sort();
   const sel = document.getElementById('venue-region');
   regions.forEach(r => { const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); });
 
@@ -346,7 +346,7 @@ function renderVenues() {
 
   let list = VENUES.filter(v => {
     if (cat && v.category !== cat) return false;
-    if (region && !v.city.startsWith(region)) return false;
+    if (region && !v.city.includes(region.replace(/(都|道|府|県)$/,''))) return false;
     if (q && !v.name_jp.toLowerCase().includes(q) && !v.name_kr.toLowerCase().includes(q) && !v.city.toLowerCase().includes(q)) return false;
     return true;
   });
