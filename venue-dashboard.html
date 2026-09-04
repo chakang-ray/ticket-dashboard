@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>일본 공연장 DB & 공연 실적</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f1117;
+  --surface:#1a1d27;
+  --surface2:#22263a;
+  --border:#2e3248;
+  --accent:#6c8ef5;
+  --accent2:#a78bfa;
+  --text:#e8eaf6;
+  --text-sub:#8b92b8;
+  --green:#4ade80;
+  --yellow:#facc15;
+  --red:#f87171;
+  --radius:12px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;font-size:14px;min-height:100vh;}
+
+/* ── Header ── */
+.header{padding:28px 32px 0;max-width:1400px;margin:0 auto;}
+.header-top{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+.header-top h1{font-size:22px;font-weight:700;letter-spacing:-.02em;}
+.header-top h1 span{color:var(--accent);}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--surface2);color:var(--text-sub);border:1px solid var(--border);}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);max-width:1400px;margin:0 auto;padding:0 32px;}
+.tab-btn{padding:10px 20px;font-size:13px;font-weight:600;background:none;border:none;color:var(--text-sub);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-btn:hover:not(.active){color:var(--text);}
+
+/* ── Tab Content ── */
+.tab-content{max-width:1400px;margin:0 auto;padding:24px 32px 48px;}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── Controls Bar ── */
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap input{width:100%;padding:8px 14px 8px 36px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;}
+.search-wrap input:focus{border-color:var(--accent);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-sub);font-size:14px;}
+select{padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;cursor:pointer;}
+select:focus{border-color:var(--accent);}
+.count-badge{padding:8px 12px;background:var(--surface2);border-radius:8px;color:var(--text-sub);font-size:12px;display:flex;align-items:center;white-space:nowrap;}
+.count-badge strong{color:var(--text);margin-right:2px;}
+
+/* ── Table ── */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-sub);white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:hover{color:var(--text);}
+thead th .sort-icon{margin-left:4px;opacity:.4;}
+thead th.sorted .sort-icon{opacity:1;color:var(--accent);}
+tbody tr{border-top:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:var(--surface2);}
+tbody td{padding:10px 14px;vertical-align:middle;}
+.venue-name-jp{font-size:13px;font-weight:600;color:var(--text);}
+.venue-name-kr{font-size:11px;color:var(--text-sub);margin-top:2px;}
+.city-tag{font-size:11px;color:var(--text-sub);}
+.cap-main{font-size:13px;font-weight:600;}
+.cap-sub{font-size:11px;color:var(--text-sub);margin-top:1px;}
+.cat-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.cat-돔{background:rgba(108,142,245,.15);color:#93b4ff;}
+.cat-스타디움{background:rgba(167,139,250,.15);color:#c4b5fd;}
+.cat-아레나{background:rgba(74,222,128,.12);color:#86efac;}
+.cat-홀{background:rgba(250,204,21,.12);color:#fde68a;}
+.cat-라이브하우스{background:rgba(248,113,113,.12);color:#fca5a5;}
+.link-btn{display:inline-flex;align-items:center;gap:4px;color:var(--accent);text-decoration:none;font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid rgba(108,142,245,.25);transition:background .15s;}
+.link-btn:hover{background:rgba(108,142,245,.1);}
+
+/* ── Stats row ── */
+.stats-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;flex:1;min-width:120px;}
+.stat-label{font-size:11px;color:var(--text-sub);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;}
+.stat-value{font-size:22px;font-weight:700;}
+
+/* ── Setup Banner ── */
+.setup-banner{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:20px;}
+.setup-banner h3{font-size:15px;font-weight:700;margin-bottom:12px;color:var(--accent);}
+.setup-steps{list-style:none;counter-reset:step;}
+.setup-steps li{counter-increment:step;display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;font-size:13px;color:var(--text-sub);}
+.setup-steps li::before{content:counter(step);min-width:22px;height:22px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:1px;}
+.setup-steps code{background:var(--surface2);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:var(--text);}
+.url-input-row{display:flex;gap:8px;margin-top:8px;}
+.url-input-row input{flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:monospace;outline:none;}
+.url-input-row input:focus{border-color:var(--accent);}
+.btn-apply{padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-apply:hover{opacity:.85;}
+.sheet-cols{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.col-chip{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--text-sub);}
+.col-chip strong{color:var(--text);}
+
+/* ── Sell-through rate colors ── */
+.rate-high{color:var(--green);font-weight:700;}
+.rate-mid{color:var(--yellow);font-weight:700;}
+.rate-low{color:var(--red);font-weight:700;}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-sub);}
+.empty-state .icon{font-size:40px;margin-bottom:12px;}
+
+@media(max-width:640px){
+  .header{padding:20px 16px 0;}
+  .tabs{padding:0 16px;}
+  .tab-content{padding:16px 16px 40px;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>🎵 일본 공연장 <span>DB</span> & 공연 실적</h1>
+    <span class="badge" id="venue-count-badge">로딩 중...</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('venues')">🏟 공연장 DB</button>
+  <button class="tab-btn" onclick="switchTab('history')">📊 공연 실적</button>
+</div>
+
+<div class="tab-content">
+
+  <!-- ══ PANEL 1: 공연장 DB ══ -->
+  <div class="panel active" id="panel-venues">
+    <div class="controls">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="venue-search" placeholder="공연장명 검색 (일본어·한국어·지역)" oninput="renderVenues()">
+      </div>
+      <select id="venue-cat" onchange="renderVenues()">
+        <option value="">전체 카테고리</option>
+        <option value="돔">돔</option>
+        <option value="스타디움">스타디움</option>
+        <option value="아레나">아레나</option>
+        <option value="홀">홀</option>
+        <option value="라이브하우스">라이브하우스</option>
+      </select>
+      <select id="venue-region" onchange="renderVenues()">
+        <option value="">전체 지역</option>
+      </select>
+      <div class="count-badge"><strong id="venue-count">0</strong>&nbsp;개 공연장</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortVenues('name_jp')">공연장명 <span class="sort-icon">↕</span></th>
+            <th onclick="sortVenues('city')">지역 <span class="sort-icon">↕</span></th>
+            <th>카테고리</th>
+            <th onclick="sortVenues('cap_max')" class="sorted">수용인원 <span class="sort-icon">↓</span></th>
+            <th>홈페이지</th>
+          </tr>
+        </thead>
+        <tbody id="venue-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ PANEL 2: 공연 실적 ══ -->
+  <div class="panel" id="panel-history">
+    <div class="setup-banner" id="setup-banner">
+      <h3>⚙️ Google Sheets 연동 설정</h3>
+      <ol class="setup-steps">
+        <li>Google Sheets를 새로 만들고, 아래 열 순서대로 헤더를 입력하세요 (1행).</li>
+        <li>공연 실적 데이터를 2행부터 입력하세요.</li>
+        <li><code>파일 → 공유 → 웹에 게시 → CSV → 게시</code> 후 URL을 복사하세요.</li>
+        <li>아래에 URL을 붙여넣고 적용을 누르세요.</li>
+      </ol>
+      <div style="margin-top:14px;">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px;">📋 시트 열 구성 (순서 고정)</div>
+        <div class="sheet-cols">
+          <span class="col-chip"><strong>A</strong> 날짜</span>
+          <span class="col-chip"><strong>B</strong> 아티스트</span>
+          <span class="col-chip"><strong>C</strong> 공연명</span>
+          <span class="col-chip"><strong>D</strong> 공연장(일본어)</span>
+          <span class="col-chip"><strong>E</strong> 총캐퍼</span>
+          <span class="col-chip"><strong>F</strong> 판매수량</span>
+          <span class="col-chip"><strong>G</strong> 비고</span>
+        </div>
+        <div class="url-input-row" style="margin-top:14px;">
+          <input type="text" id="sheet-url-input" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv&gid=...">
+          <button class="btn-apply" onclick="applySheetUrl()">적용</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row" id="history-stats" style="display:none;"></div>
+
+    <div class="controls" id="history-controls" style="display:none;">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="history-search" placeholder="아티스트·공연명·공연장 검색" oninput="renderHistory()">
+      </div>
+      <select id="history-artist" onchange="renderHistory()"><option value="">전체 아티스트</option></select>
+      <div class="count-badge"><strong id="history-count">0</strong>&nbsp;건</div>
+    </div>
+
+    <div class="table-wrap" id="history-table-wrap" style="display:none;">
+      <table>
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>아티스트</th>
+            <th>공연명</th>
+            <th>공연장</th>
+            <th>총캐퍼</th>
+            <th>판매수량</th>
+            <th>판매율</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="history-empty" style="display:none;">
+      <div class="icon">📋</div>
+      <div>검색 결과가 없습니다.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Venue Seed Data (72개) ───────────────────────────────────────────────────
+const VENUES = [
+  {name_jp:"東京ドーム",name_kr:"도쿄돔",city:"東京都文京区",capacity_seated:55000,capacity_standing:null,category:"돔",website:"https://www.tokyo-dome.co.jp"},
+  {name_jp:"京セラドーム大阪",name_kr:"교세라돔 오사카",city:"大阪府大阪市",capacity_seated:55000,capacity_standing:null,category:"돔",website:"https://www.kyoceradome-osaka.jp"},
+  {name_jp:"みずほPayPayドーム福岡",name_kr:"미즈호 PayPay돔 후쿠오카",city:"福岡県福岡市",capacity_seated:52500,capacity_standing:null,category:"돔",website:"https://www.softbankhawks.co.jp/stadium/"},
+  {name_jp:"大和ハウスプレミストドーム",name_kr:"다이와하우스 프레미스트돔 (삿포로)",city:"北海道札幌市",capacity_seated:53820,capacity_standing:null,category:"돔",website:"https://www.daiwahousepremistdome.jp"},
+  {name_jp:"バンテリンドームナゴヤ",name_kr:"반테린돔 나고야",city:"愛知県名古屋市",capacity_seated:49185,capacity_standing:null,category:"돔",website:"https://www.vantelin-dome-nagoya.com"},
+  {name_jp:"ベルーナドーム",name_kr:"벨루나돔",city:"埼玉県所沢市",capacity_seated:31552,capacity_standing:null,category:"돔",website:"https://www.belluna-dome.jp"},
+  {name_jp:"サンドーム福井",name_kr:"선돔 후쿠이",city:"福井県福井市",capacity_seated:10000,capacity_standing:null,category:"돔",website:"https://www.sundome.jp"},
+  {name_jp:"日産スタジアム",name_kr:"닛산 스타디움",city:"神奈川県横浜市",capacity_seated:72327,capacity_standing:null,category:"스타디움",website:"https://www.nissan-stadium.jp"},
+  {name_jp:"国立競技場",name_kr:"국립경기장",city:"東京都新宿区",capacity_seated:66727,capacity_standing:null,category:"스타디움",website:"https://www.jpnsport.go.jp/kokuritu/"},
+  {name_jp:"エコパスタジアム",name_kr:"에코파 스타디움",city:"静岡県袋井市",capacity_seated:50889,capacity_standing:null,category:"스타디움",website:"https://www.ecopa.jp"},
+  {name_jp:"味の素スタジアム",name_kr:"아지노모토 스타디움",city:"東京都調布市",capacity_seated:48013,capacity_standing:null,category:"스타디움",website:"https://www.ajinomotostadium.com"},
+  {name_jp:"ヤンマースタジアム長居",name_kr:"얀마 스타디움 나가이",city:"大阪府大阪市",capacity_seated:47816,capacity_standing:null,category:"스타디움",website:"https://www.yanmar-stadium-nagai.jp"},
+  {name_jp:"横浜スタジアム",name_kr:"요코하마 스타디움",city:"神奈川県横浜市",capacity_seated:35363,capacity_standing:null,category:"스타디움",website:"https://www.yokohama-stadium.co.jp"},
+  {name_jp:"ノエビアスタジアム神戸",name_kr:"노에비아 스타디움 고베",city:"兵庫県神戸市",capacity_seated:30132,capacity_standing:null,category:"스타디움",website:"https://www.noevir-stadium-kobe.jp"},
+  {name_jp:"明治神宮野球場",name_kr:"메이지진구 야구장",city:"東京都新宿区",capacity_seated:30969,capacity_standing:null,category:"스타디움",website:"https://www.jingu-stadium.com"},
+  {name_jp:"ZOZOマリンスタジアム",name_kr:"ZOZO 마린 스타디움",city:"千葉県千葉市",capacity_seated:29645,capacity_standing:null,category:"스타디움",website:"https://marines.co.jp/stadium/"},
+  {name_jp:"さいたまスーパーアリーナ",name_kr:"사이타마 슈퍼 아레나",city:"埼玉県さいたま市",capacity_seated:22500,capacity_standing:null,category:"아레나",website:"https://www.saitama-arena.co.jp"},
+  {name_jp:"ヤマダグリーンドーム前橋",name_kr:"야마다 그린돔 마에바시",city:"群馬県前橋市",capacity_seated:20000,capacity_standing:null,category:"아레나",website:"https://www.yamada-greendome.com"},
+  {name_jp:"Kアリーナ横浜",name_kr:"K아레나 요코하마",city:"神奈川県横浜市",capacity_seated:20033,capacity_standing:null,category:"아레나",website:"https://k-arena-yokohama.com"},
+  {name_jp:"IGアリーナ",name_kr:"IG아레나",city:"愛知県名古屋市",capacity_seated:17000,capacity_standing:null,category:"아레나",website:"https://ig-arena.jp"},
+  {name_jp:"横浜アリーナ",name_kr:"요코하마 아레나",city:"神奈川県横浜市",capacity_seated:17000,capacity_standing:null,category:"아레나",website:"https://www.yokohama-arena.co.jp"},
+  {name_jp:"大阪城ホール",name_kr:"오사카죠 홀",city:"大阪府大阪市",capacity_seated:16000,capacity_standing:null,category:"아레나",website:"https://www.osaka-johall.com"},
+  {name_jp:"有明アリーナ",name_kr:"아리아케 아레나",city:"東京都江東区",capacity_seated:15000,capacity_standing:null,category:"아레나",website:"https://ariake-arena.com"},
+  {name_jp:"マリンメッセ福岡A館",name_kr:"마린 메세 후쿠오카 A관",city:"福岡県福岡市",capacity_seated:15000,capacity_standing:null,category:"아레나",website:"https://www.marine-messe.co.jp"},
+  {name_jp:"日本武道館",name_kr:"일본 부도칸",city:"東京都千代田区",capacity_seated:14471,capacity_standing:null,category:"아레나",website:"https://www.nipponbudokan.or.jp"},
+  {name_jp:"国立代々木競技場 第一体育館",name_kr:"요요기 국립경기장 제1체육관",city:"東京都渋谷区",capacity_seated:12898,capacity_standing:null,category:"아레나",website:"https://www.jpnsport.go.jp/yoyogi/"},
+  {name_jp:"ぴあアリーナMM",name_kr:"피아아레나 MM",city:"神奈川県横浜市",capacity_seated:12141,capacity_standing:null,category:"아레나",website:"https://pia-arena-mm.jp"},
+  {name_jp:"LaLa arena TOKYO-BAY",name_kr:"라라 아레나 도쿄베이",city:"千葉県船橋市",capacity_seated:11000,capacity_standing:null,category:"아레나",website:"https://lala-arena.jp"},
+  {name_jp:"真駒内セキスイハイムアイスアリーナ",name_kr:"마코마나이 세키스이하임 아이스아레나",city:"北海道札幌市",capacity_seated:10770,capacity_standing:null,category:"아레나",website:"https://makoice.com"},
+  {name_jp:"トヨタアリーナ東京",name_kr:"토요타 아레나 도쿄",city:"東京都江東区",capacity_seated:10000,capacity_standing:null,category:"아레나",website:"https://toyota-arena-tokyo.jp"},
+  {name_jp:"クロコくんホール（旧日本ガイシホール）",name_kr:"일본 가이시 홀",city:"愛知県名古屋市",capacity_seated:10000,capacity_standing:null,category:"아레나",website:"https://www.gaishi-hall.co.jp"},
+  {name_jp:"エコパアリーナ",name_kr:"에코파 아레나",city:"静岡県袋井市",capacity_seated:10000,capacity_standing:null,category:"아레나",website:"https://www.ecopa.jp"},
+  {name_jp:"北海きたえーる",name_kr:"기타에루",city:"北海道札幌市",capacity_seated:10000,capacity_standing:null,category:"아레나",website:"https://kitaeru.jp"},
+  {name_jp:"広島グリーンアリーナ",name_kr:"히로시마 그린 아레나",city:"広島県広島市",capacity_seated:10000,capacity_standing:null,category:"아레나",website:"https://www.hiroshima-grenarena.com"},
+  {name_jp:"あなぶきアリーナ香川",name_kr:"아나부키 아레나 카가와",city:"香川県高松市",capacity_seated:10000,capacity_standing:null,category:"아레나",website:"https://anabuki-arena.jp"},
+  {name_jp:"GLION ARENA KOBE",name_kr:"글리온 아레나 고베",city:"兵庫県神戸市",capacity_seated:10000,capacity_standing:null,category:"아레나",website:"https://www.kobe-wmc.or.jp"},
+  {name_jp:"SAGAアリーナ",name_kr:"사가 아레나",city:"佐賀県佐賀市",capacity_seated:8400,capacity_standing:null,category:"아레나",website:"https://saga-arena.jp"},
+  {name_jp:"神戸ワールド記念ホール",name_kr:"고베 월드 기념홀",city:"兵庫県神戸市",capacity_seated:8000,capacity_standing:null,category:"아레나",website:"https://www.kobe-wmc.or.jp"},
+  {name_jp:"ゼビオアリーナ仙台",name_kr:"제비오 아레나 센다이",city:"宮城県仙台市",capacity_seated:7200,capacity_standing:null,category:"아레나",website:"https://zevioarena.sendai.jp"},
+  {name_jp:"セキスイハイムスーパーアリーナ",name_kr:"세키스이하임 슈퍼 아레나",city:"宮城県宮城郡",capacity_seated:7067,capacity_standing:null,category:"아레나",website:"https://www.miyagi-superdome.com"},
+  {name_jp:"東京国際フォーラム ホールA",name_kr:"도쿄 국제포럼 홀A",city:"東京都千代田区",capacity_seated:5012,capacity_standing:null,category:"홀",website:"https://www.t-i-forum.co.jp"},
+  {name_jp:"パシフィコ横浜 国立大ホール",name_kr:"파시피코 요코하마 국립대홀",city:"神奈川県横浜市",capacity_seated:5002,capacity_standing:null,category:"홀",website:"https://www.pacifico.co.jp"},
+  {name_jp:"NHKホール",name_kr:"NHK홀",city:"東京都渋谷区",capacity_seated:3601,capacity_standing:null,category:"홀",website:"https://www.nhk-sc.co.jp/nhk_hall/"},
+  {name_jp:"TOKYO DOME CITY HALL",name_kr:"도쿄돔시티 홀",city:"東京都文京区",capacity_seated:3120,capacity_standing:null,category:"홀",website:"https://www.tokyo-dome.co.jp/hall/"},
+  {name_jp:"フェスティバルホール",name_kr:"페스티벌 홀",city:"大阪府大阪市",capacity_seated:2754,capacity_standing:null,category:"홀",website:"https://www.festivalhall.jp"},
+  {name_jp:"グランキューブ大阪",name_kr:"그랑큐브 오사카",city:"大阪府大阪市",capacity_seated:2700,capacity_standing:null,category:"홀",website:"https://www.gco.co.jp"},
+  {name_jp:"オリックス劇場",name_kr:"오릭스 극장",city:"大阪府大阪市",capacity_seated:2400,capacity_standing:null,category:"홀",website:"https://www.orix-theater.com"},
+  {name_jp:"東京文化会館",name_kr:"도쿄 문화회관",city:"東京都台東区",capacity_seated:2303,capacity_standing:null,category:"홀",website:"https://www.t-bunka.jp"},
+  {name_jp:"幕張メッセ 国際展示場",name_kr:"마쿠하리 메세",city:"千葉県千葉市",capacity_seated:9000,capacity_standing:null,category:"홀",website:"https://www.m-messe.co.jp"},
+  {name_jp:"ポートメッセなごや",name_kr:"포트메세 나고야",city:"愛知県名古屋市",capacity_seated:15000,capacity_standing:null,category:"홀",website:"https://www.port-messe.or.jp"},
+  {name_jp:"朱鷺メッセ",name_kr:"토키 메세",city:"新潟県新潟市",capacity_seated:10000,capacity_standing:null,category:"홀",website:"https://www.tokimesse.com"},
+  {name_jp:"Aichi Sky Expo（ホールA）",name_kr:"아이치 스카이 엑스포",city:"愛知県愛知郡",capacity_seated:10000,capacity_standing:null,category:"홀",website:"https://www.aichisky.com"},
+  {name_jp:"NHK大阪ホール",name_kr:"NHK 오사카홀",city:"大阪府大阪市",capacity_seated:1417,capacity_standing:null,category:"홀",website:"https://www.nhk-sc.co.jp/osaka_hall/"},
+  {name_jp:"豊洲PIT",name_kr:"토요스 PIT",city:"東京都江東区",capacity_seated:null,capacity_standing:3103,category:"라이브하우스",website:"https://toyosu-pit.com"},
+  {name_jp:"Zepp羽田",name_kr:"Zepp 하네다",city:"東京都大田区",capacity_seated:1207,capacity_standing:2925,category:"라이브하우스",website:"https://www.zepp.co.jp/hall/haneda/"},
+  {name_jp:"Zepp大阪ベイサイド",name_kr:"Zepp 오사카 베이사이드",city:"大阪府大阪市",capacity_seated:1193,capacity_standing:2801,category:"라이브하우스",website:"https://www.zepp.co.jp/hall/osaka_bayside/"},
+  {name_jp:"Zeppなんば",name_kr:"Zepp 난바",city:"大阪府大阪市",capacity_seated:1206,capacity_standing:2513,category:"라이브하우스",website:"https://www.zepp.co.jp/hall/namba/"},
+  {name_jp:"なんばHatch",name_kr:"난바 핫치",city:"大阪府大阪市",capacity_seated:750,capacity_standing:1900,category:"라이브하우스",website:"https://www.namba-hatch.com"},
+  {name_jp:"Zepp DiverCity Tokyo",name_kr:"Zepp 다이버시티 도쿄",city:"東京都江東区",capacity_seated:1102,capacity_standing:2473,category:"라이브하우스",website:"https://www.zepp.co.jp/hall/divercity/"},
+  {name_jp:"KT Zepp横浜",name_kr:"KT Zepp 요코하마",city:"神奈川県横浜市",capacity_seated:1251,capacity_standing:2146,category:"라이브하우스",website:"https://www.zepp.co.jp/hall/yokohama/"},
+  {name_jp:"Zepp札幌",name_kr:"Zepp 삿포로",city:"北海道札幌市",capacity_seated:723,capacity_standing:2009,category:"라이브하우스",website:"https://www.zepp.co.jp/hall/sapporo/"},
+  {name_jp:"Zepp名古屋",name_kr:"Zepp 나고야",city:"愛知県名古屋市",capacity_seated:741,capacity_standing:1792,category:"라이브하우스",website:"https://www.zepp.co.jp/hall/nagoya/"},
+  {name_jp:"EXシアター六本木",name_kr:"EX 시어터 롯폰기",city:"東京都港区",capacity_seated:null,capacity_standing:1746,category:"라이브하우스",website:"https://www.ex-theater.com"},
+  {name_jp:"仙台GIGS",name_kr:"센다이 GIGS",city:"宮城県仙台市",capacity_seated:null,capacity_standing:1560,category:"라이브하우스",website:"https://sendai-gigs.com"},
+  {name_jp:"Zepp福岡",name_kr:"Zepp 후쿠오카",city:"福岡県福岡市",capacity_seated:669,capacity_standing:1526,category:"라이브하우스",website:"https://www.zepp.co.jp/hall/fukuoka/"},
+  {name_jp:"Zepp Shinjuku (TOKYO)",name_kr:"Zepp 신주쿠",city:"東京都新宿区",capacity_seated:693,capacity_standing:1500,category:"라이브하우스",website:"https://www.zepp.co.jp/hall/shinjuku/"},
+  {name_jp:"Spotify O-EAST",name_kr:"스포티파이 O-EAST",city:"東京都渋谷区",capacity_seated:null,capacity_standing:1300,category:"라이브하우스",website:"https://www.shibuya-o.com"},
+  {name_jp:"CLUB CITTA'",name_kr:"클럽 치타",city:"神奈川県川崎市",capacity_seated:null,capacity_standing:1300,category:"라이브하우스",website:"https://www.clubcitta.co.jp"},
+  {name_jp:"DIAMOND HALL",name_kr:"다이아몬드 홀",city:"愛知県名古屋市",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.diamond-hall.com"},
+  {name_jp:"LIQUIDROOM",name_kr:"리퀴드룸",city:"東京都渋谷区",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.liquidroom.net"},
+  {name_jp:"DRUM LOGOS",name_kr:"드럼 로고스",city:"福岡県福岡市",capacity_seated:null,capacity_standing:1000,category:"라이브하우스",website:"https://www.drum-logos.com"}
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let venueSortKey = 'cap_max';
+let venueSortAsc = false;
+let historyData = [];
+let sheetUrl = localStorage.getItem('venueSheetUrl') || '';
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+function init() {
+  // region filter
+  const regions = [...new Set(VENUES.map(v => v.city.replace(/[市区郡町村].*/,'').trim()))].sort();
+  const sel = document.getElementById('venue-region');
+  regions.forEach(r => { const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); });
+
+  document.getElementById('venue-count-badge').textContent = VENUES.length + '개 공연장 수록';
+  renderVenues();
+
+  // restore sheet URL
+  if (sheetUrl) {
+    document.getElementById('sheet-url-input').value = sheetUrl;
+    loadSheet(sheetUrl);
+  }
+}
+
+// ─── Venue Rendering ──────────────────────────────────────────────────────────
+function capMax(v) {
+  return Math.max(v.capacity_seated || 0, v.capacity_standing || 0);
+}
+
+function sortVenues(key) {
+  if (venueSortKey === key) { venueSortAsc = !venueSortAsc; }
+  else { venueSortKey = key; venueSortAsc = key !== 'cap_max'; }
+  renderVenues();
+}
+
+function renderVenues() {
+  const q = document.getElementById('venue-search').value.toLowerCase();
+  const cat = document.getElementById('venue-cat').value;
+  const region = document.getElementById('venue-region').value;
+
+  let list = VENUES.filter(v => {
+    if (cat && v.category !== cat) return false;
+    if (region && !v.city.startsWith(region)) return false;
+    if (q && !v.name_jp.toLowerCase().includes(q) && !v.name_kr.toLowerCase().includes(q) && !v.city.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  list.sort((a, b) => {
+    let av, bv;
+    if (venueSortKey === 'cap_max') { av = capMax(a); bv = capMax(b); }
+    else if (venueSortKey === 'name_jp') { av = a.name_jp; bv = b.name_jp; }
+    else if (venueSortKey === 'city') { av = a.city; bv = b.city; }
+    else { av = a[venueSortKey]; bv = b[venueSortKey]; }
+    if (av === bv) return 0;
+    return (venueSortAsc ? av > bv : av < bv) ? 1 : -1;
+  });
+
+  document.getElementById('venue-count').textContent = list.length;
+  const tbody = document.getElementById('venue-tbody');
+  tbody.innerHTML = list.map(v => {
+    const seated = v.capacity_seated ? v.capacity_seated.toLocaleString() + '석' : '—';
+    const standing = v.capacity_standing ? v.capacity_standing.toLocaleString() + '명(스탠딩)' : '';
+    const capMain = capMax(v).toLocaleString();
+    const capSub = standing || (v.capacity_seated ? '' : '');
+    return `<tr>
+      <td>
+        <div class="venue-name-jp">${v.name_jp}</div>
+        <div class="venue-name-kr">${v.name_kr}</div>
+      </td>
+      <td><span class="city-tag">${v.city}</span></td>
+      <td><span class="cat-badge cat-${v.category}">${v.category}</span></td>
+      <td>
+        <div class="cap-main">${capMain.toLocaleString()}</div>
+        <div class="cap-sub">${seated}${standing ? ' / ' + standing : ''}</div>
+      </td>
+      <td>${v.website ? `<a href="${v.website}" target="_blank" class="link-btn">↗ 홈페이지</a>` : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Tab Switch ───────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='venues')||(i===1&&tab==='history')));
+  document.getElementById('panel-venues').classList.toggle('active', tab === 'venues');
+  document.getElementById('panel-history').classList.toggle('active', tab === 'history');
+}
+
+// ─── Google Sheets ────────────────────────────────────────────────────────────
+function applySheetUrl() {
+  const url = document.getElementById('sheet-url-input').value.trim();
+  if (!url) return;
+  sheetUrl = url;
+  localStorage.setItem('venueSheetUrl', url);
+  loadSheet(url);
+}
+
+function loadSheet(url) {
+  fetch(url)
+    .then(r => { if (!r.ok) throw new Error('fetch fail'); return r.text(); })
+    .then(csv => {
+      historyData = parseCSV(csv);
+      renderHistoryUI();
+    })
+    .catch(() => alert('시트를 불러오지 못했습니다.\nURL이 올바른지, 게시 설정이 되어 있는지 확인해주세요.'));
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  return lines.slice(1).map(line => {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim());
+    return {
+      date: cols[0]||'', artist: cols[1]||'', title: cols[2]||'',
+      venue: cols[3]||'', capacity: parseInt(cols[4])||0,
+      sold: parseInt(cols[5])||0, note: cols[6]||''
+    };
+  }).filter(r => r.date || r.artist || r.venue);
+}
+
+function renderHistoryUI() {
+  document.getElementById('setup-banner').style.display = 'none';
+  document.getElementById('history-controls').style.display = 'flex';
+  document.getElementById('history-table-wrap').style.display = 'block';
+
+  // artists dropdown
+  const artists = [...new Set(historyData.map(r => r.artist))].sort();
+  const sel = document.getElementById('history-artist');
+  sel.innerHTML = '<option value="">전체 아티스트</option>' + artists.map(a=>`<option value="${a}">${a}</option>`).join('');
+
+  renderHistoryStats();
+  renderHistory();
+}
+
+function renderHistoryStats() {
+  const valid = historyData.filter(r => r.capacity > 0 && r.sold > 0);
+  const totalSold = historyData.reduce((s,r) => s + r.sold, 0);
+  const avgRate = valid.length ? Math.round(valid.reduce((s,r) => s + r.sold/r.capacity*100, 0) / valid.length) : 0;
+  const maxCap = Math.max(...historyData.map(r => r.capacity), 0);
+
+  document.getElementById('history-stats').style.display = 'flex';
+  document.getElementById('history-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">총 공연 건수</div><div class="stat-value">${historyData.length}</div></div>
+    <div class="stat-card"><div class="stat-label">총 판매 수량</div><div class="stat-value">${totalSold.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">평균 판매율</div><div class="stat-value" style="color:${avgRate>=90?'var(--green)':avgRate>=70?'var(--yellow)':'var(--red)'}">${avgRate}%</div></div>
+    <div class="stat-card"><div class="stat-label">최대 캐퍼 공연</div><div class="stat-value">${maxCap.toLocaleString()}</div></div>
+  `;
+}
+
+function renderHistory() {
+  const q = document.getElementById('history-search').value.toLowerCase();
+  const artist = document.getElementById('history-artist').value;
+
+  let list = historyData.filter(r => {
+    if (artist && r.artist !== artist) return false;
+    if (q && !r.artist.toLowerCase().includes(q) && !r.title.toLowerCase().includes(q) && !r.venue.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('history-count').textContent = list.length;
+
+  if (list.length === 0) {
+    document.getElementById('history-empty').style.display = 'block';
+    document.getElementById('history-tbody').innerHTML = '';
+    return;
+  }
+  document.getElementById('history-empty').style.display = 'none';
+
+  document.getElementById('history-tbody').innerHTML = list.map(r => {
+    const rate = r.capacity > 0 ? Math.round(r.sold / r.capacity * 100) : null;
+    const rateCls = rate === null ? '' : rate >= 90 ? 'rate-high' : rate >= 70 ? 'rate-mid' : 'rate-low';
+    const rateStr = rate !== null ? `<span class="${rateCls}">${rate}%</span>` : '—';
+    return `<tr>
+      <td>${r.date}</td>
+      <td>${r.artist}</td>
+      <td>${r.title}</td>
+      <td>${r.venue}</td>
+      <td>${r.capacity > 0 ? r.capacity.toLocaleString() : '—'}</td>
+      <td>${r.sold > 0 ? r.sold.toLocaleString() : '—'}</td>
+      <td>${rateStr}</td>
+      <td style="color:var(--text-sub);font-size:12px;">${r.note}</td>
+    </tr>`;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>
