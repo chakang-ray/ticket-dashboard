@@ -184,13 +184,15 @@ tbody td{padding:10px 14px;vertical-align:middle;}
       <div style="margin-top:14px;">
         <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px;">📋 시트 열 구성 (순서 고정)</div>
         <div class="sheet-cols">
-          <span class="col-chip"><strong>A</strong> 날짜</span>
-          <span class="col-chip"><strong>B</strong> 아티스트</span>
-          <span class="col-chip"><strong>C</strong> 공연명</span>
-          <span class="col-chip"><strong>D</strong> 공연장(일본어)</span>
-          <span class="col-chip"><strong>E</strong> 총캐퍼</span>
-          <span class="col-chip"><strong>F</strong> 판매수량</span>
-          <span class="col-chip"><strong>G</strong> 비고</span>
+          <span class="col-chip"><strong>A</strong> 년도</span>
+          <span class="col-chip"><strong>B</strong> 공연타이틀</span>
+          <span class="col-chip"><strong>C</strong> 공연일</span>
+          <span class="col-chip"><strong>D</strong> 공연장</span>
+          <span class="col-chip"><strong>E</strong> 응모&amp;판매기간</span>
+          <span class="col-chip"><strong>F</strong> 판매건수</span>
+          <span class="col-chip"><strong>G</strong> 판매매수</span>
+          <span class="col-chip"><strong>H</strong> Capacity</span>
+          <span class="col-chip" style="color:var(--accent);">📐 판매율 자동계산</span>
         </div>
         <div class="url-input-row" style="margin-top:14px;">
           <input type="text" id="sheet-url-input" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv&gid=...">
@@ -206,7 +208,8 @@ tbody td{padding:10px 14px;vertical-align:middle;}
         <span class="search-icon">🔍</span>
         <input type="text" id="history-search" placeholder="아티스트·공연명·공연장 검색" oninput="renderHistory()">
       </div>
-      <select id="history-artist" onchange="renderHistory()"><option value="">전체 아티스트</option></select>
+      <select id="history-year" onchange="renderHistory()"><option value="">전체 년도</option></select>
+      <select id="history-artist" onchange="renderHistory()"><option value="">전체 타이틀</option></select>
       <div class="count-badge"><strong id="history-count">0</strong>&nbsp;건</div>
     </div>
 
@@ -214,14 +217,15 @@ tbody td{padding:10px 14px;vertical-align:middle;}
       <table>
         <thead>
           <tr>
-            <th>날짜</th>
-            <th>아티스트</th>
-            <th>공연명</th>
+            <th>년도</th>
+            <th>공연타이틀</th>
+            <th>공연일</th>
             <th>공연장</th>
-            <th>총캐퍼</th>
-            <th>판매수량</th>
+            <th>응모&amp;판매기간</th>
+            <th>판매건수</th>
+            <th>판매매수</th>
+            <th>Capacity</th>
             <th>판매율</th>
-            <th>비고</th>
           </tr>
         </thead>
         <tbody id="history-tbody"></tbody>
@@ -448,11 +452,12 @@ function parseCSV(text) {
     }
     cols.push(cur.trim());
     return {
-      date: cols[0]||'', artist: cols[1]||'', title: cols[2]||'',
-      venue: cols[3]||'', capacity: parseInt(cols[4])||0,
-      sold: parseInt(cols[5])||0, note: cols[6]||''
+      year: cols[0]||'', title: cols[1]||'', date: cols[2]||'',
+      venue: cols[3]||'', period: cols[4]||'',
+      orders: parseInt(cols[5])||0, sold: parseInt(cols[6])||0,
+      capacity: parseInt(cols[7])||0
     };
-  }).filter(r => r.date || r.artist || r.venue);
+  }).filter(r => r.year || r.title || r.venue);
 }
 
 function renderHistoryUI() {
@@ -460,10 +465,13 @@ function renderHistoryUI() {
   document.getElementById('history-controls').style.display = 'flex';
   document.getElementById('history-table-wrap').style.display = 'block';
 
-  // artists dropdown
-  const artists = [...new Set(historyData.map(r => r.artist))].sort();
+  // year dropdown
+  const years = [...new Set(historyData.map(r => r.year).filter(Boolean))].sort((a,b)=>b-a);
+  document.getElementById('history-year').innerHTML = '<option value="">전체 년도</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  // title dropdown
+  const titles = [...new Set(historyData.map(r => r.title).filter(Boolean))].sort();
   const sel = document.getElementById('history-artist');
-  sel.innerHTML = '<option value="">전체 아티스트</option>' + artists.map(a=>`<option value="${a}">${a}</option>`).join('');
+  sel.innerHTML = '<option value="">전체 타이틀</option>' + titles.map(t=>`<option value="${t}">${t}</option>`).join('');
 
   renderHistoryStats();
   renderHistory();
@@ -472,25 +480,29 @@ function renderHistoryUI() {
 function renderHistoryStats() {
   const valid = historyData.filter(r => r.capacity > 0 && r.sold > 0);
   const totalSold = historyData.reduce((s,r) => s + r.sold, 0);
+  const totalOrders = historyData.reduce((s,r) => s + r.orders, 0);
   const avgRate = valid.length ? Math.round(valid.reduce((s,r) => s + r.sold/r.capacity*100, 0) / valid.length) : 0;
   const maxCap = Math.max(...historyData.map(r => r.capacity), 0);
 
   document.getElementById('history-stats').style.display = 'flex';
   document.getElementById('history-stats').innerHTML = `
     <div class="stat-card"><div class="stat-label">총 공연 건수</div><div class="stat-value">${historyData.length}</div></div>
-    <div class="stat-card"><div class="stat-label">총 판매 수량</div><div class="stat-value">${totalSold.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">총 판매건수</div><div class="stat-value">${totalOrders.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">총 판매매수</div><div class="stat-value">${totalSold.toLocaleString()}</div></div>
     <div class="stat-card"><div class="stat-label">평균 판매율</div><div class="stat-value" style="color:${avgRate>=90?'var(--green)':avgRate>=70?'var(--yellow)':'var(--red)'}">${avgRate}%</div></div>
-    <div class="stat-card"><div class="stat-label">최대 캐퍼 공연</div><div class="stat-value">${maxCap.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">최대 Capacity</div><div class="stat-value">${maxCap.toLocaleString()}</div></div>
   `;
 }
 
 function renderHistory() {
   const q = document.getElementById('history-search').value.toLowerCase();
+  const year = document.getElementById('history-year').value;
   const artist = document.getElementById('history-artist').value;
 
   let list = historyData.filter(r => {
-    if (artist && r.artist !== artist) return false;
-    if (q && !r.artist.toLowerCase().includes(q) && !r.title.toLowerCase().includes(q) && !r.venue.toLowerCase().includes(q)) return false;
+    if (year && r.year !== year) return false;
+    if (artist && r.title !== artist) return false;
+    if (q && !r.title.toLowerCase().includes(q) && !r.venue.toLowerCase().includes(q) && !r.date.toLowerCase().includes(q)) return false;
     return true;
   });
 
@@ -504,18 +516,19 @@ function renderHistory() {
   document.getElementById('history-empty').style.display = 'none';
 
   document.getElementById('history-tbody').innerHTML = list.map(r => {
-    const rate = r.capacity > 0 ? Math.round(r.sold / r.capacity * 100) : null;
+    const rate = r.capacity > 0 && r.sold > 0 ? (r.sold / r.capacity * 100).toFixed(1) : null;
     const rateCls = rate === null ? '' : rate >= 90 ? 'rate-high' : rate >= 70 ? 'rate-mid' : 'rate-low';
     const rateStr = rate !== null ? `<span class="${rateCls}">${rate}%</span>` : '—';
     return `<tr>
-      <td>${r.date}</td>
-      <td>${r.artist}</td>
+      <td>${r.year}</td>
       <td>${r.title}</td>
+      <td>${r.date}</td>
       <td>${r.venue}</td>
-      <td>${r.capacity > 0 ? r.capacity.toLocaleString() : '—'}</td>
+      <td style="color:var(--text-sub);font-size:12px;">${r.period}</td>
+      <td>${r.orders > 0 ? r.orders.toLocaleString() : '—'}</td>
       <td>${r.sold > 0 ? r.sold.toLocaleString() : '—'}</td>
+      <td>${r.capacity > 0 ? r.capacity.toLocaleString() : '—'}</td>
       <td>${rateStr}</td>
-      <td style="color:var(--text-sub);font-size:12px;">${r.note}</td>
     </tr>`;
   }).join('');
 }
