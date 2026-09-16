@@ -656,6 +656,7 @@ function makeTemplate(isLottery) {
     ['【⑤ ラインアップ（チケットとNOTICEの間）】','',''],
     ['ラインアップ見出し','LINEUP','空白の場合は見出しなし'],
     ['ラインアップ画像URL','','画像URLがあれば入力（なければセクション非表示）'],
+    ['ラインアップ幅','100%','例: 100% / 60% / 400px　デフォルト100%'],
     ['','',''],
     ['【⑥ NOTICE タブ（最大6個）】','','タブ名が空白のタブは非表示'],
     ['','','']
@@ -894,6 +895,7 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
   const ticketNotices=collect('チケット注意',5);
   const lineupHeading=g('ラインアップ見出し');
   const lineupUrl=og('ラインアップ画像URL');
+  const lineupWidth=og('ラインアップ幅')||'100%';
 
   const tabs=[];
   for(let t=1;t<=6;t++){const name=g(`タブ${t}_名称`);if(!name)break;tabs.push({name,cls:bulletCls(g(`タブ${t}_スタイル`)),items:collect(`タブ${t}_内容`,40)});}
@@ -936,7 +938,7 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
   }
 
   const noticeHtml=ticketNotices.length?`<ul class="ticket-notice">\n${ticketNotices.map(n=>`<li>${n}</li>`).join('\n')}\n</ul>`:'';
-  const lineupSec=lineupUrl?`\n<!-- lineup -->\n<div class="section-wrap" style="padding-bottom:0;">\n${lineupHeading?`<div class="title"><span class="titlecolor">${lineupHeading}</span></div>\n`:''}<div class="lineup-section"><img src="${escAttr(lineupUrl)}" style="max-width:100%;height:auto;"></div>\n</div>\n`:'';
+  const lineupSec=lineupUrl?`\n<!-- lineup -->\n<div class="section-wrap" style="padding-bottom:0;">\n${lineupHeading?`<div class="title"><span class="titlecolor">${lineupHeading}</span></div>\n`:''}<div class="lineup-section"><img src="${escAttr(lineupUrl)}" style="width:${escAttr(lineupWidth)};max-width:100%;height:auto;display:block;margin:0 auto;"></div>\n</div>\n`:'';
 
   // Contact block
   let contact='';
@@ -997,6 +999,7 @@ function generateHtmlT2(data, origData, lang='ja'){
   const ticketNotices=collect('チケット注意',5);
   const lineupHeading=g('ラインアップ見出し');
   const lineupUrl=og('ラインアップ画像URL');
+  const lineupWidth=og('ラインアップ幅')||'100%';
   const tabs=[];
   for(let t=1;t<=6;t++){const name=g(`タブ${t}_名称`);if(!name)break;tabs.push({name,cls:bulletCls(g(`タブ${t}_スタイル`)),items:collect(`タブ${t}_内容`,40)});}
 
@@ -1011,7 +1014,7 @@ function generateHtmlT2(data, origData, lang='ja'){
     ?`<section class="an-hero"><div class="an-hero-kv"><img src="${esc(poster)}" alt="${esc(title)}"><div class="an-hero-overlay"><div class="an-hero-inner"><p class="an-hero-kicker">TICKET</p><h1 class="an-hero-title">${esc(title)}</h1>${datesStr?`<p class="an-hero-date">${esc(datesStr)}</p>`:''} ${venue?`<p class="an-hero-venue">${esc(venue)}</p>`:''}</div></div></div></section>`
     :`<section class="an-hero an-hero-no-poster"><div class="an-hero-inner"><p class="an-hero-kicker">TICKET</p><h1 class="an-hero-title">${esc(title)}</h1>${datesStr?`<p class="an-hero-date">${esc(datesStr)}</p>`:''} ${venue?`<p class="an-hero-venue">${esc(venue)}</p>`:''}</div></section>`;
 
-  const lineupHtml=lineupUrl?`<section class="an-lineup-section">${lineupHeading?`<p class="an-lineup-kicker">${esc(lineupHeading)}</p>`:''}<img src="${lineupUrl}" alt="LINEUP"></section>`:'';
+  const lineupHtml=lineupUrl?`<section class="an-lineup-section">${lineupHeading?`<p class="an-lineup-kicker">${esc(lineupHeading)}</p>`:''}<img src="${lineupUrl}" alt="LINEUP" style="width:${escAttr(lineupWidth)};max-width:100%;height:auto;display:block;margin:0 auto;"></section>`:'';
 
   let lotteryRows='';
   if(salePeriod)lotteryRows+=`<div class="an-lottery-row"><span class="an-lottery-label">申込期間</span><span class="an-lottery-value">${esc(salePeriod)}</span></div>`;
