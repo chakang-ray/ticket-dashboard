@@ -137,11 +137,17 @@ a.btn-link:hover{background:#222;color:#fff;}
       <div class="color-row">
         <div class="color-group">
           <label data-i18n="c_btn">🎫 티켓 버튼 색상</label>
-          <input type="color" id="color-btn" value="#8da0a7" oninput="state.pickedBtn=this.value;">
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="color" id="color-btn" value="#8da0a7" oninput="state.pickedBtn=this.value;document.getElementById('color-btn-hex').value=this.value;" style="flex:0 0 36px;width:36px;height:36px;">
+            <input type="text" id="color-btn-hex" value="#8da0a7" maxlength="7" placeholder="#rrggbb" style="flex:1;background:#12121e;color:#fafafa;border:1px solid #3d3d4d;border-radius:7px;padding:6px 8px;font-size:12px;font-family:monospace;" oninput="syncColor('btn',this.value)">
+          </div>
         </div>
         <div class="color-group">
           <label data-i18n="c_pt">✨ 포인트 컬러</label>
-          <input type="color" id="color-pt" value="#8da0a7" oninput="state.pickedPt=this.value;">
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="color" id="color-pt" value="#8da0a7" oninput="state.pickedPt=this.value;document.getElementById('color-pt-hex').value=this.value;" style="flex:0 0 36px;width:36px;height:36px;">
+            <input type="text" id="color-pt-hex" value="#8da0a7" maxlength="7" placeholder="#rrggbb" style="flex:1;background:#12121e;color:#fafafa;border:1px solid #3d3d4d;border-radius:7px;padding:6px 8px;font-size:12px;font-family:monospace;" oninput="syncColor('pt',this.value)">
+          </div>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
@@ -1472,6 +1478,8 @@ function initDataSections(data){
   const excelBtn=data['チケットボタン色']||'#8da0a7';
   const excelPt=data['ポイントカラー']||excelBtn;
   btn.value=excelBtn;pt.value=excelPt;
+  document.getElementById('color-btn-hex').value=excelBtn;
+  document.getElementById('color-pt-hex').value=excelPt;
   state.pickedBtn=excelBtn;state.pickedPt=excelPt;
   const notices=collectNotices(data);
   const vcap=document.getElementById('v-caption');
@@ -1488,6 +1496,13 @@ function runValidation(){
   el.textContent=result;el.className='val-result';
 }
 
+function syncColor(key, val){
+  const hex=/^#[0-9a-fA-F]{6}$/.test(val)?val:(val.startsWith('#')&&val.length===4?'#'+val[1]+val[1]+val[2]+val[2]+val[3]+val[3]:null);
+  if(!hex)return;
+  if(key==='btn'){state.pickedBtn=hex;document.getElementById('color-btn').value=hex;}
+  else{state.pickedPt=hex;document.getElementById('color-pt').value=hex;}
+}
+
 async function onPosterUpload(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
@@ -1501,6 +1516,8 @@ async function onPosterUpload(input){
       state.pickedBtn=pal[0];state.pickedPt=pal[0];
       document.getElementById('color-btn').value=pal[0];
       document.getElementById('color-pt').value=pal[0];
+      document.getElementById('color-btn-hex').value=pal[0];
+      document.getElementById('color-pt-hex').value=pal[0];
     }
   };
   reader.readAsDataURL(file);
@@ -1519,6 +1536,8 @@ async function extractFromUrl(){
       state.pickedBtn=pal[0];state.pickedPt=pal[0];
       document.getElementById('color-btn').value=pal[0];
       document.getElementById('color-pt').value=pal[0];
+      document.getElementById('color-btn-hex').value=pal[0];
+      document.getElementById('color-pt-hex').value=pal[0];
     }else{alert(t('c_fail'));}
   }catch(e){alert(t('c_fail')+' (CORS)');}
 }
