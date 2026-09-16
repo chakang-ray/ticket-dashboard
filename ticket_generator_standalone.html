@@ -919,7 +919,7 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
     perfDays.forEach((d,idx)=>{
       const lbl2=perfDays.length>1?`Day ${idx+1}`:lbl.perf_datetime;
       const sub=d.time?`<p class="ev-sub">${d.time}</p>`:'';
-      datecards+=`\n<article class="ev-card"><p class="ev-label">${lbl2}</p><p class="ev-main">${d.date}</p>${sub}</article>`;
+      datecards+=`\n<article class="ev-card"><p class="ev-label">${lbl2}</p><p class="ev-main">${d.date.replace('年','年<br>')}</p>${sub}</article>`;
     });
   }else{datecards=`<article class="ev-card"><p class="ev-label">${lbl.perf_datetime}</p><p class="ev-main">—</p></article>`;}
   const mapUrl=venueAddr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(venueAddr):'';
@@ -1033,7 +1033,7 @@ function generateHtmlT2(data, origData, lang='ja'){
   const ticketsSec=`<section id="ant-tickets" class="an-tickets-section"><div class="an-tickets-inner"><p class="an-section-kicker">TICKET</p><h2 class="an-section-title">${esc(sectionTitle)}</h2>${lotteryInfoHtml}<ul class="an-ticket-list">${ticketHtml}</ul>${tnHtml}</div></section>`;
 
   let dateCards='';
-  perfDays.forEach((d,idx)=>{const lbl2=perfDays.length>1?`Day ${idx+1}`:lbl.perf_datetime;const sub=d.time?`<p class="an-sched-sub">${esc(d.time)}</p>`:'';dateCards+=`<article class="an-sched-card"><p class="an-sched-label">${lbl2}</p><p class="an-sched-main">${esc(d.date)}</p>${sub}</article>`;});
+  perfDays.forEach((d,idx)=>{const lbl2=perfDays.length>1?`Day ${idx+1}`:lbl.perf_datetime;const sub=d.time?`<p class="an-sched-sub">${esc(d.time)}</p>`:'';dateCards+=`<article class="an-sched-card"><p class="an-sched-label">${lbl2}</p><p class="an-sched-main">${esc(d.date).replace('年','年<br>')}</p>${sub}</article>`;});
   if(!dateCards)dateCards=`<article class="an-sched-card"><p class="an-sched-label">${lbl.perf_datetime}</p><p class="an-sched-main">—</p></article>`;
   const mapUrl2=venueAddr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(venueAddr):'';
   const mapHidden2=venueAddr?'':' data-hidden="1"';
