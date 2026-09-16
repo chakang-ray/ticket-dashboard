@@ -784,7 +784,7 @@ function makeTemplate(isLottery) {
     rows.push([`── タブ${n} ──`,'','']);
     rows.push([`タブ${n}_名称`,name,'タブボタンに表示される名前']);
     rows.push([`タブ${n}_スタイル`,style,'箇条書きの種類: ●（丸）/ ＊（星）/ ※（重要）/ なし']);
-    for(let ci=1;ci<=36;ci++){
+    for(let ci=1;ci<=40;ci++){
       const note=ci===1?'자유롭게 수정·삭제 가능 / 自由に編集・削除できます':'';
       rows.push([`タブ${n}_内容${ci}`,ci<=contents.length?contents[ci-1]:'',note]);
     }
@@ -840,7 +840,7 @@ function buildSocialFooter(data){
 function collectNotices(data){
   const items=[];
   for(let i=1;i<=5;i++){const v=String(data[`チケット注意${i}`]||'').trim();if(v)items.push(['チケット注意事項',v]);}
-  for(let t=1;t<=6;t++){const tn=String(data[`タブ${t}_名称`]||'').trim();if(!tn)break;for(let c=1;c<=36;c++){const v=String(data[`タブ${t}_内容${c}`]||'').trim();if(v)items.push([`タブ${t}「${tn}」`,v]);}}
+  for(let t=1;t<=6;t++){const tn=String(data[`タブ${t}_名称`]||'').trim();if(!tn)break;for(let c=1;c<=40;c++){const v=String(data[`タブ${t}_内容${c}`]||'').trim();if(v)items.push([`タブ${t}「${tn}」`,v]);}}
   return items;
 }
 
@@ -896,7 +896,7 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
   const lineupUrl=og('ラインアップ画像URL');
 
   const tabs=[];
-  for(let t=1;t<=6;t++){const name=g(`タブ${t}_名称`);if(!name)break;tabs.push({name,cls:bulletCls(g(`タブ${t}_スタイル`)),items:collect(`タブ${t}_内容`,36)});}
+  for(let t=1;t<=6;t++){const name=g(`タブ${t}_名称`);if(!name)break;tabs.push({name,cls:bulletCls(g(`タブ${t}_スタイル`)),items:collect(`タブ${t}_内容`,40)});}
 
   const cTicket=og('問合せ_チケットURL');
   const cEticket=og('問合せ_電子チケットURL');
@@ -998,7 +998,7 @@ function generateHtmlT2(data, origData, lang='ja'){
   const lineupHeading=g('ラインアップ見出し');
   const lineupUrl=og('ラインアップ画像URL');
   const tabs=[];
-  for(let t=1;t<=6;t++){const name=g(`タブ${t}_名称`);if(!name)break;tabs.push({name,cls:bulletCls(g(`タブ${t}_スタイル`)),items:collect(`タブ${t}_内容`,36)});}
+  for(let t=1;t<=6;t++){const name=g(`タブ${t}_名称`);if(!name)break;tabs.push({name,cls:bulletCls(g(`タブ${t}_スタイル`)),items:collect(`タブ${t}_内容`,40)});}
 
   const errors=[];
   if(!title)errors.push('タイトルが入力されていません。');
