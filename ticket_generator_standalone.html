@@ -1346,7 +1346,29 @@ function setupTabItems(){
     dl.parentNode.insertBefore(ab,dl.nextSibling);
   });
 }
-function setupCtrls(){setupTickets();setupNotices();setupTabs();setupTabItems();}
+function setupLineup(){
+  var imgSel=isT2?'.an-lineup-section img':'.lineup-section img';
+  var img=document.querySelector(imgSel);if(!img)return;
+  var ea=document.getElementById('__lineup_ctrl');if(ea)ea.remove();
+  var cur=parseInt(img.style.width)||100;
+  var ctrl=document.createElement('div');
+  ctrl.id='__lineup_ctrl';ctrl.className='__ied_ctrl';
+  ctrl.style.cssText='text-align:center;padding:10px 0 6px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:12px;color:#888;';
+  var lbl=document.createElement('span');lbl.textContent='LINEUP \\u5e45';
+  var slider=document.createElement('input');
+  slider.type='range';slider.min='10';slider.max='100';slider.step='5';slider.value=cur;
+  slider.style.cssText='width:130px;cursor:pointer;accent-color:#6C63FF;';
+  var numIn=document.createElement('input');
+  numIn.type='number';numIn.min='10';numIn.max='100';numIn.value=cur;
+  numIn.style.cssText='width:48px;background:#12121e;color:#fafafa;border:1px solid #3d3d4d;border-radius:5px;padding:2px 6px;font-size:12px;text-align:center;';
+  var pct=document.createElement('span');pct.textContent='%';
+  function upd(v){v=Math.min(100,Math.max(10,parseInt(v)||100));slider.value=v;numIn.value=v;img.style.width=v+'%';}
+  slider.addEventListener('input',function(){upd(this.value);});
+  numIn.addEventListener('change',function(){upd(this.value);});
+  ctrl.appendChild(lbl);ctrl.appendChild(slider);ctrl.appendChild(numIn);ctrl.appendChild(pct);
+  img.parentNode.insertBefore(ctrl,img);
+}
+function setupCtrls(){setupTickets();setupNotices();setupTabs();setupTabItems();setupLineup();}
 function removeCtrls(){document.querySelectorAll('.__ied_ctrl').forEach(function(b){b.remove();});}
 function showSavedMsg(){
   var msg=document.createElement('div');
