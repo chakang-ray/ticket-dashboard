@@ -612,6 +612,7 @@ function makeTemplate(isLottery) {
     ['ポスター幅','100%','例: 100% / 60% / 400px　デフォルト100%'],
     ['会場','○○アリーナ',''],
     ['会場_住所','','例: 東京都港区北青山2丁目8-35（空白でGoogleMapボタン非表示）'],
+    ['会場_マップURL','','GoogleMapのURLを直接貼り付け（入力時は会場_住所より優先）'],
     ['背景色','#191919','例: #191919（黒） / #0a0a1e / #1a0a00'],
     ['チケットボタン色','#8da0a7','例: #8da0a7（デフォルト） / #c2185b / #2e5fa3'],
     ['ポイントカラー','','例: #FF6B6B / #6C63FF　空白でチケットボタン色と同じ'],
@@ -871,6 +872,7 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
   const poster=g('ポスターURL');
   const venue=g('会場');
   const venueAddr=g('会場_住所');
+  const venueMapUrl=og('会場_マップURL')||'';
   const pageBg=og('背景色')||'#191919';
   const btnColor=og('チケットボタン色')||'#8da0a7';
   const pointColor=og('ポイントカラー')||btnColor;
@@ -922,8 +924,8 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
       datecards+=`\n<article class="ev-card"><p class="ev-label">${lbl2}</p><p class="ev-main">${d.date.replace('年','年<br>')}</p>${sub}</article>`;
     });
   }else{datecards=`<article class="ev-card"><p class="ev-label">${lbl.perf_datetime}</p><p class="ev-main">—</p></article>`;}
-  const mapUrl=venueAddr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((venue?venue+' ':'')+venueAddr):'';
-  const mapHidden=venueAddr?'':' data-hidden="1"';
+  const mapUrl=venueMapUrl||(venueAddr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((venue?venue+' ':'')+venueAddr):'');
+  const mapHidden=(venueAddr||venueMapUrl)?'':' data-hidden="1"';
   const venueCard=venue?`\n<article class="ev-card"><p class="ev-label">${lbl.venue}</p><p class="ev-main">${venue}</p><p class="ev-addr">${venueAddr}</p><a class="ev-map-btn" href="${escAttr(mapUrl)}" target="_blank" rel="noopener"${mapHidden}>Google Map &nbsp;→</a></article>`:'';
   const schedSec=`<!-- schedule -->\n<section class="ev-section">\n<div class="ev-inner">\n<p class="ev-kicker">ABOUT THE EVENT</p>\n<h2 class="ev-heading"><span class="titlecolor">SCHEDULE</span></h2>\n<div class="ev-grid">${datecards}${venueCard}\n</div>\n</div>\n</section>\n\n`;
 
@@ -984,6 +986,7 @@ function generateHtmlT2(data, origData, lang='ja'){
   const poster=g('ポスターURL');
   const venue=g('会場');
   const venueAddr=g('会場_住所');
+  const venueMapUrl=og('会場_マップURL')||'';
   const perfDays=[];
   for(let i=1;i<=5;i++){const d=g(`公演日${i}_日付`);if(!d)break;perfDays.push({date:d,time:g(`公演日${i}_時間`)});}
   const sectionTitle='Qoo10先行';
@@ -1035,8 +1038,8 @@ function generateHtmlT2(data, origData, lang='ja'){
   let dateCards='';
   perfDays.forEach((d,idx)=>{const lbl2=perfDays.length>1?`Day ${idx+1}`:lbl.perf_datetime;const sub=d.time?`<p class="an-sched-sub">${esc(d.time)}</p>`:'';dateCards+=`<article class="an-sched-card"><p class="an-sched-label">${lbl2}</p><p class="an-sched-main">${esc(d.date).replace('年','年<br>')}</p>${sub}</article>`;});
   if(!dateCards)dateCards=`<article class="an-sched-card"><p class="an-sched-label">${lbl.perf_datetime}</p><p class="an-sched-main">—</p></article>`;
-  const mapUrl2=venueAddr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((venue?venue+' ':'')+venueAddr):'';
-  const mapHidden2=venueAddr?'':' data-hidden="1"';
+  const mapUrl2=venueMapUrl||(venueAddr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((venue?venue+' ':'')+venueAddr):'');
+  const mapHidden2=(venueAddr||venueMapUrl)?'':' data-hidden="1"';
   const venueCard2=venue?`<article class="an-sched-card"><p class="an-sched-label">${esc(lbl.venue)}</p><p class="an-sched-main">${esc(venue)}</p><p class="an-sched-addr">${esc(venueAddr)}</p><a class="an-map-btn" href="${escAttr(mapUrl2)}" target="_blank" rel="noopener"${mapHidden2}>Google Map →</a></article>`:'';
   const schedSec=`<section class="an-sched-section"><div class="an-sched-inner"><p class="an-section-kicker">SCHEDULE</p><h2 class="an-section-title">EVENT INFORMATION</h2><div class="an-sched-grid">${dateCards}${venueCard2}</div></div></section>`;
 
