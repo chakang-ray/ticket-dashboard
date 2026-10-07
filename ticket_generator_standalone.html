@@ -880,7 +880,7 @@ function generateHtmlT1(data, origData, ticketCss, lang='ja'){
   const perfDays=[];
   for(let i=1;i<=5;i++){const d=g(`公演日${i}_日付`);if(!d)break;perfDays.push({date:d,time:g(`公演日${i}_時間`)});}
 
-  const sectionTitle='Qoo10先行';
+  const sectionTitle=g('チケットセクション見出し')||'Qoo10先行受付';
   const isLotteryType=!!g('申込期間');
   const salePeriod=isLotteryType?g('申込期間'):g('販売期間');
   const salePeriodLabel=isLotteryType?'申込期間':'販売期間';
@@ -989,7 +989,7 @@ function generateHtmlT2(data, origData, lang='ja'){
   const venueMapUrl=og('会場_マップURL')||'';
   const perfDays=[];
   for(let i=1;i<=5;i++){const d=g(`公演日${i}_日付`);if(!d)break;perfDays.push({date:d,time:g(`公演日${i}_時間`)});}
-  const sectionTitle='Qoo10先行';
+  const sectionTitle=g('チケットセクション見出し')||'Qoo10先行受付';
   const salePeriod=g('申込期間');
   const lotteryDate=g('当落発表日');
   const payDeadline=g('入金期限');
@@ -1130,6 +1130,25 @@ function _aBtn(id,txt){
   b.id=id;b.className='__ied_add __ied_ctrl';b.textContent=txt;
   return b;
 }
+function _normColor(c){
+  if(!c)return '#8da0a7';
+  c=c.trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(c))return c;
+  if(/^#[0-9a-fA-F]{3}$/.test(c))return '#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];
+  var d=document.createElement('div');d.style.color=c;document.body.appendChild(d);
+  var m=getComputedStyle(d).color.match(/\\d+/g);document.body.removeChild(d);
+  if(!m)return '#8da0a7';
+  return '#'+m.slice(0,3).map(function(x){return ('0'+parseInt(x).toString(16)).slice(-2);}).join('');
+}
+function _colorSwatch(curColor,onChange){
+  var inp=document.createElement('input');
+  inp.type='color';inp.className='__color_t __ied_ctrl';
+  inp.value=_normColor(curColor);
+  inp.title='\\ud2f0\\ucf13 \\uc0c9\\uc0c1 \\ubcc0\\uacbd / \\u30c1\\u30b1\\u30c3\\u30c8\\u8272\\u3092\\u5909\\u66f4';
+  inp.addEventListener('click',function(e){e.stopPropagation();});
+  inp.addEventListener('input',function(e){e.stopPropagation();onChange(inp.value);});
+  return inp;
+}
 function setupTickets(){
   if(isT2){
     var tl=document.querySelector('.an-ticket-list');if(!tl)return;
@@ -1138,6 +1157,9 @@ function setupTickets(){
       var b=_dBtn('__del_t');
       b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();a.remove();});
       a.appendChild(b);
+      var cur=(a.getAttribute('style')||'').match(/background:\\s*([^;]+)/);
+      var cs=_colorSwatch(cur?cur[1]:'#ffffff',function(v){a.style.background=v;a.style.color='#fff';});
+      a.appendChild(cs);
     });
     var ea=document.getElementById('__add_t');if(ea)ea.remove();
     var ab=_aBtn('__add_t','\\uff0b \\u30c1\\u30b1\\u30c3\\u30c8\\u8ffd\\u52a0 / \\ud2f0\\ucf13 \\ucd94\\uac00');
@@ -1159,6 +1181,9 @@ function setupTickets(){
       var db=_dBtn('__del_t');
       db.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();clone.remove();});
       clone.appendChild(db);
+      var curC=(clone.getAttribute('style')||'').match(/background:\\s*([^;]+)/);
+      var csC=_colorSwatch(curC?curC[1]:'#ffffff',function(v){clone.style.background=v;clone.style.color='#fff';});
+      clone.appendChild(csC);
       tl2.appendChild(clone);mk();
     });
     tl.parentNode.insertBefore(ab,tl.nextSibling);
@@ -1170,6 +1195,15 @@ function setupTickets(){
     var b=_dBtn('__del_t');
     b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();li.remove();});
     li.appendChild(b);
+    var a=li.querySelector('.ticketBtn');
+    if(a){
+      var cur=(a.getAttribute('style')||'').match(/#[0-9a-fA-F]{3,8}/);
+      var curColor=cur?cur[0]:getComputedStyle(document.documentElement).getPropertyValue('--btn-color').trim();
+      var cs=_colorSwatch(curColor,function(v){
+        a.style.background='linear-gradient(135deg,rgba(255,255,255,0.15) 0%,rgba(0,0,0,0.18) 100%) '+v;
+      });
+      li.appendChild(cs);
+    }
   });
   var ea=document.getElementById('__add_t');if(ea)ea.remove();
   var ab=_aBtn('__add_t','\\uff0b \\u30c1\\u30b1\\u30c3\\u30c8\\u8ffd\\u52a0 / \\ud2f0\\ucf13 \\ucd94\\uac00');
@@ -1191,6 +1225,14 @@ function setupTickets(){
     var db=_dBtn('__del_t');
     db.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();clone.remove();});
     clone.appendChild(db);
+    if(a){
+      var curC=(a.getAttribute('style')||'').match(/#[0-9a-fA-F]{3,8}/);
+      var curColorC=curC?curC[0]:getComputedStyle(document.documentElement).getPropertyValue('--btn-color').trim();
+      var csC=_colorSwatch(curColorC,function(v){
+        a.style.background='linear-gradient(135deg,rgba(255,255,255,0.15) 0%,rgba(0,0,0,0.18) 100%) '+v;
+      });
+      clone.appendChild(csC);
+    }
     tl2.appendChild(clone);mk();
   });
   tl.parentNode.insertBefore(ab,tl.nextSibling);
@@ -1468,6 +1510,12 @@ document.getElementById('__ied_rs').addEventListener('click',function(){
     'border-radius:50%;border:none;background:#ff4444;color:#fff;font-size:11px;' +
     'cursor:pointer;font-weight:700;line-height:22px;text-align:center;' +
     'box-shadow:0 2px 6px rgba(0,0,0,.3);padding:0;}' +
+    '.__color_t{position:absolute;top:-8px;left:-8px;z-index:10;width:22px;height:22px;' +
+    'border-radius:50%;border:2px solid #fff;cursor:pointer;padding:0;' +
+    'box-shadow:0 2px 6px rgba(0,0,0,.3);-webkit-appearance:none;appearance:none;background:none;}' +
+    '.__color_t::-webkit-color-swatch-wrapper{padding:0;border-radius:50%;}' +
+    '.__color_t::-webkit-color-swatch{border:none;border-radius:50%;}' +
+    '.__color_t::-moz-color-swatch{border:none;border-radius:50%;}' +
     '.__del_n{display:inline-block;margin-left:6px;width:18px;height:18px;' +
     'border-radius:50%;border:none;background:#ff4444;color:#fff;font-size:10px;' +
     'cursor:pointer;font-weight:700;line-height:18px;text-align:center;' +
